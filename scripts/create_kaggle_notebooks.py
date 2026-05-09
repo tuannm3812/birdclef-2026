@@ -861,6 +861,7 @@ Artifacts are written to `/kaggle/working/artifacts/perch_v2`.
                 COMMON_STYLE
                 + """
 import librosa
+import subprocess
 from importlib.metadata import PackageNotFoundError, version
 from sklearn.model_selection import train_test_split
 import torch
@@ -869,7 +870,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm.auto import tqdm
 
 REQUIRED_TENSORFLOW_VERSION = "2.20.0"
-OFFLINE_TENSORFLOW_WHEELHOUSE = None
+OFFLINE_TENSORFLOW_WHEELHOUSE = Path("/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0/wheel")
 
 
 def package_version(package_name: str) -> str | None:
@@ -895,10 +896,41 @@ if installed_tf is None or version_tuple(installed_tf) < version_tuple(REQUIRED_
     import sys
     print(f"TensorFlow {installed_tf} is not compatible with Perch v2 export 2.")
     print(f"Installing tensorflow=={REQUIRED_TENSORFLOW_VERSION}. Restart the Kaggle session after this cell stops.")
-    if OFFLINE_TENSORFLOW_WHEELHOUSE:
-        !{sys.executable} -m pip install -q --no-index --find-links {OFFLINE_TENSORFLOW_WHEELHOUSE} tensorflow=={REQUIRED_TENSORFLOW_VERSION}
+    if OFFLINE_TENSORFLOW_WHEELHOUSE.exists():
+        subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "-q",
+                "--no-deps",
+                str(OFFLINE_TENSORFLOW_WHEELHOUSE / "tensorboard-2.20.0-py3-none-any.whl"),
+            ],
+            check=True,
+        )
+        subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "-q",
+                "--no-deps",
+                str(
+                    OFFLINE_TENSORFLOW_WHEELHOUSE
+                    / "tensorflow-2.20.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+                ),
+            ],
+            check=True,
+        )
+        print("Installed TF 2.20.0 from Kaggle dataset wheels.")
     else:
-        !{sys.executable} -m pip install -q --upgrade tensorflow=={REQUIRED_TENSORFLOW_VERSION}
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q", "tensorflow==2.20.0", "tensorboard==2.20.0"],
+            check=True,
+        )
+        print("Installed TF 2.20.0 from PyPI.")
     installed_tf = package_version("tensorflow")
     if installed_tf is None or version_tuple(installed_tf) < version_tuple(REQUIRED_TENSORFLOW_VERSION):
         raise RuntimeError(
@@ -1484,6 +1516,7 @@ Artifacts are written to `/kaggle/working/artifacts/perch_submission`.
                 COMMON_STYLE
                 + """
 import zipfile
+import subprocess
 from importlib.metadata import PackageNotFoundError, version
 
 import librosa
@@ -1493,7 +1526,7 @@ from tqdm.auto import tqdm
 from IPython.display import FileLink
 
 REQUIRED_TENSORFLOW_VERSION = "2.20.0"
-OFFLINE_TENSORFLOW_WHEELHOUSE = None
+OFFLINE_TENSORFLOW_WHEELHOUSE = Path("/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0/wheel")
 
 
 def package_version(package_name: str) -> str | None:
@@ -1519,10 +1552,41 @@ if installed_tf is None or version_tuple(installed_tf) < version_tuple(REQUIRED_
     import sys
     print(f"TensorFlow {installed_tf} is not compatible with Perch v2 export 2.")
     print(f"Installing tensorflow=={REQUIRED_TENSORFLOW_VERSION}. Restart the Kaggle session after this cell stops.")
-    if OFFLINE_TENSORFLOW_WHEELHOUSE:
-        !{sys.executable} -m pip install -q --no-index --find-links {OFFLINE_TENSORFLOW_WHEELHOUSE} tensorflow=={REQUIRED_TENSORFLOW_VERSION}
+    if OFFLINE_TENSORFLOW_WHEELHOUSE.exists():
+        subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "-q",
+                "--no-deps",
+                str(OFFLINE_TENSORFLOW_WHEELHOUSE / "tensorboard-2.20.0-py3-none-any.whl"),
+            ],
+            check=True,
+        )
+        subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "-q",
+                "--no-deps",
+                str(
+                    OFFLINE_TENSORFLOW_WHEELHOUSE
+                    / "tensorflow-2.20.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+                ),
+            ],
+            check=True,
+        )
+        print("Installed TF 2.20.0 from Kaggle dataset wheels.")
     else:
-        !{sys.executable} -m pip install -q --upgrade tensorflow=={REQUIRED_TENSORFLOW_VERSION}
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q", "tensorflow==2.20.0", "tensorboard==2.20.0"],
+            check=True,
+        )
+        print("Installed TF 2.20.0 from PyPI.")
     installed_tf = package_version("tensorflow")
     if installed_tf is None or version_tuple(installed_tf) < version_tuple(REQUIRED_TENSORFLOW_VERSION):
         raise RuntimeError(
