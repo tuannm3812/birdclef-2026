@@ -49,8 +49,13 @@ def main() -> None:
             outputs = infer(**{input_name: batch})
         else:
             outputs = infer(batch)
-        tensor = next(iter(outputs.values()))
-        embeddings.append(np.asarray(tensor)[0])
+        arrays = {name: np.asarray(value) for name, value in outputs.items()}
+        embedding_name = next(
+            (name for name in arrays if "embedding" in name.lower() or "embed" in name.lower()),
+            next(iter(arrays)),
+        )
+        embedding = to_2d_embeddings(arrays[embedding_name])[0]
+        embeddings.append(embedding)
 
     np.savez_compressed(
         output_path,
@@ -69,6 +74,14 @@ def zip_artifacts(source_dir: Path, zip_path: Path) -> None:
         for path in sorted(source_dir.rglob("*")):
             if path.is_file() and path != zip_path:
                 zf.write(path, arcname=path.relative_to(source_dir.parent))
+
+
+def to_2d_embeddings(embeddings: np.ndarray) -> np.ndarray:
+    if embeddings.ndim == 2:
+        return embeddings
+    if embeddings.ndim == 3:
+        return embeddings.mean(axis=1)
+    return embeddings.reshape(embeddings.shape[0], -1)
 
 
 if __name__ == "__main__":

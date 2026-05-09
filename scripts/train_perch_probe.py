@@ -5,6 +5,7 @@ import zipfile
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import torch
 from sklearn.model_selection import train_test_split
 from torch import nn
@@ -30,17 +31,12 @@ def main() -> None:
     embeddings_path = Path(args.embeddings or cfg["perch"]["embeddings_path"])
 
     data = np.load(embeddings_path, allow_pickle=True)
-    x = data["embeddings"].astype(np.float32)
+    x = to_2d_embeddings(data["embeddings"].astype(np.float32))
     labels = [str(label) for label in data["labels"]]
     label_to_idx, _ = label_maps(labels)
     y = np.array([label_to_idx[label] for label in labels], dtype=np.int64)
 
-    train_idx, valid_idx = train_test_split(
-        np.arange(len(y)),
-        test_size=0.2,
-        random_state=int(cfg.get("seed", 42)),
-        stratify=y,
-    )
+    train_idx, valid_idx = safe_train_valid_split(y, seed=int(cfg.get("seed", 42)))
     train_loader = DataLoader(
         TensorDataset(torch.from_numpy(x[train_idx]), torch.from_numpy(y[train_idx])),
         batch_size=int(probe_cfg["batch_size"]),
@@ -54,7 +50,7 @@ def main() -> None:
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = PerchProbe(
-        embedding_dim=int(cfg["perch"]["embedding_dim"]),
+        embedding_dim=x.shape[1],
         num_classes=len(label_to_idx),
         hidden_dim=int(probe_cfg["hidden_dim"]),
         dropout=float(probe_cfg["dropout"]),
@@ -100,6 +96,30 @@ def validate(model: nn.Module, loader: DataLoader, device: torch.device) -> floa
         correct += (logits.argmax(dim=1) == yb).sum().item()
         seen += xb.size(0)
     return correct / max(seen, 1)
+
+
+def safe_train_valid_split(targets: np.ndarray, seed: int, test_size: float = 0.2) -> tuple[np.ndarray, np.ndarray]:
+    counts = pd.Series(targets).value_counts()
+    rare_classes = set(counts[counts < 2].index)
+    all_idx = np.arange(len(targets))
+    rare_idx = np.array([idx for idx in all_idx if targets[idx] in rare_classes], dtype=np.int64)
+    common_idx = np.array([idx for idx in all_idx if targets[idx] not in rare_classes], dtype=np.int64)
+    train_common, valid_idx = train_test_split(
+        common_idx,
+        test_size=test_size,
+        random_state=seed,
+        stratify=targets[common_idx],
+    )
+    train_idx = np.concatenate([train_common, rare_idx])
+    return train_idx, valid_idx
+
+
+def to_2d_embeddings(embeddings: np.ndarray) -> np.ndarray:
+    if embeddings.ndim == 2:
+        return embeddings
+    if embeddings.ndim == 3:
+        return embeddings.mean(axis=1)
+    return embeddings.reshape(embeddings.shape[0], -1)
 
 
 def zip_artifacts(source_dir: Path, zip_path: Path) -> None:

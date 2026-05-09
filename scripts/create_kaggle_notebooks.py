@@ -962,8 +962,17 @@ def run_perch_batch(batch_waveforms: np.ndarray) -> np.ndarray:
         outputs = infer(**{input_name: tensor})
     else:
         outputs = infer(tensor)
-    value = next(iter(outputs.values()))
-    return np.asarray(value).astype(np.float32)
+    arrays = {name: np.asarray(value) for name, value in outputs.items()}
+    embedding_name = next(
+        (name for name in arrays if "embedding" in name.lower() or "embed" in name.lower()),
+        next(iter(arrays)),
+    )
+    value = arrays[embedding_name]
+    if value.ndim == 3:
+        value = value.mean(axis=1)
+    elif value.ndim > 3:
+        value = value.reshape(value.shape[0], -1)
+    return value.astype(np.float32)
 
 
 embeddings_path = CFG.artifact_dir / "train_embeddings.npz"
@@ -1012,12 +1021,29 @@ class PerchProbe(nn.Module):
 
 x = embeddings.astype(np.float32)
 y = train["target"].to_numpy(dtype=np.int64)
-train_idx, valid_idx = train_test_split(
-    np.arange(len(y)),
-    test_size=0.2,
-    random_state=CFG.seed,
-    stratify=y,
-)
+
+
+def safe_train_valid_split(targets: np.ndarray, test_size: float = 0.2) -> tuple[np.ndarray, np.ndarray]:
+    counts = pd.Series(targets).value_counts()
+    rare_classes = set(counts[counts < 2].index)
+    all_idx = np.arange(len(targets))
+    rare_idx = np.array([idx for idx in all_idx if targets[idx] in rare_classes], dtype=np.int64)
+    common_idx = np.array([idx for idx in all_idx if targets[idx] not in rare_classes], dtype=np.int64)
+
+    train_common, valid_idx = train_test_split(
+        common_idx,
+        test_size=test_size,
+        random_state=CFG.seed,
+        stratify=targets[common_idx],
+    )
+    train_idx = np.concatenate([train_common, rare_idx])
+    return train_idx, valid_idx
+
+
+train_idx, valid_idx = safe_train_valid_split(y)
+print(f"Probe train rows: {len(train_idx):,}")
+print(f"Probe valid rows: {len(valid_idx):,}")
+print(f"Classes with fewer than 2 rows kept in train only: {(pd.Series(y).value_counts() < 2).sum():,}")
 
 train_loader = DataLoader(
     TensorDataset(torch.from_numpy(x[train_idx]), torch.from_numpy(y[train_idx])),
