@@ -1662,20 +1662,51 @@ def find_perch_model_dir() -> Path:
     raise FileNotFoundError("Could not find Google Perch v2 SavedModel. Attach the Kaggle Perch model.")
 
 
+def find_perch_cache() -> tuple[Path | None, Path | None]:
+    candidates = [
+        Path("/kaggle/input/perch-meta"),
+        Path("/kaggle/input/datasets/jaejohn/perch-meta"),
+        Path("/kaggle/working/perch_cache"),
+    ]
+    for root in candidates:
+        meta_path = root / "full_perch_meta.parquet"
+        arrays_path = root / "full_perch_arrays.npz"
+        if meta_path.exists() and arrays_path.exists():
+            return meta_path, arrays_path
+    input_root = Path("/kaggle/input")
+    if input_root.exists():
+        meta_matches = list(input_root.glob("**/full_perch_meta.parquet"))
+        for meta_path in meta_matches:
+            arrays_path = meta_path.parent / "full_perch_arrays.npz"
+            if arrays_path.exists():
+                return meta_path, arrays_path
+    return None, None
+
+
 artifact_roots = [Path("/kaggle/input"), Path("artifacts/perch_v2")]
 sample_path = CFG.data_root / "sample_submission.csv"
 probe_checkpoint_path = Path(CFG.probe_checkpoint_path) if CFG.probe_checkpoint_path else find_file("best_perch_probe.pt", artifact_roots)
 labels_path = Path(CFG.labels_path) if CFG.labels_path else find_file("labels.json", artifact_roots)
-perch_model_dir = find_perch_model_dir()
-
 sample_submission = pd.read_csv(sample_path)
 idx_to_label = {int(k): v for k, v in json.loads(labels_path.read_text()).items()}
 labels = [idx_to_label[i] for i in sorted(idx_to_label)]
 label_to_idx = {label: i for i, label in enumerate(labels)}
 target_columns = [c for c in sample_submission.columns if c != "row_id"]
 
+cache_meta_path, cache_arrays_path = find_perch_cache()
+use_cached_embeddings = False
+if cache_meta_path is not None and cache_arrays_path is not None:
+    cache_meta_preview = pd.read_parquet(cache_meta_path, columns=["row_id"])
+    cache_row_ids = set(cache_meta_preview["row_id"].astype(str))
+    requested_row_ids = set(sample_submission["row_id"].astype(str))
+    use_cached_embeddings = requested_row_ids.issubset(cache_row_ids)
+    print(f"Perch cache: {cache_meta_path}")
+    print(f"Cache rows: {len(cache_row_ids):,}; requested rows: {len(requested_row_ids):,}; covers submission: {use_cached_embeddings}")
+
+perch_model_dir = None if use_cached_embeddings else find_perch_model_dir()
+
 print(f"Sample submission: {sample_path}")
-print(f"Perch model: {perch_model_dir}")
+print(f"Perch model: {perch_model_dir if perch_model_dir is not None else 'not needed; using cached embeddings'}")
 print(f"Probe checkpoint: {probe_checkpoint_path}")
 print(f"Labels: {labels_path}")
 print(f"Rows: {len(sample_submission):,}")
@@ -1687,10 +1718,22 @@ display(sample_submission.head())
             md("## 3. Load Perch And Probe"),
             code(
                 """
-perch = tf.saved_model.load(str(perch_model_dir))
-infer = perch.signatures["serving_default"]
-print(f"Inputs: {infer.structured_input_signature}")
-print(f"Outputs: {infer.structured_outputs}")
+cache_meta = None
+cache_embeddings = None
+cache_row_to_idx = None
+
+if use_cached_embeddings:
+    cache_meta = pd.read_parquet(cache_meta_path)
+    cache_arrays = np.load(cache_arrays_path)
+    cache_embeddings = cache_arrays["emb_full"].astype(np.float32)
+    cache_row_to_idx = {str(row_id): i for i, row_id in enumerate(cache_meta["row_id"].astype(str))}
+    dummy_embedding = cache_embeddings[:1]
+    print(f"Loaded cached Perch embeddings: {cache_embeddings.shape}")
+else:
+    perch = tf.saved_model.load(str(perch_model_dir))
+    infer = perch.signatures["serving_default"]
+    print(f"Inputs: {infer.structured_input_signature}")
+    print(f"Outputs: {infer.structured_outputs}")
 
 
 def explain_perch_runtime_error(error: Exception) -> None:
@@ -1710,6 +1753,8 @@ def explain_perch_runtime_error(error: Exception) -> None:
 
 
 def run_perch_batch(batch_waveforms: np.ndarray) -> np.ndarray:
+    if use_cached_embeddings:
+        raise RuntimeError("run_perch_batch should not be called when cached embeddings are active.")
     tensor = tf.convert_to_tensor(batch_waveforms, dtype=tf.float32)
     _, keyword_specs = infer.structured_input_signature
     try:
@@ -1734,9 +1779,10 @@ def run_perch_batch(batch_waveforms: np.ndarray) -> np.ndarray:
     return value.astype(np.float32)
 
 
-dummy = np.zeros((1, int(CFG.sample_rate * CFG.duration)), dtype=np.float32)
-dummy_embedding = run_perch_batch(dummy)
-print(f"Smoke-test embedding shape: {dummy_embedding.shape}")
+if not use_cached_embeddings:
+    dummy = np.zeros((1, int(CFG.sample_rate * CFG.duration)), dtype=np.float32)
+    dummy_embedding = run_perch_batch(dummy)
+print(f"Embedding shape: {dummy_embedding.shape}")
 
 
 class PerchProbe(nn.Module):
@@ -1824,41 +1870,55 @@ waveforms = []
 batch_rows = []
 missing_audio = []
 
-for row_idx, row_id in tqdm(list(enumerate(submission["row_id"])), desc="perch submission"):
-    stem, end_time = row_to_stem_and_end_time(row_id)
-    audio_path = audio_index.get(stem)
-    if audio_path is None:
-        missing_audio.append(row_id)
-        continue
+if use_cached_embeddings:
+    cached = cache_embeddings[[cache_row_to_idx[str(row_id)] for row_id in submission["row_id"].astype(str)]]
+    for start in tqdm(range(0, len(submission), CFG.probe_batch_size), desc="cached probe"):
+        end = min(start + CFG.probe_batch_size, len(submission))
+        probs = predict_probe(cached[start:end])
+        for local_idx, submit_idx in enumerate(range(start, end)):
+            for label, class_idx in label_to_idx.items():
+                if label in target_columns:
+                    submission.loc[submit_idx, label] = probs[local_idx, class_idx]
+else:
+    for row_idx, row_id in tqdm(list(enumerate(submission["row_id"])), desc="perch submission"):
+        stem, end_time = row_to_stem_and_end_time(row_id)
+        audio_path = audio_index.get(stem)
+        if audio_path is None:
+            missing_audio.append(row_id)
+            continue
 
-    waveforms.append(load_audio_segment(audio_path, end_time))
-    batch_rows.append(row_idx)
+        waveforms.append(load_audio_segment(audio_path, end_time))
+        batch_rows.append(row_idx)
 
-    if len(waveforms) == CFG.extraction_batch_size:
+        if len(waveforms) == CFG.extraction_batch_size:
+            embeddings = run_perch_batch(np.stack(waveforms))
+            probs = predict_probe(embeddings)
+            for local_idx, submit_idx in enumerate(batch_rows):
+                for label, class_idx in label_to_idx.items():
+                    if label in target_columns:
+                        submission.loc[submit_idx, label] = probs[local_idx, class_idx]
+            waveforms = []
+            batch_rows = []
+
+    if waveforms:
         embeddings = run_perch_batch(np.stack(waveforms))
         probs = predict_probe(embeddings)
         for local_idx, submit_idx in enumerate(batch_rows):
             for label, class_idx in label_to_idx.items():
                 if label in target_columns:
                     submission.loc[submit_idx, label] = probs[local_idx, class_idx]
-        waveforms = []
-        batch_rows = []
 
-if waveforms:
-    embeddings = run_perch_batch(np.stack(waveforms))
-    probs = predict_probe(embeddings)
-    for local_idx, submit_idx in enumerate(batch_rows):
-        for label, class_idx in label_to_idx.items():
-            if label in target_columns:
-                submission.loc[submit_idx, label] = probs[local_idx, class_idx]
-
+"""
+            ),
+            md("## 6. Save Submission And Package Artifacts"),
+            code(
+                """
 missing_audio_path = CFG.artifact_dir / "missing_test_audio.json"
 missing_audio_path.write_text(json.dumps(missing_audio, indent=2), encoding="utf-8")
 print(f"Missing audio rows: {len(missing_audio):,}")
 display(submission.head())
 """
             ),
-            md("## 6. Save Submission And Package Artifacts"),
             code(
                 """
 submission_path = Path("/kaggle/working/submission.csv")
@@ -1880,7 +1940,6 @@ display(FileLink(zip_path))
             ),
         ]
     )
-
 
 def main() -> None:
     NOTEBOOK_DIR.mkdir(parents=True, exist_ok=True)
