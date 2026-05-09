@@ -820,6 +820,27 @@ print(f"Best valid accuracy: {best_acc:.4f}")
 print(f"Artifacts saved to {CFG.artifact_dir}")
 """
             ),
+            md("## 6. Package Artifacts For Download"),
+            md(
+                """
+Kaggle exposes files under `/kaggle/working` after the run. This cell packages the model checkpoint, label map, training history, and fold file into one zip for local download or reuse in an inference notebook.
+"""
+            ),
+            code(
+                """
+import zipfile
+from IPython.display import FileLink
+
+zip_path = Path("/kaggle/working/birdclef_effnet_b0_artifacts.zip")
+with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+    for path in sorted(CFG.artifact_dir.rglob("*")):
+        if path.is_file():
+            zf.write(path, arcname=path.relative_to(CFG.artifact_dir.parent))
+
+print(f"Wrote {zip_path} ({zip_path.stat().st_size / 1024 / 1024:.2f} MB)")
+display(FileLink(zip_path))
+"""
+            ),
         ]
     )
 
@@ -1068,6 +1089,27 @@ for epoch in range(1, CFG.probe_epochs + 1):
 pd.DataFrame(history).to_csv(CFG.artifact_dir / "history.csv", index=False)
 print(f"Best valid accuracy: {best_acc:.4f}")
 print(f"Artifacts saved to {CFG.artifact_dir}")
+"""
+            ),
+            md("## 7. Package Artifacts For Download"),
+            md(
+                """
+This cell zips the extracted Perch embeddings, label map, probe checkpoint, and training history. The embeddings file can be large, but keeping it in the zip is useful when you want to train probes locally without rerunning TensorFlow extraction.
+"""
+            ),
+            code(
+                """
+import zipfile
+from IPython.display import FileLink
+
+zip_path = Path("/kaggle/working/birdclef_perch_v2_artifacts.zip")
+with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+    for path in sorted(CFG.artifact_dir.rglob("*")):
+        if path.is_file():
+            zf.write(path, arcname=path.relative_to(CFG.artifact_dir.parent))
+
+print(f"Wrote {zip_path} ({zip_path.stat().st_size / 1024 / 1024:.2f} MB)")
+display(FileLink(zip_path))
 """
             ),
         ]

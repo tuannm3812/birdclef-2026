@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import zipfile
 from pathlib import Path
 
 import numpy as np
@@ -58,6 +59,16 @@ def main() -> None:
         filenames=df["filename"].to_numpy(),
     )
     print(f"Wrote embeddings for {len(df):,} clips to {output_path}")
+    zip_path = output_path.parent / f"{output_path.parent.name}_embeddings.zip"
+    zip_artifacts(output_path.parent, zip_path)
+    print(f"Zipped artifacts to {zip_path}")
+
+
+def zip_artifacts(source_dir: Path, zip_path: Path) -> None:
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for path in sorted(source_dir.rglob("*")):
+            if path.is_file() and path != zip_path:
+                zf.write(path, arcname=path.relative_to(source_dir.parent))
 
 
 if __name__ == "__main__":

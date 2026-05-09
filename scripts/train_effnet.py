@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import zipfile
 from pathlib import Path
 
 import pandas as pd
@@ -102,6 +103,9 @@ def main() -> None:
             )
 
     print(f"Best valid accuracy: {best_acc:.4f}")
+    zip_path = output_dir.parent / f"{output_dir.name}_artifacts.zip"
+    zip_artifacts(output_dir, zip_path)
+    print(f"Zipped artifacts to {zip_path}")
 
 
 def effective_num_workers(configured_workers: int) -> int:
@@ -122,6 +126,13 @@ def make_loader(dataset, batch_size: int, shuffle: bool, num_workers: int, devic
         loader_kwargs["persistent_workers"] = True
         loader_kwargs["prefetch_factor"] = 2
     return DataLoader(dataset, **loader_kwargs)
+
+
+def zip_artifacts(source_dir: Path, zip_path: Path) -> None:
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for path in sorted(source_dir.rglob("*")):
+            if path.is_file():
+                zf.write(path, arcname=path.relative_to(source_dir.parent))
 
 
 def train_one_epoch(model, loader, criterion, optimizer, scaler, device) -> float:

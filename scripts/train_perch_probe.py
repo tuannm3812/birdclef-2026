@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import zipfile
 from pathlib import Path
 
 import numpy as np
@@ -82,6 +83,9 @@ def main() -> None:
             )
 
     print(f"Best valid accuracy: {best_acc:.4f}")
+    zip_path = output_dir.parent / f"{output_dir.name}_artifacts.zip"
+    zip_artifacts(output_dir, zip_path)
+    print(f"Zipped artifacts to {zip_path}")
 
 
 @torch.no_grad()
@@ -96,6 +100,13 @@ def validate(model: nn.Module, loader: DataLoader, device: torch.device) -> floa
         correct += (logits.argmax(dim=1) == yb).sum().item()
         seen += xb.size(0)
     return correct / max(seen, 1)
+
+
+def zip_artifacts(source_dir: Path, zip_path: Path) -> None:
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for path in sorted(source_dir.rglob("*")):
+            if path.is_file():
+                zf.write(path, arcname=path.relative_to(source_dir.parent))
 
 
 if __name__ == "__main__":
