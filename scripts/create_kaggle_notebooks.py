@@ -147,6 +147,11 @@ class CFG(CFG):
 """
             ),
             md("## 2. Load Metadata"),
+            md(
+                """
+**Insight goal.** Before modeling, confirm the competition files are mounted correctly and that the training table, taxonomy table, soundscape labels, and sample submission agree with each other. This section creates the basic dataset inventory that later sections use for imbalance, duration, and domain-shift diagnostics.
+"""
+            ),
             code(
                 """
 def parse_label_list(value) -> list[str]:
@@ -189,6 +194,11 @@ display(train.head())
 """
             ),
             md("## 3. Dataset Schema And Missingness"),
+            md(
+                """
+**What to look for.** Missing metadata can create silent leakage or brittle preprocessing logic. The most important fields for the baseline notebooks are `filename`, `primary_label`, `secondary_labels`, and `duration`; if any of those are incomplete, the training pipeline needs explicit fallback behavior.
+"""
+            ),
             code(
                 """
 def safe_nunique(series: pd.Series) -> int:
@@ -214,6 +224,11 @@ print(f"Missing audio files: {len(missing_files):,}")
 """
             ),
             md("## 4. Primary Label Imbalance"),
+            md(
+                """
+**Why this matters.** BirdCLEF-style datasets are usually long-tailed: common species dominate the loss, while rare species are easy to ignore. The imbalance plots below help decide whether the first baseline should use balanced sampling, class-aware augmentation, focal loss, or per-class validation diagnostics.
+"""
+            ),
             code(
                 """
 label_counts = (
@@ -257,6 +272,11 @@ plt.show()
 """
             ),
             md("## 5. Duration And Chunking Implications"),
+            md(
+                """
+**Why this matters.** A 5-second crop is a modeling choice, not just a preprocessing detail. Short clips may need padding, long recordings can provide many training crops, and classes with fewer files but longer total duration may be less data-poor than raw recording counts suggest.
+"""
+            ),
             code(
                 """
 if "duration" in train.columns:
@@ -302,6 +322,11 @@ else:
 """
             ),
             md("## 6. Secondary Labels And Co-Occurrence"),
+            md(
+                """
+**Why this matters.** Secondary labels are noisy but valuable. They reveal species that often appear together and can later support soft labels, multi-label training, mixup targets, or post-processing rules. For the first EfficientNet baseline, they are kept diagnostic rather than target-defining.
+"""
+            ),
             code(
                 """
 secondary = train[["filename", "primary_label", "secondary_labels"]].explode("secondary_labels")
@@ -338,6 +363,11 @@ if len(secondary_counts):
 """
             ),
             md("## 7. Taxonomy Coverage"),
+            md(
+                """
+**Why this matters.** Taxonomy metadata gives a way to audit errors above the species level. If the model confuses species within the same genus or family, that is a different failure mode from confusing unrelated calls. This table also checks whether train labels and taxonomy labels are aligned.
+"""
+            ),
             code(
                 """
 if taxonomy is not None:
@@ -368,6 +398,11 @@ else:
 """
             ),
             md("## 8. Soundscape Labels"),
+            md(
+                """
+**Why this matters.** Soundscapes are closer to the evaluation domain than clean training clips: longer recordings, overlapping calls, background noise, and sparse temporal annotations. Treating this table as a separate domain helps avoid over-trusting validation metrics from clean clips only.
+"""
+            ),
             code(
                 """
 if soundscape_labels is None:
@@ -400,6 +435,11 @@ else:
 """
             ),
             md("## 9. Representative Audio And Spectrograms"),
+            md(
+                """
+**Why this matters.** A few spectrograms often reveal issues that tables hide: silence, clipping, background insects, rain, distant calls, and frequency bands that matter for augmentation. These examples are not a validation set; they are a quick sanity check for the acoustic texture the model will see.
+"""
+            ),
             code(
                 """
 def load_clip(path: Path, seconds: float = 5.0) -> np.ndarray:
@@ -441,6 +481,11 @@ else:
 """
             ),
             md("## 10. Modeling Takeaways"),
+            md(
+                """
+**How to use this section.** The notebook turns the diagnostics above into practical modeling implications. These takeaways should guide the baseline notebooks: validation design, crop length, augmentation strength, class balancing, and whether to compare clean-clip validation against soundscape-style artifacts.
+"""
+            ),
             code(
                 """
 takeaways = []
@@ -470,6 +515,29 @@ display(takeaways_df)
 manifest = sorted(str(path.relative_to(CFG.artifact_dir)) for path in CFG.artifact_dir.glob("*"))
 (CFG.artifact_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 manifest
+"""
+            ),
+            md("## 12. Package Artifacts For Download"),
+            md(
+                """
+Kaggle makes files under `/kaggle/working` downloadable after the notebook finishes. This cell zips the EDA tables and figures into one file so you can download them, review them locally, and optionally commit selected lightweight artifacts such as `.csv`, `.json`, or `.png` files to GitHub.
+
+Avoid committing large generated arrays or model checkpoints unless you intentionally manage them with Git LFS or a release asset.
+"""
+            ),
+            code(
+                """
+import zipfile
+from IPython.display import FileLink
+
+zip_path = Path("/kaggle/working/birdclef_eda_artifacts.zip")
+with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+    for path in sorted(CFG.artifact_dir.rglob("*")):
+        if path.is_file():
+            zf.write(path, arcname=path.relative_to(CFG.artifact_dir.parent))
+
+print(f"Wrote {zip_path} ({zip_path.stat().st_size / 1024 / 1024:.2f} MB)")
+display(FileLink(zip_path))
 """
             ),
         ]
