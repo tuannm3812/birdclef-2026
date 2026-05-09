@@ -1,7 +1,7 @@
 # BirdCLEF+ 2026
 
 <p align="center">
-  <img src="https://kaggle.com/competitions/129329/images/header" alt="BirdCLEF+ 2026 competition header" width="100%">
+  <img src="https://www.birds.cornell.edu/home/wp-content/uploads/2018/11/aab.jpg" alt="Cornell Lab bird soundscape" width="100%">
 </p>
 
 <p align="center">
