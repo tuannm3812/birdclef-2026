@@ -21,6 +21,7 @@ Professional Kaggle workspace for the BirdCLEF+ 2026 bioacoustic classification 
 
 ```text
 configs/                 Experiment configuration files
+artifacts/               Committed lightweight model artifacts
 data/                    Local data mount, ignored by Git
 models/                  Local checkpoints, ignored by Git
 notebooks/               Curated Kaggle notebooks
@@ -36,8 +37,10 @@ The canonical Kaggle notebooks are:
 - `notebooks/01_data_eda.ipynb`
 - `notebooks/02_effnet_b0_baseline.ipynb`
 - `notebooks/03_perch_v2_probe.ipynb`
+- `notebooks/04_effnet_b0_submission.ipynb`
 
 EDA artifacts and summarized findings are available in [reports/eda](reports/eda).
+The trained EfficientNet-B0 baseline artifact is available in [artifacts/effnet_b0](artifacts/effnet_b0).
 
 ## Setup
 

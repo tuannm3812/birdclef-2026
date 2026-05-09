@@ -1116,12 +1116,260 @@ display(FileLink(zip_path))
     )
 
 
+def submission_notebook() -> dict:
+    return notebook(
+        [
+            md(
+                """
+# BirdCLEF+ 2026 - EfficientNet-B0 Submission
+
+Purpose: load the trained EfficientNet-B0 artifact, run soundscape inference, and write `submission.csv` for Kaggle.
+
+Artifacts are written to `/kaggle/working/artifacts/submission`.
+"""
+            ),
+            md("## 1. Setup"),
+            code(
+                COMMON_STYLE
+                + """
+try:
+    import timm
+except ImportError:
+    import sys
+    !{sys.executable} -m pip install -q timm
+    import timm
+
+import librosa
+import zipfile
+import torch
+from torch import nn
+from tqdm.auto import tqdm
+from IPython.display import FileLink
+
+torch.set_num_threads(min(2, os.cpu_count() or 1))
+
+
+class CFG(CFG):
+    artifact_dir = Path("/kaggle/working/artifacts/submission")
+    sample_rate = 32000
+    duration = 5.0
+    n_fft = 2048
+    hop_length = 512
+    n_mels = 128
+    fmin = 20
+    fmax = 16000
+    backbone = "efficientnet_b0"
+    batch_size = 32
+    checkpoint_path = None
+    labels_path = None
+
+
+CFG.artifact_dir.mkdir(parents=True, exist_ok=True)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Device: {device}")
+"""
+            ),
+            md("## 2. Locate Competition Files And Model Artifact"),
+            code(
+                """
+def find_file(filename: str, roots: list[Path]) -> Path:
+    for root in roots:
+        if not root.exists():
+            continue
+        direct = root / filename
+        if direct.exists():
+            return direct
+        matches = list(root.glob(f"**/{filename}"))
+        if matches:
+            return matches[0]
+    raise FileNotFoundError(f"Could not find {filename}. Attach the EfficientNet artifact dataset.")
+
+
+artifact_roots = [
+    Path("/kaggle/input"),
+    Path("/kaggle/working/artifacts/effnet_b0"),
+    Path("artifacts/effnet_b0"),
+]
+sample_path = CFG.data_root / "sample_submission.csv"
+checkpoint_path = Path(CFG.checkpoint_path) if CFG.checkpoint_path else find_file("best_effnet_b0.pt", artifact_roots)
+labels_path = Path(CFG.labels_path) if CFG.labels_path else find_file("labels.json", artifact_roots)
+
+sample_submission = pd.read_csv(sample_path)
+idx_to_label = {int(k): v for k, v in json.loads(labels_path.read_text()).items()}
+labels = [idx_to_label[i] for i in sorted(idx_to_label)]
+label_to_idx = {label: i for i, label in enumerate(labels)}
+target_columns = [c for c in sample_submission.columns if c != "row_id"]
+
+print(f"Sample submission: {sample_path}")
+print(f"Checkpoint: {checkpoint_path}")
+print(f"Labels: {labels_path}")
+print(f"Rows: {len(sample_submission):,}")
+print(f"Submission target columns: {len(target_columns):,}")
+print(f"Model classes: {len(labels):,}")
+display(sample_submission.head())
+"""
+            ),
+            md("## 3. Build Model And Audio Helpers"),
+            code(
+                """
+class BirdClassifier(nn.Module):
+    def __init__(self, num_classes: int):
+        super().__init__()
+        self.model = timm.create_model(
+            CFG.backbone,
+            pretrained=False,
+            in_chans=1,
+            num_classes=num_classes,
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+
+def torch_load(path: Path):
+    try:
+        return torch.load(path, map_location=device, weights_only=False)
+    except TypeError:
+        return torch.load(path, map_location=device)
+
+
+checkpoint = torch_load(checkpoint_path)
+model = BirdClassifier(num_classes=len(labels)).to(device)
+model.load_state_dict(checkpoint["model"])
+model.eval()
+
+
+def row_to_stem_and_end_time(row_id: str) -> tuple[str, float]:
+    stem, sep, end = str(row_id).rpartition("_")
+    if sep and end.replace(".", "", 1).isdigit():
+        return stem, float(end)
+    return str(row_id), CFG.duration
+
+
+def build_audio_index() -> dict[str, Path]:
+    candidates = [
+        CFG.data_root / "test_soundscapes",
+        CFG.data_root / "test_audio",
+        CFG.data_root / "train_soundscapes",
+    ]
+    audio_index = {}
+    for folder in candidates:
+        if folder.exists():
+            for ext in ("*.ogg", "*.wav", "*.flac", "*.mp3"):
+                for path in folder.glob(ext):
+                    audio_index[path.stem] = path
+    return audio_index
+
+
+audio_index = build_audio_index()
+print(f"Indexed audio files: {len(audio_index):,}")
+"""
+            ),
+            md("## 4. Run Inference"),
+            code(
+                """
+def load_audio_segment(path: Path, end_time: float) -> np.ndarray:
+    offset = max(0.0, float(end_time) - CFG.duration)
+    target_len = int(CFG.sample_rate * CFG.duration)
+    y, _ = librosa.load(path, sr=CFG.sample_rate, mono=True, offset=offset, duration=CFG.duration)
+    if len(y) < target_len:
+        y = np.pad(y, (0, target_len - len(y)))
+    return y[:target_len].astype(np.float32)
+
+
+def audio_to_mel(y: np.ndarray) -> np.ndarray:
+    mel = librosa.feature.melspectrogram(
+        y=y,
+        sr=CFG.sample_rate,
+        n_fft=CFG.n_fft,
+        hop_length=CFG.hop_length,
+        n_mels=CFG.n_mels,
+        fmin=CFG.fmin,
+        fmax=CFG.fmax,
+        power=2.0,
+    )
+    mel = librosa.power_to_db(mel, ref=np.max)
+    mel = (mel - mel.mean()) / (mel.std() + 1e-6)
+    return mel.astype(np.float32)
+
+
+def predict_batch(batch: list[np.ndarray]) -> np.ndarray:
+    x = torch.from_numpy(np.stack(batch)).unsqueeze(1).to(device)
+    with torch.no_grad():
+        logits = model(x)
+        probs = torch.softmax(logits, dim=1).cpu().numpy()
+    return probs
+
+
+submission = sample_submission.copy()
+for col in target_columns:
+    submission[col] = 0.0
+
+batch = []
+batch_rows = []
+missing_audio = []
+
+for row_idx, row_id in tqdm(list(enumerate(submission["row_id"])), desc="inference"):
+    stem, end_time = row_to_stem_and_end_time(row_id)
+    audio_path = audio_index.get(stem)
+    if audio_path is None:
+        missing_audio.append(row_id)
+        continue
+    batch.append(audio_to_mel(load_audio_segment(audio_path, end_time)))
+    batch_rows.append(row_idx)
+    if len(batch) == CFG.batch_size:
+        probs = predict_batch(batch)
+        for local_idx, submit_idx in enumerate(batch_rows):
+            for label, class_idx in label_to_idx.items():
+                if label in target_columns:
+                    submission.loc[submit_idx, label] = probs[local_idx, class_idx]
+        batch = []
+        batch_rows = []
+
+if batch:
+    probs = predict_batch(batch)
+    for local_idx, submit_idx in enumerate(batch_rows):
+        for label, class_idx in label_to_idx.items():
+            if label in target_columns:
+                submission.loc[submit_idx, label] = probs[local_idx, class_idx]
+
+missing_audio_path = CFG.artifact_dir / "missing_test_audio.json"
+missing_audio_path.write_text(json.dumps(missing_audio, indent=2), encoding="utf-8")
+print(f"Missing audio rows: {len(missing_audio):,}")
+display(submission.head())
+"""
+            ),
+            md("## 5. Save Submission And Package Artifacts"),
+            code(
+                """
+submission_path = Path("/kaggle/working/submission.csv")
+submission.to_csv(submission_path, index=False)
+submission.to_csv(CFG.artifact_dir / "submission.csv", index=False)
+
+zip_path = Path("/kaggle/working/birdclef_effnet_b0_submission_artifacts.zip")
+with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+    zf.write(submission_path, arcname="submission.csv")
+    for path in sorted(CFG.artifact_dir.rglob("*")):
+        if path.is_file():
+            zf.write(path, arcname=path.relative_to(CFG.artifact_dir.parent))
+
+print(f"Wrote submission: {submission_path}")
+print(f"Wrote artifact zip: {zip_path} ({zip_path.stat().st_size / 1024 / 1024:.2f} MB)")
+display(FileLink(submission_path))
+display(FileLink(zip_path))
+"""
+            ),
+        ]
+    )
+
+
 def main() -> None:
     NOTEBOOK_DIR.mkdir(parents=True, exist_ok=True)
     outputs = {
         "01_data_eda.ipynb": eda_notebook(),
         "02_effnet_b0_baseline.ipynb": effnet_notebook(),
         "03_perch_v2_probe.ipynb": perch_notebook(),
+        "04_effnet_b0_submission.ipynb": submission_notebook(),
     }
     for name, nb in outputs.items():
         path = NOTEBOOK_DIR / name
