@@ -1508,6 +1508,8 @@ def perch_submission_notebook() -> dict:
 
 Purpose: load Google Perch v2, extract test soundscape embeddings, apply the trained PyTorch probe, and write `submission.csv` for Kaggle.
 
+Important: the current Perch v2 SavedModel export is CUDA-only and is too slow for strict competition rerun limits. Use this notebook for diagnostics or offline artifact generation. For official fast submission, use `04_effnet_b0_submission.ipynb` or train a fast student model distilled from Perch.
+
 Artifacts are written to `/kaggle/working/artifacts/perch_submission`.
 """
             ),
@@ -1612,12 +1614,19 @@ class CFG(CFG):
     perch_model_dir = None
     probe_checkpoint_path = None
     labels_path = None
+    require_cuda_perch = True
 
 
 CFG.artifact_dir.mkdir(parents=True, exist_ok=True)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Device: {device}")
 print(f"TensorFlow: {tf.__version__}")
+if CFG.require_cuda_perch and device.type != "cuda":
+    raise RuntimeError(
+        "This Perch v2 SavedModel is CUDA-only. CPU execution fails with: "
+        "'The current platform CPU is not among the platforms required by the module: [CUDA]'. "
+        "Use a GPU session for Perch diagnostics, or use the EfficientNet submission notebook for competition reruns."
+    )
 """
             ),
             md("## 2. Locate Competition Files And Model Artifacts"),
