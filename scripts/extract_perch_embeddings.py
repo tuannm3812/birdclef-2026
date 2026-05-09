@@ -37,6 +37,7 @@ def main() -> None:
 
     model = tf.saved_model.load(str(model_dir))
     infer = model.signatures["serving_default"]
+    smoke_test_perch(infer, tf, int(cfg["audio"]["sample_rate"]), float(cfg["audio"]["duration"]))
     audio_cfg = cfg["audio"]
     embeddings = []
 
@@ -44,11 +45,14 @@ def main() -> None:
         y = load_audio(path, int(audio_cfg["sample_rate"]), float(audio_cfg["duration"]))
         batch = tf.convert_to_tensor(y[None, :], dtype=tf.float32)
         _, keyword_specs = infer.structured_input_signature
-        if keyword_specs:
-            input_name = next(iter(keyword_specs))
-            outputs = infer(**{input_name: batch})
-        else:
-            outputs = infer(batch)
+        try:
+            if keyword_specs:
+                input_name = next(iter(keyword_specs))
+                outputs = infer(**{input_name: batch})
+            else:
+                outputs = infer(batch)
+        except Exception as error:
+            explain_perch_runtime_error(error)
         arrays = {name: np.asarray(value) for name, value in outputs.items()}
         embedding_name = next(
             (name for name in arrays if "embedding" in name.lower() or "embed" in name.lower()),
@@ -82,6 +86,31 @@ def to_2d_embeddings(embeddings: np.ndarray) -> np.ndarray:
     if embeddings.ndim == 3:
         return embeddings.mean(axis=1)
     return embeddings.reshape(embeddings.shape[0], -1)
+
+
+def smoke_test_perch(infer, tf, sample_rate: int, duration: float) -> None:
+    dummy = tf.zeros((1, int(sample_rate * duration)), dtype=tf.float32)
+    _, keyword_specs = infer.structured_input_signature
+    try:
+        if keyword_specs:
+            input_name = next(iter(keyword_specs))
+            infer(**{input_name: dummy})
+        else:
+            infer(dummy)
+    except Exception as error:
+        explain_perch_runtime_error(error)
+
+
+def explain_perch_runtime_error(error: Exception) -> None:
+    message = str(error)
+    if "XlaCallModuleOp with version 10 is not supported" in message:
+        raise RuntimeError(
+            "The attached Perch SavedModel requires a newer TensorFlow/XLA runtime. "
+            "Upgrade TensorFlow before importing/loading the model, for example with "
+            "`pip install --upgrade tensorflow==2.20.0`, then restart the Python process. "
+            "If package installation is unavailable, use an older compatible Perch SavedModel export."
+        ) from error
+    raise error
 
 
 if __name__ == "__main__":

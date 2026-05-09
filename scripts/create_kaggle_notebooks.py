@@ -889,11 +889,22 @@ class CFG(CFG):
     lr = 1e-3
     max_samples = None
     perch_model_dir = None
+    # Perch v2 model version 2 may require a newer TensorFlow/XLA runtime than
+    # Kaggle's default image. Set this to True and run the setup cell first if
+    # you see "XlaCallModuleOp with version 10 is not supported".
+    install_newer_tensorflow = False
+    tensorflow_package = "tensorflow==2.20.0"
 
 
 CFG.artifact_dir.mkdir(parents=True, exist_ok=True)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Device: {device}")
+if CFG.install_newer_tensorflow:
+    import sys
+    !{sys.executable} -m pip install -q --upgrade {CFG.tensorflow_package}
+    raise SystemExit("TensorFlow was upgraded. Restart the Kaggle session, then run the notebook from the top.")
+if tf is not None:
+    print(f"TensorFlow: {tf.__version__}")
 """
             ),
             md("## 2. Load Metadata"),
@@ -941,6 +952,35 @@ infer = perch.signatures["serving_default"]
 print(f"Perch model: {perch_model_dir}")
 print(f"Inputs: {infer.structured_input_signature}")
 print(f"Outputs: {infer.structured_outputs}")
+
+
+def explain_perch_runtime_error(error: Exception) -> None:
+    message = str(error)
+    if "XlaCallModuleOp with version 10 is not supported" in message:
+        raise RuntimeError(
+            "The attached Perch SavedModel requires a newer TensorFlow/XLA runtime than this Kaggle image. "
+            "Set CFG.install_newer_tensorflow = True in the setup cell, run that cell once, restart the "
+            "Kaggle session, then run the notebook from the top. If internet is disabled, attach a Kaggle "
+            "dataset containing a compatible TensorFlow wheel or use an older Perch SavedModel export."
+        ) from error
+    raise error
+
+
+def smoke_test_perch() -> None:
+    dummy = tf.zeros((1, int(CFG.sample_rate * CFG.duration)), dtype=tf.float32)
+    _, keyword_specs = infer.structured_input_signature
+    try:
+        if keyword_specs:
+            input_name = next(iter(keyword_specs))
+            outputs = infer(**{input_name: dummy})
+        else:
+            outputs = infer(dummy)
+    except Exception as error:
+        explain_perch_runtime_error(error)
+    print({name: tuple(value.shape) for name, value in outputs.items()})
+
+
+smoke_test_perch()
 """
             ),
             md("## 4. Extract Embeddings"),
@@ -959,9 +999,15 @@ def run_perch_batch(batch_waveforms: np.ndarray) -> np.ndarray:
     _, keyword_specs = infer.structured_input_signature
     if keyword_specs:
         input_name = next(iter(keyword_specs))
-        outputs = infer(**{input_name: tensor})
+        try:
+            outputs = infer(**{input_name: tensor})
+        except Exception as error:
+            explain_perch_runtime_error(error)
     else:
-        outputs = infer(tensor)
+        try:
+            outputs = infer(tensor)
+        except Exception as error:
+            explain_perch_runtime_error(error)
     arrays = {name: np.asarray(value) for name, value in outputs.items()}
     embedding_name = next(
         (name for name in arrays if "embedding" in name.lower() or "embed" in name.lower()),
