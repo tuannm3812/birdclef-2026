@@ -895,7 +895,7 @@ installed_tf = package_version("tensorflow")
 if installed_tf is None or version_tuple(installed_tf) < version_tuple(REQUIRED_TENSORFLOW_VERSION):
     import sys
     print(f"TensorFlow {installed_tf} is not compatible with Perch v2 export 2.")
-    print(f"Installing tensorflow=={REQUIRED_TENSORFLOW_VERSION}. Restart the Kaggle session after this cell stops.")
+    print(f"Installing tensorflow=={REQUIRED_TENSORFLOW_VERSION} before importing TensorFlow.")
     if OFFLINE_TENSORFLOW_WHEELHOUSE.exists():
         subprocess.run(
             [
@@ -938,7 +938,7 @@ if installed_tf is None or version_tuple(installed_tf) < version_tuple(REQUIRED_
             "for this notebook or attach an offline TensorFlow wheelhouse dataset and set "
             "OFFLINE_TENSORFLOW_WHEELHOUSE to that /kaggle/input path."
         )
-    raise SystemExit("TensorFlow was upgraded. Restart the Kaggle session, then run the notebook from the top.")
+    print(f"TensorFlow package is now {installed_tf}; importing TensorFlow next.")
 
 try:
     import tensorflow as tf
@@ -1551,7 +1551,7 @@ installed_tf = package_version("tensorflow")
 if installed_tf is None or version_tuple(installed_tf) < version_tuple(REQUIRED_TENSORFLOW_VERSION):
     import sys
     print(f"TensorFlow {installed_tf} is not compatible with Perch v2 export 2.")
-    print(f"Installing tensorflow=={REQUIRED_TENSORFLOW_VERSION}. Restart the Kaggle session after this cell stops.")
+    print(f"Installing tensorflow=={REQUIRED_TENSORFLOW_VERSION} before importing TensorFlow.")
     if OFFLINE_TENSORFLOW_WHEELHOUSE.exists():
         subprocess.run(
             [
@@ -1594,7 +1594,7 @@ if installed_tf is None or version_tuple(installed_tf) < version_tuple(REQUIRED_
             "for this notebook or attach an offline TensorFlow wheelhouse dataset and set "
             "OFFLINE_TENSORFLOW_WHEELHOUSE to that /kaggle/input path."
         )
-    raise SystemExit("TensorFlow was upgraded. Restart the Kaggle session, then run the notebook from the top.")
+    print(f"TensorFlow package is now {installed_tf}; importing TensorFlow next.")
 
 import tensorflow as tf
 
