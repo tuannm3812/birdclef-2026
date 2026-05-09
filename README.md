@@ -1,5 +1,20 @@
 # BirdCLEF+ 2026
 
+<p align="center">
+  <img src="https://kaggle.com/competitions/129329/images/header" alt="BirdCLEF+ 2026 competition header" width="100%">
+</p>
+
+<p align="center">
+  <a href="https://www.kaggle.com/competitions/birdclef-2026">
+    <img src="https://img.shields.io/badge/Kaggle-BirdCLEF%2B%202026-20BEFF?logo=kaggle&logoColor=white" alt="Kaggle competition">
+  </a>
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/PyTorch-EfficientNet--B0-EE4C2C?logo=pytorch&logoColor=white" alt="PyTorch EfficientNet-B0">
+  <img src="https://img.shields.io/badge/TensorFlow-Perch%20v2-FF6F00?logo=tensorflow&logoColor=white" alt="TensorFlow Perch v2">
+  <img src="https://img.shields.io/badge/Notebooks-3%20Kaggle--ready-F37626?logo=jupyter&logoColor=white" alt="Three Kaggle-ready notebooks">
+  <img src="https://img.shields.io/badge/Status-Active-success" alt="Project status">
+</p>
+
 Professional Kaggle workspace for the BirdCLEF+ 2026 bioacoustic classification competition. The repo separates exploratory notebooks, Kaggle-ready training notebooks, reusable Python modules, and command-line scripts for repeatable experiments.
 
 ## Project Structure
