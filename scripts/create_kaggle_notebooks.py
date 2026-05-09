@@ -191,13 +191,18 @@ display(train.head())
             md("## 3. Dataset Schema And Missingness"),
             code(
                 """
+def safe_nunique(series: pd.Series) -> int:
+    values = series.map(lambda x: tuple(x) if isinstance(x, list) else x)
+    return int(values.nunique(dropna=True))
+
+
 schema = pd.DataFrame(
     {
         "column": train.columns,
         "dtype": [str(train[col].dtype) for col in train.columns],
         "missing": [int(train[col].isna().sum()) for col in train.columns],
         "missing_pct": [float(train[col].isna().mean()) for col in train.columns],
-        "unique": [int(train[col].nunique(dropna=True)) for col in train.columns],
+        "unique": [safe_nunique(train[col]) for col in train.columns],
     }
 )
 schema.to_csv(CFG.artifact_dir / "train_schema_missingness.csv", index=False)
