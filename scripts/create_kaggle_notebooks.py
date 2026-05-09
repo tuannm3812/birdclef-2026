@@ -869,6 +869,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm.auto import tqdm
 
 REQUIRED_TENSORFLOW_VERSION = "2.20.0"
+OFFLINE_TENSORFLOW_WHEELHOUSE = None
 
 
 def package_version(package_name: str) -> str | None:
@@ -894,7 +895,17 @@ if installed_tf is None or version_tuple(installed_tf) < version_tuple(REQUIRED_
     import sys
     print(f"TensorFlow {installed_tf} is not compatible with Perch v2 export 2.")
     print(f"Installing tensorflow=={REQUIRED_TENSORFLOW_VERSION}. Restart the Kaggle session after this cell stops.")
-    !{sys.executable} -m pip install -q --upgrade tensorflow=={REQUIRED_TENSORFLOW_VERSION}
+    if OFFLINE_TENSORFLOW_WHEELHOUSE:
+        !{sys.executable} -m pip install -q --no-index --find-links {OFFLINE_TENSORFLOW_WHEELHOUSE} tensorflow=={REQUIRED_TENSORFLOW_VERSION}
+    else:
+        !{sys.executable} -m pip install -q --upgrade tensorflow=={REQUIRED_TENSORFLOW_VERSION}
+    installed_tf = package_version("tensorflow")
+    if installed_tf is None or version_tuple(installed_tf) < version_tuple(REQUIRED_TENSORFLOW_VERSION):
+        raise RuntimeError(
+            "TensorFlow upgrade did not complete. If Kaggle shows DNS or connection errors, enable Internet "
+            "for this notebook or attach an offline TensorFlow wheelhouse dataset and set "
+            "OFFLINE_TENSORFLOW_WHEELHOUSE to that /kaggle/input path."
+        )
     raise SystemExit("TensorFlow was upgraded. Restart the Kaggle session, then run the notebook from the top.")
 
 try:
@@ -1482,6 +1493,7 @@ from tqdm.auto import tqdm
 from IPython.display import FileLink
 
 REQUIRED_TENSORFLOW_VERSION = "2.20.0"
+OFFLINE_TENSORFLOW_WHEELHOUSE = None
 
 
 def package_version(package_name: str) -> str | None:
@@ -1507,7 +1519,17 @@ if installed_tf is None or version_tuple(installed_tf) < version_tuple(REQUIRED_
     import sys
     print(f"TensorFlow {installed_tf} is not compatible with Perch v2 export 2.")
     print(f"Installing tensorflow=={REQUIRED_TENSORFLOW_VERSION}. Restart the Kaggle session after this cell stops.")
-    !{sys.executable} -m pip install -q --upgrade tensorflow=={REQUIRED_TENSORFLOW_VERSION}
+    if OFFLINE_TENSORFLOW_WHEELHOUSE:
+        !{sys.executable} -m pip install -q --no-index --find-links {OFFLINE_TENSORFLOW_WHEELHOUSE} tensorflow=={REQUIRED_TENSORFLOW_VERSION}
+    else:
+        !{sys.executable} -m pip install -q --upgrade tensorflow=={REQUIRED_TENSORFLOW_VERSION}
+    installed_tf = package_version("tensorflow")
+    if installed_tf is None or version_tuple(installed_tf) < version_tuple(REQUIRED_TENSORFLOW_VERSION):
+        raise RuntimeError(
+            "TensorFlow upgrade did not complete. If Kaggle shows DNS or connection errors, enable Internet "
+            "for this notebook or attach an offline TensorFlow wheelhouse dataset and set "
+            "OFFLINE_TENSORFLOW_WHEELHOUSE to that /kaggle/input path."
+        )
     raise SystemExit("TensorFlow was upgraded. Restart the Kaggle session, then run the notebook from the top.")
 
 import tensorflow as tf
