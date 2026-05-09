@@ -1788,7 +1788,7 @@ def run_perch_batch(batch_waveforms: np.ndarray) -> np.ndarray:
     return value.astype(np.float32)
 
 
-if not use_cached_embeddings:
+if not use_cached_embeddings and not use_sample_submission_only:
     dummy = np.zeros((1, int(CFG.sample_rate * CFG.duration)), dtype=np.float32)
     dummy_embedding = run_perch_batch(dummy)
 print(f"Embedding shape: {dummy_embedding.shape}")
@@ -1816,12 +1816,13 @@ def torch_load(path: Path):
         return torch.load(path, map_location=device)
 
 
-checkpoint = torch_load(probe_checkpoint_path)
 probe = PerchProbe(embedding_dim=dummy_embedding.shape[1], num_classes=len(labels)).to(device)
-if "model" in checkpoint:
-    probe.load_state_dict(checkpoint["model"])
-else:
-    probe.load_state_dict(checkpoint)
+if not use_sample_submission_only:
+    checkpoint = torch_load(probe_checkpoint_path)
+    if "model" in checkpoint:
+        probe.load_state_dict(checkpoint["model"])
+    else:
+        probe.load_state_dict(checkpoint)
 probe.eval()
 """
             ),
