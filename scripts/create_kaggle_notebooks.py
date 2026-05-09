@@ -1692,6 +1692,8 @@ idx_to_label = {int(k): v for k, v in json.loads(labels_path.read_text()).items(
 labels = [idx_to_label[i] for i in sorted(idx_to_label)]
 label_to_idx = {label: i for i, label in enumerate(labels)}
 target_columns = [c for c in sample_submission.columns if c != "row_id"]
+test_soundscape_files = sorted((CFG.data_root / "test_soundscapes").glob("*.ogg"))
+use_sample_submission_only = len(test_soundscape_files) == 0 and len(sample_submission) <= 3
 
 cache_meta_path, cache_arrays_path = find_perch_cache()
 use_cached_embeddings = False
@@ -1703,10 +1705,14 @@ if cache_meta_path is not None and cache_arrays_path is not None:
     print(f"Perch cache: {cache_meta_path}")
     print(f"Cache rows: {len(cache_row_ids):,}; requested rows: {len(requested_row_ids):,}; covers submission: {use_cached_embeddings}")
 
-perch_model_dir = None if use_cached_embeddings else find_perch_model_dir()
+perch_model_dir = None if (use_cached_embeddings or use_sample_submission_only) else find_perch_model_dir()
 
 print(f"Sample submission: {sample_path}")
-print(f"Perch model: {perch_model_dir if perch_model_dir is not None else 'not needed; using cached embeddings'}")
+if use_sample_submission_only:
+    print("Public dry-run detected: no test soundscapes and sample_submission has <= 3 rows.")
+    print("Perch model: not needed; writing sample_submission.csv unchanged.")
+else:
+    print(f"Perch model: {perch_model_dir if perch_model_dir is not None else 'not needed; using cached embeddings'}")
 print(f"Probe checkpoint: {probe_checkpoint_path}")
 print(f"Labels: {labels_path}")
 print(f"Rows: {len(sample_submission):,}")
@@ -1722,7 +1728,10 @@ cache_meta = None
 cache_embeddings = None
 cache_row_to_idx = None
 
-if use_cached_embeddings:
+if use_sample_submission_only:
+    dummy_embedding = np.zeros((1, 1536), dtype=np.float32)
+    print("Skipping Perch/probe loading for public dry-run.")
+elif use_cached_embeddings:
     cache_meta = pd.read_parquet(cache_meta_path)
     cache_arrays = np.load(cache_arrays_path)
     cache_embeddings = cache_arrays["emb_full"].astype(np.float32)
@@ -1809,7 +1818,10 @@ def torch_load(path: Path):
 
 checkpoint = torch_load(probe_checkpoint_path)
 probe = PerchProbe(embedding_dim=dummy_embedding.shape[1], num_classes=len(labels)).to(device)
-probe.load_state_dict(checkpoint["model"])
+if "model" in checkpoint:
+    probe.load_state_dict(checkpoint["model"])
+else:
+    probe.load_state_dict(checkpoint)
 probe.eval()
 """
             ),
@@ -1870,7 +1882,9 @@ waveforms = []
 batch_rows = []
 missing_audio = []
 
-if use_cached_embeddings:
+if use_sample_submission_only:
+    submission = sample_submission.copy()
+elif use_cached_embeddings:
     cached = cache_embeddings[[cache_row_to_idx[str(row_id)] for row_id in submission["row_id"].astype(str)]]
     for start in tqdm(range(0, len(submission), CFG.probe_batch_size), desc="cached probe"):
         end = min(start + CFG.probe_batch_size, len(submission))
