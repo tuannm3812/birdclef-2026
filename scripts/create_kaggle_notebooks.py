@@ -1456,6 +1456,326 @@ display(FileLink(zip_path))
     )
 
 
+def perch_submission_notebook() -> dict:
+    return notebook(
+        [
+            md(
+                """
+# BirdCLEF+ 2026 - Perch v2 Probe Submission
+
+Purpose: load Google Perch v2, extract test soundscape embeddings, apply the trained PyTorch probe, and write `submission.csv` for Kaggle.
+
+Artifacts are written to `/kaggle/working/artifacts/perch_submission`.
+"""
+            ),
+            md("## 1. Setup"),
+            code(
+                COMMON_STYLE
+                + """
+import zipfile
+from importlib.metadata import PackageNotFoundError, version
+
+import librosa
+import torch
+from torch import nn
+from tqdm.auto import tqdm
+from IPython.display import FileLink
+
+REQUIRED_TENSORFLOW_VERSION = "2.20.0"
+
+
+def package_version(package_name: str) -> str | None:
+    try:
+        return version(package_name)
+    except PackageNotFoundError:
+        return None
+
+
+def version_tuple(value: str) -> tuple[int, ...]:
+    core = value.split("+")[0].split("-")[0]
+    parts = []
+    for part in core.split("."):
+        if part.isdigit():
+            parts.append(int(part))
+        else:
+            break
+    return tuple(parts)
+
+
+installed_tf = package_version("tensorflow")
+if installed_tf is None or version_tuple(installed_tf) < version_tuple(REQUIRED_TENSORFLOW_VERSION):
+    import sys
+    print(f"TensorFlow {installed_tf} is not compatible with Perch v2 export 2.")
+    print(f"Installing tensorflow=={REQUIRED_TENSORFLOW_VERSION}. Restart the Kaggle session after this cell stops.")
+    !{sys.executable} -m pip install -q --upgrade tensorflow=={REQUIRED_TENSORFLOW_VERSION}
+    raise SystemExit("TensorFlow was upgraded. Restart the Kaggle session, then run the notebook from the top.")
+
+import tensorflow as tf
+
+torch.set_num_threads(min(2, os.cpu_count() or 1))
+
+
+class CFG(CFG):
+    artifact_dir = Path("/kaggle/working/artifacts/perch_submission")
+    sample_rate = 32000
+    duration = 5.0
+    extraction_batch_size = 8
+    probe_batch_size = 256
+    hidden_dim = 512
+    dropout = 0.25
+    perch_model_dir = None
+    probe_checkpoint_path = None
+    labels_path = None
+
+
+CFG.artifact_dir.mkdir(parents=True, exist_ok=True)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Device: {device}")
+print(f"TensorFlow: {tf.__version__}")
+"""
+            ),
+            md("## 2. Locate Competition Files And Model Artifacts"),
+            code(
+                """
+def find_file(filename: str, roots: list[Path]) -> Path:
+    for root in roots:
+        if not root.exists():
+            continue
+        direct = root / filename
+        if direct.exists():
+            return direct
+        matches = list(root.glob(f"**/{filename}"))
+        if matches:
+            return matches[0]
+    raise FileNotFoundError(f"Could not find {filename}. Attach the Perch probe model artifact.")
+
+
+def find_perch_model_dir() -> Path:
+    if CFG.perch_model_dir:
+        return Path(CFG.perch_model_dir)
+    input_root = Path("/kaggle/input")
+    matches = list(input_root.glob("**/saved_model.pb")) if input_root.exists() else []
+    matches = [path.parent for path in matches if "perch" in str(path).lower() or "vocal" in str(path).lower()]
+    if matches:
+        return matches[0]
+    raise FileNotFoundError("Could not find Google Perch v2 SavedModel. Attach the Kaggle Perch model.")
+
+
+artifact_roots = [Path("/kaggle/input"), Path("artifacts/perch_v2")]
+sample_path = CFG.data_root / "sample_submission.csv"
+probe_checkpoint_path = Path(CFG.probe_checkpoint_path) if CFG.probe_checkpoint_path else find_file("best_perch_probe.pt", artifact_roots)
+labels_path = Path(CFG.labels_path) if CFG.labels_path else find_file("labels.json", artifact_roots)
+perch_model_dir = find_perch_model_dir()
+
+sample_submission = pd.read_csv(sample_path)
+idx_to_label = {int(k): v for k, v in json.loads(labels_path.read_text()).items()}
+labels = [idx_to_label[i] for i in sorted(idx_to_label)]
+label_to_idx = {label: i for i, label in enumerate(labels)}
+target_columns = [c for c in sample_submission.columns if c != "row_id"]
+
+print(f"Sample submission: {sample_path}")
+print(f"Perch model: {perch_model_dir}")
+print(f"Probe checkpoint: {probe_checkpoint_path}")
+print(f"Labels: {labels_path}")
+print(f"Rows: {len(sample_submission):,}")
+print(f"Submission target columns: {len(target_columns):,}")
+print(f"Probe classes: {len(labels):,}")
+display(sample_submission.head())
+"""
+            ),
+            md("## 3. Load Perch And Probe"),
+            code(
+                """
+perch = tf.saved_model.load(str(perch_model_dir))
+infer = perch.signatures["serving_default"]
+print(f"Inputs: {infer.structured_input_signature}")
+print(f"Outputs: {infer.structured_outputs}")
+
+
+def explain_perch_runtime_error(error: Exception) -> None:
+    message = str(error)
+    if "XlaCallModuleOp with version 10 is not supported" in message:
+        raise RuntimeError(
+            "This Perch SavedModel requires TensorFlow/XLA >= the version installed in this session. "
+            "The setup cell should install tensorflow>=2.20 before import. Restart the Kaggle session "
+            "after installation, then run from the top."
+        ) from error
+    raise error
+
+
+def run_perch_batch(batch_waveforms: np.ndarray) -> np.ndarray:
+    tensor = tf.convert_to_tensor(batch_waveforms, dtype=tf.float32)
+    _, keyword_specs = infer.structured_input_signature
+    try:
+        if keyword_specs:
+            input_name = next(iter(keyword_specs))
+            outputs = infer(**{input_name: tensor})
+        else:
+            outputs = infer(tensor)
+    except Exception as error:
+        explain_perch_runtime_error(error)
+
+    arrays = {name: np.asarray(value) for name, value in outputs.items()}
+    embedding_name = next(
+        (name for name in arrays if "embedding" in name.lower() and "spatial" not in name.lower()),
+        next(iter(arrays)),
+    )
+    value = arrays[embedding_name]
+    if value.ndim == 3:
+        value = value.mean(axis=1)
+    elif value.ndim > 3:
+        value = value.reshape(value.shape[0], -1)
+    return value.astype(np.float32)
+
+
+dummy = np.zeros((1, int(CFG.sample_rate * CFG.duration)), dtype=np.float32)
+dummy_embedding = run_perch_batch(dummy)
+print(f"Smoke-test embedding shape: {dummy_embedding.shape}")
+
+
+class PerchProbe(nn.Module):
+    def __init__(self, embedding_dim: int, num_classes: int):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.LayerNorm(embedding_dim),
+            nn.Linear(embedding_dim, CFG.hidden_dim),
+            nn.ReLU(inplace=True),
+            nn.Dropout(CFG.dropout),
+            nn.Linear(CFG.hidden_dim, num_classes),
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+
+def torch_load(path: Path):
+    try:
+        return torch.load(path, map_location=device, weights_only=False)
+    except TypeError:
+        return torch.load(path, map_location=device)
+
+
+checkpoint = torch_load(probe_checkpoint_path)
+probe = PerchProbe(embedding_dim=dummy_embedding.shape[1], num_classes=len(labels)).to(device)
+probe.load_state_dict(checkpoint["model"])
+probe.eval()
+"""
+            ),
+            md("## 4. Build Test Audio Index"),
+            code(
+                """
+def row_to_stem_and_end_time(row_id: str) -> tuple[str, float]:
+    stem, sep, end = str(row_id).rpartition("_")
+    if sep and end.replace(".", "", 1).isdigit():
+        return stem, float(end)
+    return str(row_id), CFG.duration
+
+
+def build_audio_index() -> dict[str, Path]:
+    candidates = [
+        CFG.data_root / "test_soundscapes",
+        CFG.data_root / "test_audio",
+        CFG.data_root / "train_soundscapes",
+    ]
+    audio_index = {}
+    for folder in candidates:
+        if folder.exists():
+            for ext in ("*.ogg", "*.wav", "*.flac", "*.mp3"):
+                for path in folder.glob(ext):
+                    audio_index[path.stem] = path
+    return audio_index
+
+
+def load_audio_segment(path: Path, end_time: float) -> np.ndarray:
+    offset = max(0.0, float(end_time) - CFG.duration)
+    target_len = int(CFG.sample_rate * CFG.duration)
+    y, _ = librosa.load(path, sr=CFG.sample_rate, mono=True, offset=offset, duration=CFG.duration)
+    if len(y) < target_len:
+        y = np.pad(y, (0, target_len - len(y)))
+    return y[:target_len].astype(np.float32)
+
+
+audio_index = build_audio_index()
+print(f"Indexed audio files: {len(audio_index):,}")
+"""
+            ),
+            md("## 5. Run Perch Probe Inference"),
+            code(
+                """
+def predict_probe(embeddings: np.ndarray) -> np.ndarray:
+    x = torch.from_numpy(embeddings.astype(np.float32)).to(device)
+    with torch.no_grad():
+        logits = probe(x)
+        probs = torch.softmax(logits, dim=1).cpu().numpy()
+    return probs
+
+
+submission = sample_submission.copy()
+for col in target_columns:
+    submission[col] = 0.0
+
+waveforms = []
+batch_rows = []
+missing_audio = []
+
+for row_idx, row_id in tqdm(list(enumerate(submission["row_id"])), desc="perch submission"):
+    stem, end_time = row_to_stem_and_end_time(row_id)
+    audio_path = audio_index.get(stem)
+    if audio_path is None:
+        missing_audio.append(row_id)
+        continue
+
+    waveforms.append(load_audio_segment(audio_path, end_time))
+    batch_rows.append(row_idx)
+
+    if len(waveforms) == CFG.extraction_batch_size:
+        embeddings = run_perch_batch(np.stack(waveforms))
+        probs = predict_probe(embeddings)
+        for local_idx, submit_idx in enumerate(batch_rows):
+            for label, class_idx in label_to_idx.items():
+                if label in target_columns:
+                    submission.loc[submit_idx, label] = probs[local_idx, class_idx]
+        waveforms = []
+        batch_rows = []
+
+if waveforms:
+    embeddings = run_perch_batch(np.stack(waveforms))
+    probs = predict_probe(embeddings)
+    for local_idx, submit_idx in enumerate(batch_rows):
+        for label, class_idx in label_to_idx.items():
+            if label in target_columns:
+                submission.loc[submit_idx, label] = probs[local_idx, class_idx]
+
+missing_audio_path = CFG.artifact_dir / "missing_test_audio.json"
+missing_audio_path.write_text(json.dumps(missing_audio, indent=2), encoding="utf-8")
+print(f"Missing audio rows: {len(missing_audio):,}")
+display(submission.head())
+"""
+            ),
+            md("## 6. Save Submission And Package Artifacts"),
+            code(
+                """
+submission_path = Path("/kaggle/working/submission.csv")
+submission.to_csv(submission_path, index=False)
+submission.to_csv(CFG.artifact_dir / "submission.csv", index=False)
+
+zip_path = Path("/kaggle/working/birdclef_perch_v2_submission_artifacts.zip")
+with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+    zf.write(submission_path, arcname="submission.csv")
+    for path in sorted(CFG.artifact_dir.rglob("*")):
+        if path.is_file():
+            zf.write(path, arcname=path.relative_to(CFG.artifact_dir.parent))
+
+print(f"Wrote submission: {submission_path}")
+print(f"Wrote artifact zip: {zip_path} ({zip_path.stat().st_size / 1024 / 1024:.2f} MB)")
+display(FileLink(submission_path))
+display(FileLink(zip_path))
+"""
+            ),
+        ]
+    )
+
+
 def main() -> None:
     NOTEBOOK_DIR.mkdir(parents=True, exist_ok=True)
     outputs = {
@@ -1463,6 +1783,7 @@ def main() -> None:
         "02_effnet_b0_baseline.ipynb": effnet_notebook(),
         "03_perch_v2_probe.ipynb": perch_notebook(),
         "04_effnet_b0_submission.ipynb": submission_notebook(),
+        "05_perch_v2_submission.ipynb": perch_submission_notebook(),
     }
     for name, nb in outputs.items():
         path = NOTEBOOK_DIR / name
