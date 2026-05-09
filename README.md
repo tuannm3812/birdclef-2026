@@ -41,6 +41,7 @@ The canonical Kaggle notebooks are:
 
 EDA artifacts and summarized findings are available in [reports/eda](reports/eda).
 The trained EfficientNet-B0 baseline artifact is available in [artifacts/effnet_b0](artifacts/effnet_b0).
+The trained Perch v2 probe artifact is available in [artifacts/perch_v2](artifacts/perch_v2).
 
 ## Setup
 
