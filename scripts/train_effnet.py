@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -27,6 +28,11 @@ def main() -> None:
 
     cfg = load_config(args.config)
     seed_everything(int(cfg.get("seed", 42)))
+    torch.set_num_threads(min(2, os.cpu_count() or 1))
+    try:
+        torch.multiprocessing.set_sharing_strategy("file_system")
+    except RuntimeError:
+        pass
 
     train_cfg = cfg["train"]
     fold = int(args.fold if args.fold is not None else cfg.get("folds", {}).get("fold", 0))
@@ -55,7 +61,8 @@ def main() -> None:
     train_ds = BirdDataset(train_df, label_to_idx, audio_cfg, train=True)
     valid_ds = BirdDataset(valid_df, label_to_idx, audio_cfg, train=False)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    num_workers = int(train_cfg.get("num_workers", 0))
+    num_workers = effective_num_workers(int(train_cfg.get("num_workers", 0)))
+    print(f"Effective DataLoader workers: {num_workers}")
     train_loader = make_loader(train_ds, int(train_cfg["batch_size"]), True, num_workers, device)
     valid_loader = make_loader(valid_ds, int(train_cfg["batch_size"]) * 2, False, num_workers, device)
     model = BirdClassifier(
@@ -95,6 +102,12 @@ def main() -> None:
             )
 
     print(f"Best valid accuracy: {best_acc:.4f}")
+
+
+def effective_num_workers(configured_workers: int) -> int:
+    if Path("/kaggle/working").exists():
+        return 0
+    return configured_workers
 
 
 def make_loader(dataset, batch_size: int, shuffle: bool, num_workers: int, device: torch.device) -> DataLoader:

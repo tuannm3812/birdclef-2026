@@ -576,6 +576,11 @@ from tqdm.auto import tqdm
 torch.manual_seed(CFG.seed)
 torch.cuda.manual_seed_all(CFG.seed)
 torch.backends.cudnn.benchmark = True
+torch.set_num_threads(min(2, os.cpu_count() or 1))
+try:
+    torch.multiprocessing.set_sharing_strategy("file_system")
+except RuntimeError:
+    pass
 
 
 class CFG(CFG):
@@ -596,6 +601,7 @@ class CFG(CFG):
     # Kaggle notebooks can crash with multiprocessing DataLoader workers when
     # audio decoding happens inside __getitem__. Keep this at 0 for stability.
     num_workers = 0
+    force_single_process_loader = True
     lr = 3e-4
     weight_decay = 1e-2
     label_smoothing = 0.05
@@ -691,20 +697,28 @@ class BirdDataset(Dataset):
         return x, target
 
 
+def effective_num_workers() -> int:
+    if CFG.force_single_process_loader or Path("/kaggle/working").exists():
+        return 0
+    return int(CFG.num_workers)
+
+
 def make_loader(dataset: Dataset, batch_size: int, shuffle: bool) -> DataLoader:
+    workers = effective_num_workers()
     loader_kwargs = {
         "batch_size": batch_size,
         "shuffle": shuffle,
-        "num_workers": CFG.num_workers,
+        "num_workers": workers,
         "pin_memory": device.type == "cuda",
         "drop_last": False,
     }
-    if CFG.num_workers > 0:
+    if workers > 0:
         loader_kwargs["persistent_workers"] = True
         loader_kwargs["prefetch_factor"] = 2
     return DataLoader(dataset, **loader_kwargs)
 
 
+print(f"Effective DataLoader workers: {effective_num_workers()}")
 train_loader = make_loader(BirdDataset(train_df, train_mode=True), CFG.batch_size, True)
 valid_loader = make_loader(BirdDataset(valid_df, train_mode=False), CFG.batch_size * 2, False)
 """
