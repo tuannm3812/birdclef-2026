@@ -1,0 +1,782 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+
+NOTEBOOK_DIR = Path("notebooks")
+
+
+def md(source: str) -> dict:
+    return {"cell_type": "markdown", "metadata": {}, "source": lines(source)}
+
+
+def code(source: str) -> dict:
+    return {
+        "cell_type": "code",
+        "execution_count": None,
+        "metadata": {},
+        "outputs": [],
+        "source": lines(source),
+    }
+
+
+def lines(source: str) -> list[str]:
+    source = source.strip("\n")
+    return [line + "\n" for line in source.splitlines()]
+
+
+def notebook(cells: list[dict]) -> dict:
+    return {
+        "cells": cells,
+        "metadata": {
+            "kernelspec": {
+                "display_name": "Python 3",
+                "language": "python",
+                "name": "python3",
+            },
+            "language_info": {
+                "codemirror_mode": {"name": "ipython", "version": 3},
+                "file_extension": ".py",
+                "mimetype": "text/x-python",
+                "name": "python",
+                "nbconvert_exporter": "python",
+                "pygments_lexer": "ipython3",
+                "version": "3.10",
+            },
+        },
+        "nbformat": 4,
+        "nbformat_minor": 5,
+    }
+
+
+COMMON_STYLE = """
+from pathlib import Path
+import json
+import os
+import random
+import warnings
+
+import numpy as np
+import pandas as pd
+
+warnings.filterwarnings("ignore")
+pd.set_option("display.max_columns", 80)
+
+
+class CFG:
+    seed = 42
+    competition_name = "birdclef-2026"
+    data_root = None
+    artifact_dir = Path("/kaggle/working/artifacts")
+
+
+def seed_everything(seed: int = 42) -> None:
+    random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    np.random.seed(seed)
+
+
+def find_data_root() -> Path:
+    candidates = [
+        Path("/kaggle/input/birdclef-2026"),
+        Path("/kaggle/input/birdclef-2026-repack/birdclef-2026"),
+        Path("/kaggle/input/birdclef-2026-repack"),
+        Path("data/raw/birdclef-2026"),
+    ]
+    for path in candidates:
+        if (path / "train.csv").exists():
+            return path
+    input_root = Path("/kaggle/input")
+    if input_root.exists():
+        matches = list(input_root.glob("**/train.csv"))
+        if matches:
+            return matches[0].parent
+    raise FileNotFoundError("Could not find train.csv. Attach the BirdCLEF 2026 dataset.")
+
+
+def read_optional_csv(path: Path) -> pd.DataFrame | None:
+    return pd.read_csv(path) if path.exists() else None
+
+
+seed_everything(CFG.seed)
+CFG.data_root = find_data_root()
+CFG.artifact_dir.mkdir(parents=True, exist_ok=True)
+
+print(f"Data root: {CFG.data_root}")
+print(f"Artifacts: {CFG.artifact_dir}")
+"""
+
+
+def eda_notebook() -> dict:
+    return notebook(
+        [
+            md(
+                """
+# BirdCLEF+ 2026 - EDA
+
+Purpose: inspect labels, taxonomy, audio duration, secondary labels, and soundscape annotations.  
+Artifacts are written to `/kaggle/working/artifacts/eda`.
+"""
+            ),
+            md("## 1. Setup"),
+            code(
+                COMMON_STYLE
+                + """
+import ast
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+CFG.artifact_dir = CFG.artifact_dir / "eda"
+CFG.artifact_dir.mkdir(parents=True, exist_ok=True)
+sns.set_theme(style="whitegrid", context="notebook")
+"""
+            ),
+            md("## 2. Load Metadata"),
+            code(
+                """
+def parse_label_list(value) -> list[str]:
+    if isinstance(value, list):
+        return [str(x) for x in value]
+    if pd.isna(value):
+        return []
+    try:
+        parsed = ast.literal_eval(value)
+    except (ValueError, SyntaxError):
+        return []
+    return [str(x) for x in parsed] if isinstance(parsed, list) else []
+
+
+train = pd.read_csv(CFG.data_root / "train.csv")
+taxonomy = read_optional_csv(CFG.data_root / "taxonomy.csv")
+soundscape_labels = read_optional_csv(CFG.data_root / "train_soundscapes_labels.csv")
+sample_submission = read_optional_csv(CFG.data_root / "sample_submission.csv")
+
+train["filepath"] = train["filename"].map(lambda x: CFG.data_root / "train_audio" / x)
+train["secondary_labels"] = train.get("secondary_labels", "[]").map(parse_label_list)
+
+if taxonomy is not None and "primary_label" in taxonomy.columns:
+    train = train.merge(taxonomy, on="primary_label", how="left", suffixes=("", "_taxonomy"))
+
+display(train.head())
+print(f"Train rows: {len(train):,}")
+print(f"Primary classes: {train['primary_label'].nunique():,}")
+print(f"Taxonomy rows: {0 if taxonomy is None else len(taxonomy):,}")
+print(f"Soundscape label rows: {0 if soundscape_labels is None else len(soundscape_labels):,}")
+print(f"Sample submission rows: {0 if sample_submission is None else len(sample_submission):,}")
+"""
+            ),
+            md("## 3. Label Distribution"),
+            code(
+                """
+label_counts = (
+    train["primary_label"]
+    .value_counts()
+    .rename_axis("primary_label")
+    .reset_index(name="recordings")
+)
+label_counts["share"] = label_counts["recordings"] / label_counts["recordings"].sum()
+label_counts.to_csv(CFG.artifact_dir / "primary_label_counts.csv", index=False)
+
+display(label_counts.head(20))
+display(label_counts.tail(20))
+
+fig, ax = plt.subplots(figsize=(12, 5))
+sns.histplot(label_counts["recordings"], bins=50, ax=ax)
+ax.set_title("Recordings per primary label")
+ax.set_xlabel("recordings")
+fig.tight_layout()
+fig.savefig(CFG.artifact_dir / "label_count_histogram.png", dpi=160)
+plt.show()
+"""
+            ),
+            md("## 4. Duration And Missing Files"),
+            code(
+                """
+if "duration" in train.columns:
+    duration_summary = train["duration"].describe(percentiles=[0.25, 0.5, 0.75, 0.9, 0.95, 0.99])
+    duration_summary.to_csv(CFG.artifact_dir / "duration_summary.csv", header=["value"])
+    display(duration_summary)
+
+    fig, ax = plt.subplots(figsize=(12, 5))
+    sns.histplot(train["duration"].clip(upper=train["duration"].quantile(0.99)), bins=60, ax=ax)
+    ax.set_title("Audio duration distribution, clipped at p99")
+    ax.set_xlabel("seconds")
+    fig.tight_layout()
+    fig.savefig(CFG.artifact_dir / "duration_histogram.png", dpi=160)
+    plt.show()
+
+missing_files = train.loc[~train["filepath"].map(Path.exists), ["filename", "filepath"]]
+missing_files.to_csv(CFG.artifact_dir / "missing_audio_files.csv", index=False)
+print(f"Missing audio files: {len(missing_files):,}")
+"""
+            ),
+            md("## 5. Secondary Labels"),
+            code(
+                """
+secondary = train[["filename", "primary_label", "secondary_labels"]].explode("secondary_labels")
+secondary = secondary.dropna(subset=["secondary_labels"])
+secondary_counts = (
+    secondary["secondary_labels"]
+    .value_counts()
+    .rename_axis("secondary_label")
+    .reset_index(name="mentions")
+)
+secondary_counts.to_csv(CFG.artifact_dir / "secondary_label_counts.csv", index=False)
+display(secondary_counts.head(20))
+print(f"Rows with secondary labels: {(train['secondary_labels'].map(len) > 0).sum():,}")
+"""
+            ),
+            md("## 6. Taxonomy And Soundscapes"),
+            code(
+                """
+if taxonomy is not None:
+    taxonomy.to_csv(CFG.artifact_dir / "taxonomy_copy.csv", index=False)
+    display(taxonomy.head())
+    print(taxonomy.columns.tolist())
+
+if soundscape_labels is not None:
+    soundscape_labels.to_csv(CFG.artifact_dir / "soundscape_labels_copy.csv", index=False)
+    display(soundscape_labels.head())
+    print(soundscape_labels.columns.tolist())
+"""
+            ),
+            md("## 7. Artifact Manifest"),
+            code(
+                """
+manifest = sorted(str(path.relative_to(CFG.artifact_dir)) for path in CFG.artifact_dir.glob("*"))
+(CFG.artifact_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+manifest
+"""
+            ),
+        ]
+    )
+
+
+def effnet_notebook() -> dict:
+    return notebook(
+        [
+            md(
+                """
+# BirdCLEF+ 2026 - Baseline EfficientNet-B0
+
+Purpose: train a reproducible mel-spectrogram EfficientNet-B0 baseline.  
+Artifacts are written to `/kaggle/working/artifacts/effnet_b0`.
+"""
+            ),
+            md("## 1. Setup"),
+            code(
+                COMMON_STYLE
+                + """
+try:
+    import timm
+except ImportError:
+    import sys
+    !{sys.executable} -m pip install -q timm
+    import timm
+
+import librosa
+from sklearn.model_selection import StratifiedGroupKFold, StratifiedKFold
+import torch
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
+from tqdm.auto import tqdm
+
+torch.manual_seed(CFG.seed)
+torch.cuda.manual_seed_all(CFG.seed)
+torch.backends.cudnn.benchmark = True
+
+
+class CFG(CFG):
+    artifact_dir = Path("/kaggle/working/artifacts/effnet_b0")
+    sample_rate = 32000
+    duration = 5.0
+    n_fft = 2048
+    hop_length = 512
+    n_mels = 128
+    fmin = 20
+    fmax = 16000
+    n_splits = 5
+    fold = 0
+    backbone = "efficientnet_b0"
+    pretrained = True
+    epochs = 5
+    batch_size = 32
+    num_workers = 2
+    lr = 3e-4
+    weight_decay = 1e-2
+    label_smoothing = 0.05
+    max_train_samples = None
+    max_valid_samples = None
+
+
+CFG.artifact_dir.mkdir(parents=True, exist_ok=True)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Device: {device}")
+"""
+            ),
+            md("## 2. Load Metadata And Build Folds"),
+            code(
+                """
+train = pd.read_csv(CFG.data_root / "train.csv")
+train["filepath"] = train["filename"].map(lambda x: CFG.data_root / "train_audio" / x)
+labels = sorted(train["primary_label"].unique())
+label_to_idx = {label: idx for idx, label in enumerate(labels)}
+idx_to_label = {idx: label for label, idx in label_to_idx.items()}
+train["target"] = train["primary_label"].map(label_to_idx)
+
+train["fold"] = -1
+group_col = "filename"
+try:
+    splitter = StratifiedGroupKFold(n_splits=CFG.n_splits, shuffle=True, random_state=CFG.seed)
+    splits = splitter.split(train, train["target"], groups=train[group_col])
+except ValueError:
+    splitter = StratifiedKFold(n_splits=CFG.n_splits, shuffle=True, random_state=CFG.seed)
+    splits = splitter.split(train, train["target"])
+
+for fold, (_, valid_idx) in enumerate(splits):
+    train.loc[valid_idx, "fold"] = fold
+
+train.to_csv(CFG.artifact_dir / "train_folds.csv", index=False)
+(CFG.artifact_dir / "labels.json").write_text(json.dumps(idx_to_label, indent=2), encoding="utf-8")
+
+train_df = train[train["fold"] != CFG.fold].reset_index(drop=True)
+valid_df = train[train["fold"] == CFG.fold].reset_index(drop=True)
+if CFG.max_train_samples:
+    train_df = train_df.sample(CFG.max_train_samples, random_state=CFG.seed).reset_index(drop=True)
+if CFG.max_valid_samples:
+    valid_df = valid_df.sample(CFG.max_valid_samples, random_state=CFG.seed).reset_index(drop=True)
+
+print(f"Train rows: {len(train_df):,}")
+print(f"Valid rows: {len(valid_df):,}")
+print(f"Classes: {len(labels):,}")
+"""
+            ),
+            md("## 3. Dataset"),
+            code(
+                """
+def load_audio(path: Path, duration: float, train_mode: bool) -> np.ndarray:
+    target_len = int(CFG.sample_rate * duration)
+    offset = 0.0
+    y, _ = librosa.load(path, sr=CFG.sample_rate, mono=True, offset=offset, duration=duration)
+    if len(y) < target_len:
+        y = np.pad(y, (0, target_len - len(y)))
+    return y[:target_len].astype(np.float32)
+
+
+def audio_to_mel(y: np.ndarray) -> np.ndarray:
+    mel = librosa.feature.melspectrogram(
+        y=y,
+        sr=CFG.sample_rate,
+        n_fft=CFG.n_fft,
+        hop_length=CFG.hop_length,
+        n_mels=CFG.n_mels,
+        fmin=CFG.fmin,
+        fmax=CFG.fmax,
+        power=2.0,
+    )
+    mel = librosa.power_to_db(mel, ref=np.max)
+    mel = (mel - mel.mean()) / (mel.std() + 1e-6)
+    return mel.astype(np.float32)
+
+
+class BirdDataset(Dataset):
+    def __init__(self, df: pd.DataFrame, train_mode: bool):
+        self.df = df.reset_index(drop=True)
+        self.train_mode = train_mode
+
+    def __len__(self) -> int:
+        return len(self.df)
+
+    def __getitem__(self, idx: int):
+        row = self.df.iloc[idx]
+        y = load_audio(row["filepath"], CFG.duration, self.train_mode)
+        if self.train_mode and random.random() < 0.5:
+            y = y * random.uniform(0.75, 1.25)
+        x = torch.from_numpy(audio_to_mel(y)).unsqueeze(0)
+        target = torch.tensor(row["target"], dtype=torch.long)
+        return x, target
+
+
+train_loader = DataLoader(
+    BirdDataset(train_df, train_mode=True),
+    batch_size=CFG.batch_size,
+    shuffle=True,
+    num_workers=CFG.num_workers,
+    pin_memory=True,
+)
+valid_loader = DataLoader(
+    BirdDataset(valid_df, train_mode=False),
+    batch_size=CFG.batch_size * 2,
+    shuffle=False,
+    num_workers=CFG.num_workers,
+    pin_memory=True,
+)
+"""
+            ),
+            md("## 4. Model And Training Loop"),
+            code(
+                """
+class BirdClassifier(nn.Module):
+    def __init__(self, num_classes: int):
+        super().__init__()
+        self.model = timm.create_model(
+            CFG.backbone,
+            pretrained=CFG.pretrained,
+            in_chans=1,
+            num_classes=num_classes,
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+
+model = BirdClassifier(num_classes=len(labels)).to(device)
+criterion = nn.CrossEntropyLoss(label_smoothing=CFG.label_smoothing)
+optimizer = torch.optim.AdamW(model.parameters(), lr=CFG.lr, weight_decay=CFG.weight_decay)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=CFG.epochs)
+scaler = torch.cuda.amp.GradScaler(enabled=device.type == "cuda")
+"""
+            ),
+            code(
+                """
+def train_one_epoch() -> float:
+    model.train()
+    total_loss = 0.0
+    for x, y in tqdm(train_loader, desc="train", leave=False):
+        x = x.to(device, non_blocking=True)
+        y = y.to(device, non_blocking=True)
+        optimizer.zero_grad(set_to_none=True)
+        with torch.cuda.amp.autocast(enabled=scaler.is_enabled()):
+            loss = criterion(model(x), y)
+        scaler.scale(loss).backward()
+        scaler.step(optimizer)
+        scaler.update()
+        total_loss += loss.item() * x.size(0)
+    return total_loss / max(len(train_loader.dataset), 1)
+
+
+@torch.no_grad()
+def validate() -> tuple[float, float]:
+    model.eval()
+    total_loss = 0.0
+    correct = 0
+    seen = 0
+    for x, y in tqdm(valid_loader, desc="valid", leave=False):
+        x = x.to(device, non_blocking=True)
+        y = y.to(device, non_blocking=True)
+        logits = model(x)
+        loss = criterion(logits, y)
+        total_loss += loss.item() * x.size(0)
+        correct += (logits.argmax(dim=1) == y).sum().item()
+        seen += x.size(0)
+    return total_loss / max(seen, 1), correct / max(seen, 1)
+"""
+            ),
+            md("## 5. Train And Save Artifacts"),
+            code(
+                """
+history = []
+best_acc = 0.0
+
+for epoch in range(1, CFG.epochs + 1):
+    train_loss = train_one_epoch()
+    valid_loss, valid_acc = validate()
+    scheduler.step()
+    row = {
+        "epoch": epoch,
+        "train_loss": train_loss,
+        "valid_loss": valid_loss,
+        "valid_acc": valid_acc,
+        "lr": scheduler.get_last_lr()[0],
+    }
+    history.append(row)
+    print(row)
+
+    if valid_acc > best_acc:
+        best_acc = valid_acc
+        torch.save(
+            {
+                "model": model.state_dict(),
+                "label_to_idx": label_to_idx,
+                "cfg": {k: v for k, v in CFG.__dict__.items() if not k.startswith("_")},
+                "valid_acc": best_acc,
+            },
+            CFG.artifact_dir / "best_effnet_b0.pt",
+        )
+
+history_df = pd.DataFrame(history)
+history_df.to_csv(CFG.artifact_dir / "history.csv", index=False)
+print(f"Best valid accuracy: {best_acc:.4f}")
+print(f"Artifacts saved to {CFG.artifact_dir}")
+"""
+            ),
+        ]
+    )
+
+
+def perch_notebook() -> dict:
+    return notebook(
+        [
+            md(
+                """
+# BirdCLEF+ 2026 - Google Perch v2 Probe
+
+Purpose: extract frozen Perch embeddings and train a shallow PyTorch probe.  
+Artifacts are written to `/kaggle/working/artifacts/perch_v2`.
+"""
+            ),
+            md("## 1. Setup"),
+            code(
+                COMMON_STYLE
+                + """
+import librosa
+from sklearn.model_selection import train_test_split
+import torch
+from torch import nn
+from torch.utils.data import DataLoader, TensorDataset
+from tqdm.auto import tqdm
+
+try:
+    import tensorflow as tf
+except ImportError:
+    tf = None
+
+torch.manual_seed(CFG.seed)
+torch.cuda.manual_seed_all(CFG.seed)
+
+
+class CFG(CFG):
+    artifact_dir = Path("/kaggle/working/artifacts/perch_v2")
+    sample_rate = 32000
+    duration = 5.0
+    embedding_dim = 1536
+    extraction_batch_size = 8
+    probe_batch_size = 128
+    probe_epochs = 10
+    hidden_dim = 512
+    dropout = 0.25
+    lr = 1e-3
+    max_samples = None
+    perch_model_dir = None
+
+
+CFG.artifact_dir.mkdir(parents=True, exist_ok=True)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Device: {device}")
+"""
+            ),
+            md("## 2. Load Metadata"),
+            code(
+                """
+train = pd.read_csv(CFG.data_root / "train.csv")
+train["filepath"] = train["filename"].map(lambda x: CFG.data_root / "train_audio" / x)
+if CFG.max_samples:
+    train = train.sample(CFG.max_samples, random_state=CFG.seed).reset_index(drop=True)
+
+labels = sorted(train["primary_label"].unique())
+label_to_idx = {label: idx for idx, label in enumerate(labels)}
+idx_to_label = {idx: label for label, idx in label_to_idx.items()}
+train["target"] = train["primary_label"].map(label_to_idx)
+(CFG.artifact_dir / "labels.json").write_text(json.dumps(idx_to_label, indent=2), encoding="utf-8")
+
+print(f"Rows: {len(train):,}")
+print(f"Classes: {len(labels):,}")
+display(train.head())
+"""
+            ),
+            md("## 3. Locate And Load Perch"),
+            code(
+                """
+def find_perch_model_dir() -> Path:
+    if CFG.perch_model_dir:
+        return Path(CFG.perch_model_dir)
+    input_root = Path("/kaggle/input")
+    matches = list(input_root.glob("**/saved_model.pb")) if input_root.exists() else []
+    matches = [path.parent for path in matches if "perch" in str(path).lower() or "vocal" in str(path).lower()]
+    if matches:
+        return matches[0]
+    raise FileNotFoundError(
+        "Could not find a Perch SavedModel. Attach the Perch/vocalization-classifier Kaggle model "
+        "or set CFG.perch_model_dir."
+    )
+
+
+if tf is None:
+    raise ImportError("TensorFlow is required for Perch embedding extraction.")
+
+perch_model_dir = find_perch_model_dir()
+perch = tf.saved_model.load(str(perch_model_dir))
+infer = perch.signatures["serving_default"]
+print(f"Perch model: {perch_model_dir}")
+print(f"Inputs: {infer.structured_input_signature}")
+print(f"Outputs: {infer.structured_outputs}")
+"""
+            ),
+            md("## 4. Extract Embeddings"),
+            code(
+                """
+def load_audio(path: Path) -> np.ndarray:
+    target_len = int(CFG.sample_rate * CFG.duration)
+    y, _ = librosa.load(path, sr=CFG.sample_rate, mono=True, duration=CFG.duration)
+    if len(y) < target_len:
+        y = np.pad(y, (0, target_len - len(y)))
+    return y[:target_len].astype(np.float32)
+
+
+def run_perch_batch(batch_waveforms: np.ndarray) -> np.ndarray:
+    tensor = tf.convert_to_tensor(batch_waveforms, dtype=tf.float32)
+    _, keyword_specs = infer.structured_input_signature
+    if keyword_specs:
+        input_name = next(iter(keyword_specs))
+        outputs = infer(**{input_name: tensor})
+    else:
+        outputs = infer(tensor)
+    value = next(iter(outputs.values()))
+    return np.asarray(value).astype(np.float32)
+
+
+embeddings_path = CFG.artifact_dir / "train_embeddings.npz"
+if embeddings_path.exists():
+    saved = np.load(embeddings_path, allow_pickle=True)
+    embeddings = saved["embeddings"]
+else:
+    chunks = []
+    waveforms = []
+    for path in tqdm(train["filepath"], desc="audio"):
+        waveforms.append(load_audio(path))
+        if len(waveforms) == CFG.extraction_batch_size:
+            chunks.append(run_perch_batch(np.stack(waveforms)))
+            waveforms = []
+    if waveforms:
+        chunks.append(run_perch_batch(np.stack(waveforms)))
+    embeddings = np.concatenate(chunks, axis=0)
+    np.savez_compressed(
+        embeddings_path,
+        embeddings=embeddings,
+        labels=train["primary_label"].to_numpy(),
+        filenames=train["filename"].to_numpy(),
+    )
+
+print(f"Embeddings: {embeddings.shape}")
+print(f"Saved: {embeddings_path}")
+"""
+            ),
+            md("## 5. Probe Model"),
+            code(
+                """
+class PerchProbe(nn.Module):
+    def __init__(self, embedding_dim: int, num_classes: int):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.LayerNorm(embedding_dim),
+            nn.Linear(embedding_dim, CFG.hidden_dim),
+            nn.ReLU(inplace=True),
+            nn.Dropout(CFG.dropout),
+            nn.Linear(CFG.hidden_dim, num_classes),
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+
+x = embeddings.astype(np.float32)
+y = train["target"].to_numpy(dtype=np.int64)
+train_idx, valid_idx = train_test_split(
+    np.arange(len(y)),
+    test_size=0.2,
+    random_state=CFG.seed,
+    stratify=y,
+)
+
+train_loader = DataLoader(
+    TensorDataset(torch.from_numpy(x[train_idx]), torch.from_numpy(y[train_idx])),
+    batch_size=CFG.probe_batch_size,
+    shuffle=True,
+)
+valid_loader = DataLoader(
+    TensorDataset(torch.from_numpy(x[valid_idx]), torch.from_numpy(y[valid_idx])),
+    batch_size=CFG.probe_batch_size * 2,
+    shuffle=False,
+)
+
+model = PerchProbe(embedding_dim=x.shape[1], num_classes=len(labels)).to(device)
+criterion = nn.CrossEntropyLoss()
+optimizer = torch.optim.AdamW(model.parameters(), lr=CFG.lr)
+"""
+            ),
+            md("## 6. Train And Save Artifacts"),
+            code(
+                """
+@torch.no_grad()
+def validate() -> float:
+    model.eval()
+    correct = 0
+    seen = 0
+    for xb, yb in valid_loader:
+        xb = xb.to(device)
+        yb = yb.to(device)
+        logits = model(xb)
+        correct += (logits.argmax(dim=1) == yb).sum().item()
+        seen += xb.size(0)
+    return correct / max(seen, 1)
+
+
+history = []
+best_acc = 0.0
+for epoch in range(1, CFG.probe_epochs + 1):
+    model.train()
+    total_loss = 0.0
+    for xb, yb in train_loader:
+        xb = xb.to(device)
+        yb = yb.to(device)
+        optimizer.zero_grad(set_to_none=True)
+        loss = criterion(model(xb), yb)
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item() * xb.size(0)
+
+    valid_acc = validate()
+    row = {
+        "epoch": epoch,
+        "train_loss": total_loss / max(len(train_loader.dataset), 1),
+        "valid_acc": valid_acc,
+    }
+    history.append(row)
+    print(row)
+    if valid_acc > best_acc:
+        best_acc = valid_acc
+        torch.save(
+            {
+                "model": model.state_dict(),
+                "label_to_idx": label_to_idx,
+                "cfg": {k: v for k, v in CFG.__dict__.items() if not k.startswith("_")},
+                "valid_acc": best_acc,
+            },
+            CFG.artifact_dir / "best_perch_probe.pt",
+        )
+
+pd.DataFrame(history).to_csv(CFG.artifact_dir / "history.csv", index=False)
+print(f"Best valid accuracy: {best_acc:.4f}")
+print(f"Artifacts saved to {CFG.artifact_dir}")
+"""
+            ),
+        ]
+    )
+
+
+def main() -> None:
+    NOTEBOOK_DIR.mkdir(parents=True, exist_ok=True)
+    outputs = {
+        "01_data_eda.ipynb": eda_notebook(),
+        "02_effnet_b0_baseline.ipynb": effnet_notebook(),
+        "03_perch_v2_probe.ipynb": perch_notebook(),
+    }
+    for name, nb in outputs.items():
+        path = NOTEBOOK_DIR / name
+        path.write_text(json.dumps(nb, indent=1), encoding="utf-8")
+        print(f"Wrote {path}")
+
+
+if __name__ == "__main__":
+    main()
