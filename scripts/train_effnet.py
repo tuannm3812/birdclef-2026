@@ -54,22 +54,10 @@ def main() -> None:
     audio_cfg = AudioConfig(**cfg["audio"])
     train_ds = BirdDataset(train_df, label_to_idx, audio_cfg, train=True)
     valid_ds = BirdDataset(valid_df, label_to_idx, audio_cfg, train=False)
-    train_loader = DataLoader(
-        train_ds,
-        batch_size=int(train_cfg["batch_size"]),
-        shuffle=True,
-        num_workers=int(train_cfg.get("num_workers", 0)),
-        pin_memory=True,
-    )
-    valid_loader = DataLoader(
-        valid_ds,
-        batch_size=int(train_cfg["batch_size"]) * 2,
-        shuffle=False,
-        num_workers=int(train_cfg.get("num_workers", 0)),
-        pin_memory=True,
-    )
-
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    num_workers = int(train_cfg.get("num_workers", 0))
+    train_loader = make_loader(train_ds, int(train_cfg["batch_size"]), True, num_workers, device)
+    valid_loader = make_loader(valid_ds, int(train_cfg["batch_size"]) * 2, False, num_workers, device)
     model = BirdClassifier(
         backbone=train_cfg.get("backbone", "efficientnet_b0"),
         num_classes=len(labels),
@@ -107,6 +95,20 @@ def main() -> None:
             )
 
     print(f"Best valid accuracy: {best_acc:.4f}")
+
+
+def make_loader(dataset, batch_size: int, shuffle: bool, num_workers: int, device: torch.device) -> DataLoader:
+    loader_kwargs = {
+        "batch_size": batch_size,
+        "shuffle": shuffle,
+        "num_workers": num_workers,
+        "pin_memory": device.type == "cuda",
+        "drop_last": False,
+    }
+    if num_workers > 0:
+        loader_kwargs["persistent_workers"] = True
+        loader_kwargs["prefetch_factor"] = 2
+    return DataLoader(dataset, **loader_kwargs)
 
 
 def train_one_epoch(model, loader, criterion, optimizer, scaler, device) -> float:

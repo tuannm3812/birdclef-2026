@@ -593,7 +593,9 @@ class CFG(CFG):
     pretrained = True
     epochs = 5
     batch_size = 32
-    num_workers = 2
+    # Kaggle notebooks can crash with multiprocessing DataLoader workers when
+    # audio decoding happens inside __getitem__. Keep this at 0 for stability.
+    num_workers = 0
     lr = 3e-4
     weight_decay = 1e-2
     label_smoothing = 0.05
@@ -689,20 +691,22 @@ class BirdDataset(Dataset):
         return x, target
 
 
-train_loader = DataLoader(
-    BirdDataset(train_df, train_mode=True),
-    batch_size=CFG.batch_size,
-    shuffle=True,
-    num_workers=CFG.num_workers,
-    pin_memory=True,
-)
-valid_loader = DataLoader(
-    BirdDataset(valid_df, train_mode=False),
-    batch_size=CFG.batch_size * 2,
-    shuffle=False,
-    num_workers=CFG.num_workers,
-    pin_memory=True,
-)
+def make_loader(dataset: Dataset, batch_size: int, shuffle: bool) -> DataLoader:
+    loader_kwargs = {
+        "batch_size": batch_size,
+        "shuffle": shuffle,
+        "num_workers": CFG.num_workers,
+        "pin_memory": device.type == "cuda",
+        "drop_last": False,
+    }
+    if CFG.num_workers > 0:
+        loader_kwargs["persistent_workers"] = True
+        loader_kwargs["prefetch_factor"] = 2
+    return DataLoader(dataset, **loader_kwargs)
+
+
+train_loader = make_loader(BirdDataset(train_df, train_mode=True), CFG.batch_size, True)
+valid_loader = make_loader(BirdDataset(valid_df, train_mode=False), CFG.batch_size * 2, False)
 """
             ),
             md("## 4. Model And Training Loop"),
