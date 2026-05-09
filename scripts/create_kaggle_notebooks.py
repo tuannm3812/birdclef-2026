@@ -113,9 +113,10 @@ def eda_notebook() -> dict:
         [
             md(
                 """
-# BirdCLEF+ 2026 - EDA
+# BirdCLEF+ 2026 - Insightful EDA
 
-Purpose: inspect labels, taxonomy, audio duration, secondary labels, and soundscape annotations.  
+Purpose: understand the dataset shape, label imbalance, taxonomy coverage, duration/chunking strategy, secondary-label noise, soundscape annotations, and representative audio examples.
+
 Artifacts are written to `/kaggle/working/artifacts/eda`.
 """
             ),
@@ -124,12 +125,25 @@ Artifacts are written to `/kaggle/working/artifacts/eda`.
                 COMMON_STYLE
                 + """
 import ast
+from collections import Counter
+
+import librosa
+import librosa.display
 import matplotlib.pyplot as plt
 import seaborn as sns
+from IPython.display import Audio, display
 
 CFG.artifact_dir = CFG.artifact_dir / "eda"
 CFG.artifact_dir.mkdir(parents=True, exist_ok=True)
 sns.set_theme(style="whitegrid", context="notebook")
+
+
+class CFG(CFG):
+    sample_rate = 32000
+    clip_seconds = 5
+    n_mels = 128
+    top_n = 30
+    random_examples = 6
 """
             ),
             md("## 2. Load Metadata"),
@@ -153,20 +167,48 @@ soundscape_labels = read_optional_csv(CFG.data_root / "train_soundscapes_labels.
 sample_submission = read_optional_csv(CFG.data_root / "sample_submission.csv")
 
 train["filepath"] = train["filename"].map(lambda x: CFG.data_root / "train_audio" / x)
-train["secondary_labels"] = train.get("secondary_labels", "[]").map(parse_label_list)
+if "secondary_labels" in train.columns:
+    train["secondary_labels"] = train["secondary_labels"].map(parse_label_list)
+else:
+    train["secondary_labels"] = [[] for _ in range(len(train))]
 
 if taxonomy is not None and "primary_label" in taxonomy.columns:
     train = train.merge(taxonomy, on="primary_label", how="left", suffixes=("", "_taxonomy"))
 
+summary = {
+    "train_rows": len(train),
+    "primary_classes": train["primary_label"].nunique(),
+    "taxonomy_rows": 0 if taxonomy is None else len(taxonomy),
+    "soundscape_label_rows": 0 if soundscape_labels is None else len(soundscape_labels),
+    "sample_submission_rows": 0 if sample_submission is None else len(sample_submission),
+    "audio_files_found": int(train["filepath"].map(Path.exists).sum()),
+}
+pd.Series(summary).to_csv(CFG.artifact_dir / "dataset_summary.csv", header=["value"])
+display(pd.Series(summary).to_frame("value"))
 display(train.head())
-print(f"Train rows: {len(train):,}")
-print(f"Primary classes: {train['primary_label'].nunique():,}")
-print(f"Taxonomy rows: {0 if taxonomy is None else len(taxonomy):,}")
-print(f"Soundscape label rows: {0 if soundscape_labels is None else len(soundscape_labels):,}")
-print(f"Sample submission rows: {0 if sample_submission is None else len(sample_submission):,}")
 """
             ),
-            md("## 3. Label Distribution"),
+            md("## 3. Dataset Schema And Missingness"),
+            code(
+                """
+schema = pd.DataFrame(
+    {
+        "column": train.columns,
+        "dtype": [str(train[col].dtype) for col in train.columns],
+        "missing": [int(train[col].isna().sum()) for col in train.columns],
+        "missing_pct": [float(train[col].isna().mean()) for col in train.columns],
+        "unique": [int(train[col].nunique(dropna=True)) for col in train.columns],
+    }
+)
+schema.to_csv(CFG.artifact_dir / "train_schema_missingness.csv", index=False)
+display(schema)
+
+missing_files = train.loc[~train["filepath"].map(Path.exists), ["filename", "filepath"]]
+missing_files.to_csv(CFG.artifact_dir / "missing_audio_files.csv", index=False)
+print(f"Missing audio files: {len(missing_files):,}")
+"""
+            ),
+            md("## 4. Primary Label Imbalance"),
             code(
                 """
 label_counts = (
@@ -176,21 +218,40 @@ label_counts = (
     .reset_index(name="recordings")
 )
 label_counts["share"] = label_counts["recordings"] / label_counts["recordings"].sum()
+label_counts["cumulative_share"] = label_counts["share"].cumsum()
+label_counts["imbalance_ratio_vs_median"] = label_counts["recordings"] / label_counts["recordings"].median()
 label_counts.to_csv(CFG.artifact_dir / "primary_label_counts.csv", index=False)
 
-display(label_counts.head(20))
-display(label_counts.tail(20))
+head_share = label_counts.head(10)["share"].sum()
+tail_singletons = int((label_counts["recordings"] == 1).sum())
+print(f"Top 10 classes contain {head_share:.1%} of recordings.")
+print(f"Singleton classes: {tail_singletons:,}")
+display(label_counts.head(CFG.top_n))
+display(label_counts.tail(CFG.top_n))
 
 fig, ax = plt.subplots(figsize=(12, 5))
-sns.histplot(label_counts["recordings"], bins=50, ax=ax)
-ax.set_title("Recordings per primary label")
+sns.barplot(data=label_counts.head(CFG.top_n), x="recordings", y="primary_label", ax=ax, color="#3C78D8")
+ax.set_title(f"Top {CFG.top_n} primary labels by recording count")
 ax.set_xlabel("recordings")
+ax.set_ylabel("")
 fig.tight_layout()
-fig.savefig(CFG.artifact_dir / "label_count_histogram.png", dpi=160)
+fig.savefig(CFG.artifact_dir / "top_primary_labels.png", dpi=160)
+plt.show()
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+sns.histplot(label_counts["recordings"], bins=50, ax=axes[0], color="#2CA02C")
+axes[0].set_title("Class-count distribution")
+axes[0].set_xlabel("recordings per class")
+sns.lineplot(data=label_counts.reset_index(), x="index", y="cumulative_share", ax=axes[1], color="#D62728")
+axes[1].set_title("Cumulative share by ranked class")
+axes[1].set_xlabel("class rank")
+axes[1].set_ylabel("cumulative share")
+fig.tight_layout()
+fig.savefig(CFG.artifact_dir / "class_imbalance_diagnostics.png", dpi=160)
 plt.show()
 """
             ),
-            md("## 4. Duration And Missing Files"),
+            md("## 5. Duration And Chunking Implications"),
             code(
                 """
 if "duration" in train.columns:
@@ -198,20 +259,44 @@ if "duration" in train.columns:
     duration_summary.to_csv(CFG.artifact_dir / "duration_summary.csv", header=["value"])
     display(duration_summary)
 
-    fig, ax = plt.subplots(figsize=(12, 5))
-    sns.histplot(train["duration"].clip(upper=train["duration"].quantile(0.99)), bins=60, ax=ax)
-    ax.set_title("Audio duration distribution, clipped at p99")
-    ax.set_xlabel("seconds")
-    fig.tight_layout()
-    fig.savefig(CFG.artifact_dir / "duration_histogram.png", dpi=160)
-    plt.show()
+    duration_by_label = (
+        train.groupby("primary_label")["duration"]
+        .agg(recordings="count", median_duration="median", total_seconds="sum")
+        .reset_index()
+        .sort_values("total_seconds", ascending=False)
+    )
+    duration_by_label["estimated_5s_chunks"] = np.ceil(duration_by_label["total_seconds"] / CFG.clip_seconds).astype(int)
+    duration_by_label.to_csv(CFG.artifact_dir / "duration_by_primary_label.csv", index=False)
+    display(duration_by_label.head(20))
 
-missing_files = train.loc[~train["filepath"].map(Path.exists), ["filename", "filepath"]]
-missing_files.to_csv(CFG.artifact_dir / "missing_audio_files.csv", index=False)
-print(f"Missing audio files: {len(missing_files):,}")
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    clipped = train["duration"].clip(upper=train["duration"].quantile(0.99))
+    sns.histplot(clipped, bins=60, ax=axes[0], color="#9467BD")
+    axes[0].set_title("Audio duration distribution, clipped at p99")
+    axes[0].set_xlabel("seconds")
+    sns.scatterplot(
+        data=duration_by_label,
+        x="recordings",
+        y="total_seconds",
+        size="median_duration",
+        sizes=(20, 180),
+        alpha=0.7,
+        ax=axes[1],
+        color="#FF7F0E",
+    )
+    axes[1].set_xscale("log")
+    axes[1].set_yscale("log")
+    axes[1].set_title("Per-class recording count vs total audio")
+    axes[1].set_xlabel("recordings, log scale")
+    axes[1].set_ylabel("total seconds, log scale")
+    fig.tight_layout()
+    fig.savefig(CFG.artifact_dir / "duration_and_chunking.png", dpi=160)
+    plt.show()
+else:
+    print("No duration column found in train.csv.")
 """
             ),
-            md("## 5. Secondary Labels"),
+            md("## 6. Secondary Labels And Co-Occurrence"),
             code(
                 """
 secondary = train[["filename", "primary_label", "secondary_labels"]].explode("secondary_labels")
@@ -223,25 +308,158 @@ secondary_counts = (
     .reset_index(name="mentions")
 )
 secondary_counts.to_csv(CFG.artifact_dir / "secondary_label_counts.csv", index=False)
-display(secondary_counts.head(20))
-print(f"Rows with secondary labels: {(train['secondary_labels'].map(len) > 0).sum():,}")
+rows_with_secondary = int((train["secondary_labels"].map(len) > 0).sum())
+print(f"Rows with secondary labels: {rows_with_secondary:,} ({rows_with_secondary / len(train):.1%})")
+display(secondary_counts.head(CFG.top_n))
+
+cooccurrence = (
+    secondary.groupby(["primary_label", "secondary_labels"])
+    .size()
+    .reset_index(name="count")
+    .sort_values("count", ascending=False)
+)
+cooccurrence.to_csv(CFG.artifact_dir / "primary_secondary_cooccurrence.csv", index=False)
+display(cooccurrence.head(30))
+
+if len(secondary_counts):
+    fig, ax = plt.subplots(figsize=(12, 6))
+    sns.barplot(data=secondary_counts.head(CFG.top_n), x="mentions", y="secondary_label", ax=ax, color="#17BECF")
+    ax.set_title(f"Top {CFG.top_n} secondary labels")
+    ax.set_xlabel("mentions")
+    ax.set_ylabel("")
+    fig.tight_layout()
+    fig.savefig(CFG.artifact_dir / "top_secondary_labels.png", dpi=160)
+    plt.show()
 """
             ),
-            md("## 6. Taxonomy And Soundscapes"),
+            md("## 7. Taxonomy Coverage"),
             code(
                 """
 if taxonomy is not None:
     taxonomy.to_csv(CFG.artifact_dir / "taxonomy_copy.csv", index=False)
     display(taxonomy.head())
-    print(taxonomy.columns.tolist())
+    taxonomy_cols = taxonomy.columns.tolist()
+    print(taxonomy_cols)
 
-if soundscape_labels is not None:
+    taxonomy_label_col = "primary_label" if "primary_label" in taxonomy.columns else None
+    if taxonomy_label_col:
+        train_labels = set(pd.read_csv(CFG.data_root / "train.csv")["primary_label"].unique())
+        taxonomy_labels = set(taxonomy[taxonomy_label_col].dropna().astype(str).unique())
+        coverage = {
+            "train_labels": len(train_labels),
+            "taxonomy_labels": len(taxonomy_labels),
+            "train_labels_missing_from_taxonomy": len(train_labels - taxonomy_labels),
+            "taxonomy_labels_not_in_train": len(taxonomy_labels - train_labels),
+        }
+        pd.Series(coverage).to_csv(CFG.artifact_dir / "taxonomy_coverage.csv", header=["value"])
+        display(pd.Series(coverage).to_frame("value"))
+
+    candidate_cols = [c for c in ["class_name", "order", "family", "genus", "species", "common_name", "scientific_name"] if c in train.columns]
+    for col in candidate_cols[:4]:
+        counts = train[col].value_counts(dropna=False).head(20).rename_axis(col).reset_index(name="recordings")
+        display(counts)
+else:
+    print("No taxonomy.csv found.")
+"""
+            ),
+            md("## 8. Soundscape Labels"),
+            code(
+                """
+if soundscape_labels is None:
+    print("No train_soundscapes_labels.csv found.")
+else:
     soundscape_labels.to_csv(CFG.artifact_dir / "soundscape_labels_copy.csv", index=False)
     display(soundscape_labels.head())
     print(soundscape_labels.columns.tolist())
+
+    label_like_cols = [c for c in soundscape_labels.columns if "label" in c.lower() or "species" in c.lower() or "code" in c.lower()]
+    time_like_cols = [c for c in soundscape_labels.columns if "time" in c.lower() or "second" in c.lower()]
+    file_like_cols = [c for c in soundscape_labels.columns if "filename" in c.lower() or "soundscape" in c.lower() or "row_id" in c.lower()]
+
+    soundscape_summary = {
+        "rows": len(soundscape_labels),
+        "columns": len(soundscape_labels.columns),
+        "label_like_columns": ", ".join(label_like_cols),
+        "time_like_columns": ", ".join(time_like_cols),
+        "file_like_columns": ", ".join(file_like_cols),
+    }
+    pd.Series(soundscape_summary).to_csv(CFG.artifact_dir / "soundscape_summary.csv", header=["value"])
+    display(pd.Series(soundscape_summary).to_frame("value"))
+
+    if label_like_cols:
+        col = label_like_cols[0]
+        sc_counts = soundscape_labels[col].value_counts().head(CFG.top_n).rename_axis(col).reset_index(name="rows")
+        sc_counts.to_csv(CFG.artifact_dir / "soundscape_label_counts.csv", index=False)
+        display(sc_counts)
+
 """
             ),
-            md("## 7. Artifact Manifest"),
+            md("## 9. Representative Audio And Spectrograms"),
+            code(
+                """
+def load_clip(path: Path, seconds: float = 5.0) -> np.ndarray:
+    y, _ = librosa.load(path, sr=CFG.sample_rate, mono=True, duration=seconds)
+    target_len = int(CFG.sample_rate * seconds)
+    if len(y) < target_len:
+        y = np.pad(y, (0, target_len - len(y)))
+    return y[:target_len].astype(np.float32)
+
+
+available = train[train["filepath"].map(Path.exists)].copy()
+if len(available) == 0:
+    print("No local audio files available for previews.")
+else:
+    example_df = (
+        available.groupby("primary_label", group_keys=False)
+        .apply(lambda x: x.sample(1, random_state=CFG.seed))
+        .sample(min(CFG.random_examples, available["primary_label"].nunique()), random_state=CFG.seed)
+        .reset_index(drop=True)
+    )
+    example_df[["filename", "primary_label"]].to_csv(CFG.artifact_dir / "audio_examples.csv", index=False)
+    display(example_df[["filename", "primary_label"]])
+
+    fig, axes = plt.subplots(len(example_df), 1, figsize=(12, 2.6 * len(example_df)))
+    axes = np.atleast_1d(axes)
+    for ax, (_, row) in zip(axes, example_df.iterrows()):
+        y = load_clip(row["filepath"], CFG.clip_seconds)
+        mel = librosa.feature.melspectrogram(y=y, sr=CFG.sample_rate, n_mels=CFG.n_mels)
+        mel_db = librosa.power_to_db(mel, ref=np.max)
+        librosa.display.specshow(mel_db, sr=CFG.sample_rate, x_axis="time", y_axis="mel", ax=ax)
+        ax.set_title(f"{row['primary_label']} | {row['filename']}")
+    fig.tight_layout()
+    fig.savefig(CFG.artifact_dir / "representative_mels.png", dpi=160)
+    plt.show()
+
+    first = example_df.iloc[0]
+    print(f"Audio preview: {first['primary_label']} | {first['filename']}")
+    display(Audio(load_clip(first["filepath"], CFG.clip_seconds), rate=CFG.sample_rate))
+"""
+            ),
+            md("## 10. Modeling Takeaways"),
+            code(
+                """
+takeaways = []
+takeaways.append(
+    f"Primary-label imbalance is substantial: top 10 classes cover {label_counts.head(10)['share'].sum():.1%} of training recordings."
+)
+if "duration" in train.columns:
+    takeaways.append(
+        f"Median clip duration is {train['duration'].median():.1f}s; a {CFG.clip_seconds}s training window creates multiple possible crops for long recordings."
+    )
+takeaways.append(
+    f"Secondary labels appear in {(train['secondary_labels'].map(len) > 0).mean():.1%} of rows, so noisy multi-label context may help later even if the first baseline is single-label."
+)
+if taxonomy is not None:
+    takeaways.append("Taxonomy metadata can support stratified diagnostics and class-family level error analysis.")
+if soundscape_labels is not None:
+    takeaways.append("Soundscape annotations should be treated separately from clean training clips because they reflect the evaluation domain more closely.")
+
+takeaways_df = pd.DataFrame({"takeaway": takeaways})
+takeaways_df.to_csv(CFG.artifact_dir / "modeling_takeaways.csv", index=False)
+display(takeaways_df)
+"""
+            ),
+            md("## 11. Artifact Manifest"),
             code(
                 """
 manifest = sorted(str(path.relative_to(CFG.artifact_dir)) for path in CFG.artifact_dir.glob("*"))
