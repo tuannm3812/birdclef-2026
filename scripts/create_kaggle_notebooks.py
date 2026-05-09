@@ -861,11 +861,41 @@ Artifacts are written to `/kaggle/working/artifacts/perch_v2`.
                 COMMON_STYLE
                 + """
 import librosa
+from importlib.metadata import PackageNotFoundError, version
 from sklearn.model_selection import train_test_split
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm.auto import tqdm
+
+REQUIRED_TENSORFLOW_VERSION = "2.20.0"
+
+
+def package_version(package_name: str) -> str | None:
+    try:
+        return version(package_name)
+    except PackageNotFoundError:
+        return None
+
+
+def version_tuple(value: str) -> tuple[int, ...]:
+    core = value.split("+")[0].split("-")[0]
+    parts = []
+    for part in core.split("."):
+        if part.isdigit():
+            parts.append(int(part))
+        else:
+            break
+    return tuple(parts)
+
+
+installed_tf = package_version("tensorflow")
+if installed_tf is None or version_tuple(installed_tf) < version_tuple(REQUIRED_TENSORFLOW_VERSION):
+    import sys
+    print(f"TensorFlow {installed_tf} is not compatible with Perch v2 export 2.")
+    print(f"Installing tensorflow=={REQUIRED_TENSORFLOW_VERSION}. Restart the Kaggle session after this cell stops.")
+    !{sys.executable} -m pip install -q --upgrade tensorflow=={REQUIRED_TENSORFLOW_VERSION}
+    raise SystemExit("TensorFlow was upgraded. Restart the Kaggle session, then run the notebook from the top.")
 
 try:
     import tensorflow as tf
@@ -889,20 +919,11 @@ class CFG(CFG):
     lr = 1e-3
     max_samples = None
     perch_model_dir = None
-    # Perch v2 model version 2 may require a newer TensorFlow/XLA runtime than
-    # Kaggle's default image. Set this to True and run the setup cell first if
-    # you see "XlaCallModuleOp with version 10 is not supported".
-    install_newer_tensorflow = False
-    tensorflow_package = "tensorflow==2.20.0"
 
 
 CFG.artifact_dir.mkdir(parents=True, exist_ok=True)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Device: {device}")
-if CFG.install_newer_tensorflow:
-    import sys
-    !{sys.executable} -m pip install -q --upgrade {CFG.tensorflow_package}
-    raise SystemExit("TensorFlow was upgraded. Restart the Kaggle session, then run the notebook from the top.")
 if tf is not None:
     print(f"TensorFlow: {tf.__version__}")
 """
@@ -959,9 +980,9 @@ def explain_perch_runtime_error(error: Exception) -> None:
     if "XlaCallModuleOp with version 10 is not supported" in message:
         raise RuntimeError(
             "The attached Perch SavedModel requires a newer TensorFlow/XLA runtime than this Kaggle image. "
-            "Set CFG.install_newer_tensorflow = True in the setup cell, run that cell once, restart the "
-            "Kaggle session, then run the notebook from the top. If internet is disabled, attach a Kaggle "
-            "dataset containing a compatible TensorFlow wheel or use an older Perch SavedModel export."
+            "The setup cell should install tensorflow>=2.20 before TensorFlow is imported. Restart the "
+            "Kaggle session after installation, then run the notebook from the top. If internet is disabled, "
+            "attach a Kaggle dataset containing a compatible TensorFlow wheel or use an older Perch SavedModel export."
         ) from error
     raise error
 
