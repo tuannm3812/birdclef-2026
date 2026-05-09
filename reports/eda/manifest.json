@@ -1,0 +1,20 @@
+[
+  "audio_examples.csv",
+  "class_imbalance_diagnostics.png",
+  "dataset_summary.csv",
+  "manifest.json",
+  "missing_audio_files.csv",
+  "modeling_takeaways.csv",
+  "primary_label_counts.csv",
+  "primary_secondary_cooccurrence.csv",
+  "representative_mels.png",
+  "secondary_label_counts.csv",
+  "soundscape_label_counts.csv",
+  "soundscape_labels_copy.csv",
+  "soundscape_summary.csv",
+  "taxonomy_copy.csv",
+  "taxonomy_coverage.csv",
+  "top_primary_labels.png",
+  "top_secondary_labels.png",
+  "train_schema_missingness.csv"
+]

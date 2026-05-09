@@ -26,6 +26,7 @@ models/                  Local checkpoints, ignored by Git
 notebooks/               Curated Kaggle notebooks
 notebooks/archive/       Original reference notebooks
 outputs/                 Local experiment outputs, ignored by Git
+reports/eda/             Kaggle EDA artifacts and written insights
 scripts/                 CLI utilities and notebook generator
 src/birdclef2026/        Reusable Python package
 ```
@@ -35,6 +36,8 @@ The canonical Kaggle notebooks are:
 - `notebooks/01_data_eda.ipynb`
 - `notebooks/02_effnet_b0_baseline.ipynb`
 - `notebooks/03_perch_v2_probe.ipynb`
+
+EDA artifacts and summarized findings are available in [reports/eda](reports/eda).
 
 ## Setup
 
