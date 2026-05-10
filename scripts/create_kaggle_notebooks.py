@@ -227,7 +227,68 @@ missing_files.to_csv(CFG.artifact_dir / "missing_audio_files.csv", index=False)
 print(f"Missing audio files: {len(missing_files):,}")
 """
             ),
-            md("## 4. Primary Label Imbalance"),
+            md("## 4. Duplicate Records"),
+            md(
+                """
+**Why this matters.** Duplicate metadata rows can inflate apparent sample size and leak repeated labels into validation. The soundscape label file is especially important because exact duplicate 5-second annotations can bias multi-label prevalence estimates.
+"""
+            ),
+            code(
+                """
+duplicate_tables = {}
+for name, frame in {
+    "train": train,
+    "taxonomy": taxonomy,
+    "soundscape_labels": soundscape_labels,
+    "sample_submission": sample_submission,
+}.items():
+    if frame is None:
+        continue
+    dup_mask = frame.duplicated(keep=False)
+    duplicate_tables[name] = int(dup_mask.sum())
+    frame.loc[dup_mask].to_csv(CFG.artifact_dir / f"{name}_duplicate_rows.csv", index=False)
+
+duplicate_summary = pd.Series(duplicate_tables, name="duplicate_rows").rename_axis("table").reset_index()
+duplicate_summary.to_csv(CFG.artifact_dir / "duplicate_summary.csv", index=False)
+display(duplicate_summary)
+
+key_checks = []
+for name, frame, candidates in [
+    ("train", train, [["filename"], ["filepath"], ["primary_label", "filename"]]),
+    ("taxonomy", taxonomy, [["primary_label"], ["scientific_name"]]),
+    ("soundscape_labels", soundscape_labels, [["row_id"], ["filename"], ["filename", "primary_label"]]),
+    ("sample_submission", sample_submission, [["row_id"]]),
+]:
+    if frame is None:
+        continue
+    for keys in candidates:
+        if all(key in frame.columns for key in keys):
+            dup_count = int(frame.duplicated(subset=keys, keep=False).sum())
+            key_checks.append({"table": name, "keys": "+".join(keys), "duplicate_rows": dup_count})
+            if dup_count:
+                frame.loc[frame.duplicated(subset=keys, keep=False)].sort_values(keys).to_csv(
+                    CFG.artifact_dir / f"{name}_{'_'.join(keys)}_duplicates.csv",
+                    index=False,
+                )
+
+key_duplicate_summary = pd.DataFrame(key_checks)
+key_duplicate_summary.to_csv(CFG.artifact_dir / "key_duplicate_summary.csv", index=False)
+display(key_duplicate_summary)
+
+if soundscape_labels is not None:
+    soundscape_dedup = soundscape_labels.drop_duplicates().reset_index(drop=True)
+    print(f"Soundscape labels before deduplication: {len(soundscape_labels):,}")
+    print(f"Soundscape labels after deduplication: {len(soundscape_dedup):,}")
+else:
+    soundscape_dedup = None
+"""
+            ),
+            md(
+                """
+**Takeaway.** If duplicate rows appear in `train_soundscapes_labels.csv`, downstream soundscape prevalence and co-occurrence analysis should use the deduplicated table. The original file is still copied to artifacts for auditability.
+"""
+            ),
+            md("## 5. Primary Label Imbalance"),
             md(
                 """
 **Why this matters.** BirdCLEF-style datasets are usually long-tailed: common species dominate the loss, while rare species are easy to ignore. The imbalance plots below help decide whether the first baseline should use balanced sampling, class-aware augmentation, focal loss, or per-class validation diagnostics.
@@ -275,7 +336,7 @@ fig.savefig(CFG.artifact_dir / "class_imbalance_diagnostics.png", dpi=160)
 plt.show()
 """
             ),
-            md("## 5. Duration And Chunking Implications"),
+            md("## 6. Duration And Chunking Implications"),
             md(
                 """
 **Why this matters.** A 5-second crop is a modeling choice, not just a preprocessing detail. Short clips may need padding, long recordings can provide many training crops, and classes with fewer files but longer total duration may be less data-poor than raw recording counts suggest.
@@ -325,7 +386,7 @@ else:
     print("No duration column found in train.csv.")
 """
             ),
-            md("## 6. Secondary Labels And Co-Occurrence"),
+            md("## 7. Secondary Labels And Co-Occurrence"),
             md(
                 """
 **Why this matters.** Secondary labels are noisy but valuable. They reveal species that often appear together and can later support soft labels, multi-label training, mixup targets, or post-processing rules. For the first EfficientNet baseline, they are kept diagnostic rather than target-defining.
@@ -366,7 +427,7 @@ if len(secondary_counts):
     plt.show()
 """
             ),
-            md("## 7. Taxonomy Coverage"),
+            md("## 8. Taxonomy Coverage"),
             md(
                 """
 **Why this matters.** Taxonomy metadata gives a way to audit errors above the species level. If the model confuses species within the same genus or family, that is a different failure mode from confusing unrelated calls. This table also checks whether train labels and taxonomy labels are aligned.
@@ -401,7 +462,81 @@ else:
     print("No taxonomy.csv found.")
 """
             ),
-            md("## 8. Soundscape Labels"),
+            md("## 9. Metadata Quality And Geography"),
+            md(
+                """
+**Why this matters.** Metadata quality is uneven across recording sources. Rating, collection, author, license, and geography can all become hidden confounders: a model may learn recorder/source artifacts instead of species-specific acoustic structure.
+"""
+            ),
+            code(
+                """
+metadata_outputs = {}
+
+if "rating" in train.columns:
+    rating_counts = train["rating"].value_counts(dropna=False).sort_index().rename_axis("rating").reset_index(name="recordings")
+    rating_counts.to_csv(CFG.artifact_dir / "rating_counts.csv", index=False)
+    display(rating_counts)
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    sns.barplot(data=rating_counts, x="rating", y="recordings", ax=axes[0], color="#7F7F7F")
+    axes[0].set_title("Recording rating distribution")
+    if "class_name" in train.columns:
+        quality_by_class = train.groupby("class_name")["rating"].agg(["count", "mean", "median"]).reset_index()
+        quality_by_class.to_csv(CFG.artifact_dir / "quality_by_class.csv", index=False)
+        sns.boxplot(data=train, x="rating", y="class_name", ax=axes[1], color="#BCBD22")
+        axes[1].set_title("Rating by biological class")
+    else:
+        axes[1].axis("off")
+    fig.tight_layout()
+    fig.savefig(CFG.artifact_dir / "metadata_quality_rating.png", dpi=160)
+    plt.show()
+
+for col in ["collection", "license", "type", "author"]:
+    if col in train.columns:
+        counts = train[col].value_counts(dropna=False).head(30).rename_axis(col).reset_index(name="recordings")
+        counts.to_csv(CFG.artifact_dir / f"{col}_counts.csv", index=False)
+        metadata_outputs[col] = len(counts)
+
+if {"latitude", "longitude"}.issubset(train.columns):
+    pantanal = {"lat_min": -21.6, "lat_max": -16.5, "lon_min": -57.6, "lon_max": -55.9}
+    geo = train.dropna(subset=["latitude", "longitude"]).copy()
+    geo["inside_pantanal_box"] = (
+        geo["latitude"].between(pantanal["lat_min"], pantanal["lat_max"])
+        & geo["longitude"].between(pantanal["lon_min"], pantanal["lon_max"])
+    )
+    geo_summary = pd.Series(
+        {
+            "records_with_coordinates": len(geo),
+            "inside_pantanal_box": int(geo["inside_pantanal_box"].sum()),
+            "inside_pantanal_share": float(geo["inside_pantanal_box"].mean()),
+            "species_inside_pantanal": int(geo.loc[geo["inside_pantanal_box"], "primary_label"].nunique()),
+        }
+    )
+    geo_summary.to_csv(CFG.artifact_dir / "geography_summary.csv", header=["value"])
+    display(geo_summary.to_frame("value"))
+
+    fig, ax = plt.subplots(figsize=(9, 6))
+    sns.scatterplot(
+        data=geo.sample(min(len(geo), 12000), random_state=CFG.seed),
+        x="longitude",
+        y="latitude",
+        hue="inside_pantanal_box",
+        s=8,
+        alpha=0.35,
+        ax=ax,
+    )
+    ax.set_title("Training recording geography")
+    fig.tight_layout()
+    fig.savefig(CFG.artifact_dir / "recording_geography.png", dpi=160)
+    plt.show()
+"""
+            ),
+            md(
+                """
+**Takeaway.** Treat quality/source/geography as potential domain-shift variables. Validation splits grouped by author, recording, or source can be more honest than purely random splits, especially when the hidden soundscapes come from a narrower ecological region.
+"""
+            ),
+            md("## 10. Soundscape Labels"),
             md(
                 """
 **Why this matters.** Soundscapes are closer to the evaluation domain than clean training clips: longer recordings, overlapping calls, background noise, and sparse temporal annotations. Treating this table as a separate domain helps avoid over-trusting validation metrics from clean clips only.
@@ -413,16 +548,17 @@ if soundscape_labels is None:
     print("No train_soundscapes_labels.csv found.")
 else:
     soundscape_labels.to_csv(CFG.artifact_dir / "soundscape_labels_copy.csv", index=False)
-    display(soundscape_labels.head())
-    print(soundscape_labels.columns.tolist())
+    soundscape_analysis = soundscape_dedup if "soundscape_dedup" in globals() and soundscape_dedup is not None else soundscape_labels
+    display(soundscape_analysis.head())
+    print(soundscape_analysis.columns.tolist())
 
-    label_like_cols = [c for c in soundscape_labels.columns if "label" in c.lower() or "species" in c.lower() or "code" in c.lower()]
-    time_like_cols = [c for c in soundscape_labels.columns if "time" in c.lower() or "second" in c.lower()]
-    file_like_cols = [c for c in soundscape_labels.columns if "filename" in c.lower() or "soundscape" in c.lower() or "row_id" in c.lower()]
+    label_like_cols = [c for c in soundscape_analysis.columns if "label" in c.lower() or "species" in c.lower() or "code" in c.lower()]
+    time_like_cols = [c for c in soundscape_analysis.columns if "time" in c.lower() or "second" in c.lower()]
+    file_like_cols = [c for c in soundscape_analysis.columns if "filename" in c.lower() or "soundscape" in c.lower() or "row_id" in c.lower()]
 
     soundscape_summary = {
-        "rows": len(soundscape_labels),
-        "columns": len(soundscape_labels.columns),
+        "rows": len(soundscape_analysis),
+        "columns": len(soundscape_analysis.columns),
         "label_like_columns": ", ".join(label_like_cols),
         "time_like_columns": ", ".join(time_like_cols),
         "file_like_columns": ", ".join(file_like_cols),
@@ -432,13 +568,42 @@ else:
 
     if label_like_cols:
         col = label_like_cols[0]
-        sc_counts = soundscape_labels[col].value_counts().head(CFG.top_n).rename_axis(col).reset_index(name="rows")
+        sc_counts = soundscape_analysis[col].value_counts().head(CFG.top_n).rename_axis(col).reset_index(name="rows")
         sc_counts.to_csv(CFG.artifact_dir / "soundscape_label_counts.csv", index=False)
         display(sc_counts)
 
+    if {"filename", "primary_label"}.issubset(soundscape_analysis.columns):
+        sc = soundscape_analysis.copy()
+        sc["label_list"] = sc["primary_label"].astype(str).str.split(";")
+        sc["n_labels"] = sc["label_list"].map(len)
+        sc["site"] = sc["filename"].astype(str).str.extract(r"_(S\\d+)_", expand=False)
+        sc["hour"] = sc["filename"].astype(str).str.extract(r"_(\\d{6})\\.ogg$", expand=False).str[:2]
+        overlap_summary = sc["n_labels"].describe(percentiles=[0.5, 0.75, 0.9]).to_frame("value")
+        overlap_summary.to_csv(CFG.artifact_dir / "soundscape_overlap_summary.csv")
+        display(overlap_summary)
+
+        fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+        sns.histplot(sc["n_labels"], discrete=True, ax=axes[0], color="#8C564B")
+        axes[0].set_title("Labels per soundscape segment")
+        if sc["hour"].notna().any():
+            hour_counts = sc["hour"].value_counts().sort_index().rename_axis("hour").reset_index(name="segments")
+            hour_counts.to_csv(CFG.artifact_dir / "soundscape_hour_counts.csv", index=False)
+            sns.barplot(data=hour_counts, x="hour", y="segments", ax=axes[1], color="#E377C2")
+            axes[1].set_title("Labeled soundscape segments by hour")
+        else:
+            axes[1].axis("off")
+        fig.tight_layout()
+        fig.savefig(CFG.artifact_dir / "soundscape_overlap_time.png", dpi=160)
+        plt.show()
+
 """
             ),
-            md("## 9. Representative Audio And Spectrograms"),
+            md(
+                """
+**Takeaway.** Soundscape labels should be interpreted after deduplication and with time/site context. Multi-label density and temporal clustering are clues for hour-aware priors, threshold tuning, and validation design.
+"""
+            ),
+            md("## 11. Representative Audio And Spectrograms"),
             md(
                 """
 **Why this matters.** A few spectrograms often reveal issues that tables hide: silence, clipping, background insects, rain, distant calls, and frequency bands that matter for augmentation. These examples are not a validation set; they are a quick sanity check for the acoustic texture the model will see.
@@ -484,7 +649,7 @@ else:
     display(Audio(load_clip(first["filepath"], CFG.clip_seconds), rate=CFG.sample_rate))
 """
             ),
-            md("## 10. Modeling Takeaways"),
+            md("## 12. Analysis Takeaways"),
             md(
                 """
 The diagnostics above point to a few concrete modeling decisions:
@@ -528,7 +693,18 @@ takeaways_df.to_csv(CFG.artifact_dir / "modeling_takeaways.csv", index=False)
 display(takeaways_df)
 """
             ),
-            md("## 11. Artifact Manifest"),
+            md("## 13. Final Conclusion"),
+            md(
+                """
+This EDA suggests a practical modeling roadmap:
+
+- Use the EfficientNet-B0 mel baseline as the dependable submission path because it is fast, pure PyTorch, and already competition-safe.
+- Use Perch v2 as an offline teacher or feature generator rather than direct hidden-test inference, because the CUDA SavedModel is too slow and the CPU/cache path depends on external coverage.
+- Improve validation before chasing architecture complexity: group leakage, source bias, geography drift, and soundscape overlap can all make local metrics misleading.
+- Prioritize class-aware training, multi-crop inference, and eventually soundscape-informed calibration. These changes are more aligned with the observed data issues than simply scaling the backbone.
+"""
+            ),
+            md("## 14. Artifact Manifest"),
             code(
                 """
 manifest = sorted(str(path.relative_to(CFG.artifact_dir)) for path in CFG.artifact_dir.glob("*"))
@@ -536,7 +712,7 @@ manifest = sorted(str(path.relative_to(CFG.artifact_dir)) for path in CFG.artifa
 manifest
 """
             ),
-            md("## 12. Package Artifacts For Download"),
+            md("## 15. Package Artifacts For Download"),
             md(
                 """
 Kaggle makes files under `/kaggle/working` downloadable after the notebook finishes. This cell zips the EDA tables and figures into one file so you can download them, review them locally, and optionally commit selected lightweight artifacts such as `.csv`, `.json`, or `.png` files to GitHub.
