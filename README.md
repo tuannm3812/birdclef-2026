@@ -41,6 +41,7 @@ The canonical Kaggle notebooks are:
 - `notebooks/05_perch_v2_submission.ipynb`
 
 EDA artifacts and summarized findings are available in [reports/eda](reports/eda).
+The academic-style project report is available at [reports/PROJECT_REPORT.md](reports/PROJECT_REPORT.md).
 The trained EfficientNet-B0 baseline artifact is available in [artifacts/effnet_b0](artifacts/effnet_b0).
 The trained Perch v2 probe artifact is available in [artifacts/perch_v2](artifacts/perch_v2).
 
