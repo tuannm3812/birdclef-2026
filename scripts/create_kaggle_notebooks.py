@@ -115,7 +115,11 @@ def eda_notebook() -> dict:
                 """
 # BirdCLEF+ 2026 - Insightful EDA
 
-Purpose: understand the dataset shape, label imbalance, taxonomy coverage, duration/chunking strategy, secondary-label noise, soundscape annotations, and representative audio examples.
+**Purpose.** Build a clear picture of the BirdCLEF+ 2026 training data before modeling: label imbalance, taxonomy coverage, duration/chunking behavior, secondary-label noise, soundscape annotations, and representative audio examples.
+
+**Run mode.** Kaggle analysis notebook; no model training.
+
+**Primary outputs.** CSV summaries, diagnostic plots, representative mel-spectrograms, and a zipped artifact bundle under `/kaggle/working`.
 
 Artifacts are written to `/kaggle/working/artifacts/eda`.
 """
@@ -551,7 +555,12 @@ def effnet_notebook() -> dict:
                 """
 # BirdCLEF+ 2026 - Baseline EfficientNet-B0
 
-Purpose: train a reproducible mel-spectrogram EfficientNet-B0 baseline.  
+**Purpose.** Train a fast, reproducible PyTorch baseline using 5-second mel-spectrogram crops and an EfficientNet-B0 classifier.
+
+**Run mode.** Kaggle training notebook. Designed to be stable on Kaggle by using single-process audio loading.
+
+**Primary outputs.** Best checkpoint, label mapping, fold assignments, training history, and a zipped artifact bundle.
+
 Artifacts are written to `/kaggle/working/artifacts/effnet_b0`.
 """
             ),
@@ -615,6 +624,11 @@ print(f"Device: {device}")
 """
             ),
             md("## 2. Load Metadata And Build Folds"),
+            md(
+                """
+This section creates a reproducible validation split and persists it with the artifacts. The first baseline uses `primary_label` only, which keeps the training objective simple and gives us a dependable reference score before adding multi-label complexity.
+"""
+            ),
             code(
                 """
 train = pd.read_csv(CFG.data_root / "train.csv")
@@ -652,6 +666,11 @@ print(f"Classes: {len(labels):,}")
 """
             ),
             md("## 3. Dataset"),
+            md(
+                """
+Audio is converted into normalized mel-spectrograms on the fly. The implementation favors reliability over maximum throughput because Kaggle worker multiprocessing can be fragile when decoding many audio files inside `Dataset.__getitem__`.
+"""
+            ),
             code(
                 """
 def load_audio(path: Path, duration: float, train_mode: bool) -> np.ndarray:
@@ -724,6 +743,11 @@ valid_loader = make_loader(BirdDataset(valid_df, train_mode=False), CFG.batch_si
 """
             ),
             md("## 4. Model And Training Loop"),
+            md(
+                """
+EfficientNet-B0 is intentionally modest: it trains quickly, exports cleanly, and is fast enough for competition reruns. This is the submission-safe baseline we compare stronger but slower methods against.
+"""
+            ),
             code(
                 """
 class BirdClassifier(nn.Module):
@@ -783,6 +807,11 @@ def validate() -> tuple[float, float]:
 """
             ),
             md("## 5. Train And Save Artifacts"),
+            md(
+                """
+The notebook saves only the best validation checkpoint. `history.csv` records the learning curve so later experiments can compare changes without relying on notebook output logs.
+"""
+            ),
             code(
                 """
 history = []
@@ -852,7 +881,14 @@ def perch_notebook() -> dict:
                 """
 # BirdCLEF+ 2026 - Google Perch v2 Probe
 
-Purpose: extract frozen Perch embeddings and train a shallow PyTorch probe.  
+**Purpose.** Use Google Perch v2 as a frozen bioacoustic feature extractor and train a lightweight PyTorch probe on 1,536-dimensional embeddings.
+
+**Run mode.** Kaggle training/diagnostic notebook. It may require TensorFlow 2.20 wheels for the current Perch export.
+
+**Primary outputs.** Perch embeddings, probe checkpoint, label mapping, training history, and a zipped artifact bundle.
+
+**Submission note.** Direct Perch inference is too slow for hidden competition reruns in our current setup. Use Perch as a teacher/offline feature extractor, then submit a fast PyTorch student model.
+
 Artifacts are written to `/kaggle/working/artifacts/perch_v2`.
 """
             ),
@@ -972,6 +1008,11 @@ if tf is not None:
 """
             ),
             md("## 2. Load Metadata"),
+            md(
+                """
+The probe is trained on the same 206 primary labels as the EfficientNet baseline. This keeps the comparison clean: the main difference is the representation, not the target definition.
+"""
+            ),
             code(
                 """
 train = pd.read_csv(CFG.data_root / "train.csv")
@@ -991,6 +1032,11 @@ display(train.head())
 """
             ),
             md("## 3. Locate And Load Perch"),
+            md(
+                """
+Perch v2 is loaded as a TensorFlow SavedModel. The notebook performs a smoke test immediately after loading so TensorFlow/XLA compatibility issues surface before the long embedding extraction loop starts.
+"""
+            ),
             code(
                 """
 def find_perch_model_dir() -> Path:
@@ -1048,6 +1094,11 @@ smoke_test_perch()
 """
             ),
             md("## 4. Extract Embeddings"),
+            md(
+                """
+Embeddings are cached to disk because TensorFlow Perch extraction is the expensive step. Once `train_embeddings.npz` exists, the PyTorch probe can be retrained quickly without rerunning the backbone.
+"""
+            ),
             code(
                 """
 def load_audio(path: Path) -> np.ndarray:
@@ -1112,6 +1163,11 @@ print(f"Saved: {embeddings_path}")
 """
             ),
             md("## 5. Probe Model"),
+            md(
+                """
+The probe is deliberately shallow. Perch already encodes strong acoustic features, so the probe should learn a compact decision boundary rather than memorize the training set.
+"""
+            ),
             code(
                 """
 class PerchProbe(nn.Module):
@@ -1172,6 +1228,11 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=CFG.lr)
 """
             ),
             md("## 6. Train And Save Artifacts"),
+            md(
+                """
+Singleton classes are kept in the training split to avoid invalid stratification. Validation accuracy should be interpreted as a directional signal rather than a perfect proxy for hidden soundscape performance.
+"""
+            ),
             code(
                 """
 @torch.no_grad()
@@ -1259,7 +1320,13 @@ def submission_notebook() -> dict:
                 """
 # BirdCLEF+ 2026 - EfficientNet-B0 Submission
 
-Purpose: load the trained EfficientNet-B0 artifact, run soundscape inference, and write `submission.csv` for Kaggle.
+**Purpose.** Generate a competition-safe `submission.csv` from the trained EfficientNet-B0 baseline.
+
+**Run mode.** Kaggle submission notebook. This is the reliable official-submission path because it uses only PyTorch and fast mel-spectrogram inference.
+
+**Required inputs.** BirdCLEF+ 2026 competition data and the uploaded EfficientNet artifact containing `best_effnet_b0.pt` and `labels.json`.
+
+**Primary outputs.** `/kaggle/working/submission.csv` and a zipped submission artifact bundle.
 
 Artifacts are written to `/kaggle/working/artifacts/submission`.
 """
@@ -1306,6 +1373,11 @@ print(f"Device: {device}")
 """
             ),
             md("## 2. Locate Competition Files And Model Artifact"),
+            md(
+                """
+The notebook searches attached Kaggle inputs for the trained checkpoint and label map. Keeping artifact discovery flexible makes the same notebook work with either GitHub files or Kaggle Model uploads.
+"""
+            ),
             code(
                 """
 def find_file(filename: str, roots: list[Path]) -> Path:
@@ -1402,6 +1474,11 @@ print(f"Indexed audio files: {len(audio_index):,}")
 """
             ),
             md("## 4. Run Inference"),
+            md(
+                """
+Each row is interpreted as a 5-second window ending at the timestamp encoded in `row_id`. The model predicts probabilities for every label column expected by `sample_submission.csv`.
+"""
+            ),
             code(
                 """
 def load_audio_segment(path: Path, end_time: float) -> np.ndarray:
@@ -1506,9 +1583,13 @@ def perch_submission_notebook() -> dict:
                 """
 # BirdCLEF+ 2026 - Perch v2 Probe Submission
 
-Purpose: load Google Perch v2, extract test soundscape embeddings, apply the trained PyTorch probe, and write `submission.csv` for Kaggle.
+**Purpose.** Generate a Perch-probe submission when compatible cached embeddings or a CPU-capable Perch model are available.
 
-Important: for CPU competition reruns, attach a `perch_v2_cpu` model dataset if available. The standard `perch_v2/2` SavedModel is CUDA-only and cannot run on CPU.
+**Run mode.** Experimental/diagnostic submission notebook. Direct Perch inference can exceed hidden rerun limits, so this is not the default official-submission path.
+
+**Important.** For CPU competition reruns, attach cached embeddings that cover the submission row IDs or attach a `perch_v2_cpu` model dataset. The standard `perch_v2/2` SavedModel is CUDA-only and cannot run on CPU.
+
+**Recommended official path.** Use `04_effnet_b0_submission.ipynb` unless this notebook confirms cache coverage or a compatible CPU Perch model.
 
 Artifacts are written to `/kaggle/working/artifacts/perch_submission`.
 """
@@ -1624,6 +1705,11 @@ print(f"TensorFlow: {tf.__version__}")
 """
             ),
             md("## 2. Locate Competition Files And Model Artifacts"),
+            md(
+                """
+This section first looks for cached Perch embeddings. If the cache covers all requested `row_id`s, the notebook skips TensorFlow entirely and runs only the PyTorch probe. If the cache does not cover the submission rows, a compatible Perch SavedModel is required.
+"""
+            ),
             code(
                 """
 def find_file(filename: str, roots: list[Path]) -> Path:
@@ -1722,6 +1808,11 @@ display(sample_submission.head())
 """
             ),
             md("## 3. Load Perch And Probe"),
+            md(
+                """
+When cache coverage is available, this section only initializes the probe shape. Otherwise it loads Perch and runs a smoke test before any full inference loop begins.
+"""
+            ),
             code(
                 """
 cache_meta = None
@@ -1865,6 +1956,11 @@ print(f"Indexed audio files: {len(audio_index):,}")
 """
             ),
             md("## 5. Run Perch Probe Inference"),
+            md(
+                """
+The fast path uses cached embeddings. The slow path extracts Perch embeddings from audio and should be treated as diagnostic unless runtime has been confirmed against the hidden rerun budget.
+"""
+            ),
             code(
                 """
 def predict_probe(embeddings: np.ndarray) -> np.ndarray:
