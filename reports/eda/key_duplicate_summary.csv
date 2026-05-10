@@ -1,0 +1,9 @@
+table,keys,duplicate_rows
+train,filename,0
+train,filepath,0
+train,primary_label+filename,0
+taxonomy,primary_label,0
+taxonomy,scientific_name,0
+soundscape_labels,filename,1478
+soundscape_labels,filename+primary_label,1478
+sample_submission,row_id,0
