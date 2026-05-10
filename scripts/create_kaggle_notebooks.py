@@ -206,8 +206,20 @@ display(train.head())
             code(
                 """
 def safe_nunique(series: pd.Series) -> int:
-    values = series.map(lambda x: tuple(x) if isinstance(x, list) else x)
+    values = series.map(make_hashable)
     return int(values.nunique(dropna=True))
+
+
+def make_hashable(value):
+    if isinstance(value, list):
+        return tuple(make_hashable(item) for item in value)
+    if isinstance(value, np.ndarray):
+        return tuple(make_hashable(item) for item in value.tolist())
+    if isinstance(value, dict):
+        return tuple(sorted(((key, make_hashable(item)) for key, item in value.items()), key=repr))
+    if isinstance(value, set):
+        return tuple(sorted((make_hashable(item) for item in value), key=repr))
+    return value
 
 
 schema = pd.DataFrame(
@@ -236,6 +248,10 @@ print(f"Missing audio files: {len(missing_files):,}")
             code(
                 """
 duplicate_tables = {}
+def duplicate_ready(frame: pd.DataFrame) -> pd.DataFrame:
+    return frame.apply(lambda col: col.map(make_hashable) if col.dtype == "object" else col)
+
+
 for name, frame in {
     "train": train,
     "taxonomy": taxonomy,
@@ -244,7 +260,8 @@ for name, frame in {
 }.items():
     if frame is None:
         continue
-    dup_mask = frame.duplicated(keep=False)
+    frame_for_dupes = duplicate_ready(frame)
+    dup_mask = frame_for_dupes.duplicated(keep=False)
     duplicate_tables[name] = int(dup_mask.sum())
     frame.loc[dup_mask].to_csv(CFG.artifact_dir / f"{name}_duplicate_rows.csv", index=False)
 
@@ -261,12 +278,14 @@ for name, frame, candidates in [
 ]:
     if frame is None:
         continue
+    frame_for_dupes = duplicate_ready(frame)
     for keys in candidates:
         if all(key in frame.columns for key in keys):
-            dup_count = int(frame.duplicated(subset=keys, keep=False).sum())
+            key_dup_mask = frame_for_dupes.duplicated(subset=keys, keep=False)
+            dup_count = int(key_dup_mask.sum())
             key_checks.append({"table": name, "keys": "+".join(keys), "duplicate_rows": dup_count})
             if dup_count:
-                frame.loc[frame.duplicated(subset=keys, keep=False)].sort_values(keys).to_csv(
+                frame.loc[key_dup_mask].sort_values(keys).to_csv(
                     CFG.artifact_dir / f"{name}_{'_'.join(keys)}_duplicates.csv",
                     index=False,
                 )
@@ -276,7 +295,7 @@ key_duplicate_summary.to_csv(CFG.artifact_dir / "key_duplicate_summary.csv", ind
 display(key_duplicate_summary)
 
 if soundscape_labels is not None:
-    soundscape_dedup = soundscape_labels.drop_duplicates().reset_index(drop=True)
+    soundscape_dedup = soundscape_labels.loc[~duplicate_ready(soundscape_labels).duplicated()].reset_index(drop=True)
     print(f"Soundscape labels before deduplication: {len(soundscape_labels):,}")
     print(f"Soundscape labels after deduplication: {len(soundscape_dedup):,}")
 else:
