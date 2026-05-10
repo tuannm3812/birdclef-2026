@@ -124,8 +124,8 @@ def eda_notebook() -> dict:
 Artifacts are written to `/kaggle/working/artifacts/eda`.
 """
             ),
-            md("# Setup And Inputs"),
-            md("## Environment Setup"),
+            md("# 1. Setup And Inputs"),
+            md("## 1.1 Environment Setup"),
             code(
                 COMMON_STYLE
                 + """
@@ -151,7 +151,7 @@ class CFG(CFG):
     random_examples = 6
 """
             ),
-            md("## 2. Load Metadata"),
+            md("## 1.2 Load Metadata"),
             md(
                 """
 **Insight goal.** Before modeling, confirm the competition files are mounted correctly and that the training table, taxonomy table, soundscape labels, and sample submission agree with each other. This section creates the basic dataset inventory that later sections use for imbalance, duration, and domain-shift diagnostics.
@@ -198,8 +198,8 @@ display(pd.Series(summary).to_frame("value"))
 display(train.head())
 """
             ),
-            md("# Data Integrity Audit"),
-            md("## Dataset Schema And Missingness"),
+            md("# 2. Data Integrity Audit"),
+            md("## 2.1 Dataset Schema And Missingness"),
             md(
                 """
 **What to look for.** Missing metadata can create silent leakage or brittle preprocessing logic. The most important fields for the baseline notebooks are `filename`, `primary_label`, `secondary_labels`, and `duration`; if any of those are incomplete, the training pipeline needs explicit fallback behavior.
@@ -241,7 +241,7 @@ missing_files.to_csv(CFG.artifact_dir / "missing_audio_files.csv", index=False)
 print(f"Missing audio files: {len(missing_files):,}")
 """
             ),
-            md("## Duplicate Records"),
+            md("## 2.2 Duplicate Records"),
             md(
                 """
 **Why this matters.** Duplicate metadata rows can inflate apparent sample size and leak repeated labels into validation. The soundscape label file is especially important because exact duplicate 5-second annotations can bias multi-label prevalence estimates.
@@ -309,8 +309,8 @@ else:
 **Takeaway.** If duplicate rows appear in `train_soundscapes_labels.csv`, downstream soundscape prevalence and co-occurrence analysis should use the deduplicated table. The original file is still copied to artifacts for auditability.
 """
             ),
-            md("# Training Label Analysis"),
-            md("## Primary Label Imbalance"),
+            md("# 3. Training Label Analysis"),
+            md("## 3.1 Primary Label Imbalance"),
             md(
                 """
 **Why this matters.** BirdCLEF-style datasets are usually long-tailed: common species dominate the loss, while rare species are easy to ignore. The imbalance plots below help decide whether the first baseline should use balanced sampling, class-aware augmentation, focal loss, or per-class validation diagnostics.
@@ -358,7 +358,7 @@ fig.savefig(CFG.artifact_dir / "class_imbalance_diagnostics.png", dpi=160)
 plt.show()
 """
             ),
-            md("## Duration And Chunking Implications"),
+            md("## 3.2 Duration And Chunking Implications"),
             md(
                 """
 **Why this matters.** A 5-second crop is a modeling choice, not just a preprocessing detail. Short clips may need padding, long recordings can provide many training crops, and classes with fewer files but longer total duration may be less data-poor than raw recording counts suggest.
@@ -408,7 +408,7 @@ else:
     print("No duration column found in train.csv.")
 """
             ),
-            md("## Secondary Labels And Co-Occurrence"),
+            md("## 3.3 Secondary Labels And Co-Occurrence"),
             md(
                 """
 **Why this matters.** Secondary labels are noisy but valuable. They reveal species that often appear together and can later support soft labels, multi-label training, mixup targets, or post-processing rules. For the first EfficientNet baseline, they are kept diagnostic rather than target-defining.
@@ -449,7 +449,7 @@ if len(secondary_counts):
     plt.show()
 """
             ),
-            md("## Taxonomy Coverage"),
+            md("## 3.4 Taxonomy Coverage"),
             md(
                 """
 **Why this matters.** Taxonomy metadata gives a way to audit errors above the species level. If the model confuses species within the same genus or family, that is a different failure mode from confusing unrelated calls. This table also checks whether train labels and taxonomy labels are aligned.
@@ -484,8 +484,8 @@ else:
     print("No taxonomy.csv found.")
 """
             ),
-            md("# Metadata And Domain Shift"),
-            md("## Metadata Quality And Geography"),
+            md("# 4. Metadata And Domain Shift"),
+            md("## 4.1 Metadata Quality And Geography"),
             md(
                 """
 **Why this matters.** Metadata quality is uneven across recording sources. Rating, collection, author, license, and geography can all become hidden confounders: a model may learn recorder/source artifacts instead of species-specific acoustic structure.
@@ -559,7 +559,7 @@ if {"latitude", "longitude"}.issubset(train.columns):
 **Takeaway.** Treat quality/source/geography as potential domain-shift variables. Validation splits grouped by author, recording, or source can be more honest than purely random splits, especially when the hidden soundscapes come from a narrower ecological region.
 """
             ),
-            md("## Soundscape Labels"),
+            md("## 4.2 Soundscape Labels"),
             md(
                 """
 **Why this matters.** Soundscapes are closer to the evaluation domain than clean training clips: longer recordings, overlapping calls, background noise, and sparse temporal annotations. Treating this table as a separate domain helps avoid over-trusting validation metrics from clean clips only.
@@ -626,7 +626,7 @@ else:
 **Takeaway.** Soundscape labels should be interpreted after deduplication and with time/site context. Multi-label density and temporal clustering are clues for hour-aware priors, threshold tuning, and validation design.
 """
             ),
-            md("## Representative Audio And Spectrograms"),
+            md("## 4.3 Representative Audio And Spectrograms"),
             md(
                 """
 **Why this matters.** A few spectrograms often reveal issues that tables hide: silence, clipping, background insects, rain, distant calls, and frequency bands that matter for augmentation. These examples are not a validation set; they are a quick sanity check for the acoustic texture the model will see.
@@ -672,8 +672,8 @@ else:
     display(Audio(load_clip(first["filepath"], CFG.clip_seconds), rate=CFG.sample_rate))
 """
             ),
-            md("# Modeling Decisions And Artifacts"),
-            md("## Analysis Takeaways"),
+            md("# 5. Modeling Decisions And Artifacts"),
+            md("## 5.1 Analysis Takeaways"),
             md(
                 """
 The diagnostics above point to a few concrete modeling decisions:
@@ -717,7 +717,7 @@ takeaways_df.to_csv(CFG.artifact_dir / "modeling_takeaways.csv", index=False)
 display(takeaways_df)
 """
             ),
-            md("## Final Conclusion"),
+            md("## 5.2 Final Conclusion"),
             md(
                 """
 This EDA suggests a practical modeling roadmap:
@@ -728,7 +728,7 @@ This EDA suggests a practical modeling roadmap:
 - Prioritize class-aware training, multi-crop inference, and eventually soundscape-informed calibration. These changes are more aligned with the observed data issues than simply scaling the backbone.
 """
             ),
-            md("## Artifact Manifest"),
+            md("## 5.3 Artifact Manifest"),
             code(
                 """
 manifest = sorted(str(path.relative_to(CFG.artifact_dir)) for path in CFG.artifact_dir.glob("*"))
@@ -736,7 +736,7 @@ manifest = sorted(str(path.relative_to(CFG.artifact_dir)) for path in CFG.artifa
 manifest
 """
             ),
-            md("## Package Artifacts For Download"),
+            md("## 5.4 Package Artifacts For Download"),
             md(
                 """
 Kaggle makes files under `/kaggle/working` downloadable after the notebook finishes. This cell zips the EDA tables and figures into one file so you can download them, review them locally, and optionally commit selected lightweight artifacts such as `.csv`, `.json`, or `.png` files to GitHub.
