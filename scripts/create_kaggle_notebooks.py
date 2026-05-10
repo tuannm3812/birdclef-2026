@@ -141,6 +141,8 @@ from IPython.display import Audio, display
 CFG.artifact_dir = CFG.artifact_dir / "eda"
 CFG.artifact_dir.mkdir(parents=True, exist_ok=True)
 sns.set_theme(style="whitegrid", context="notebook")
+VIRIDIS = sns.color_palette("viridis", n_colors=8)
+VIRIDIS_CMAP = "viridis"
 
 
 class CFG(CFG):
@@ -337,7 +339,7 @@ display(label_counts.head(CFG.top_n))
 display(label_counts.tail(CFG.top_n))
 
 fig, ax = plt.subplots(figsize=(12, 5))
-sns.barplot(data=label_counts.head(CFG.top_n), x="recordings", y="primary_label", ax=ax, color="#3C78D8")
+sns.barplot(data=label_counts.head(CFG.top_n), x="recordings", y="primary_label", ax=ax, color=VIRIDIS[4])
 ax.set_title(f"Top {CFG.top_n} primary labels by recording count")
 ax.set_xlabel("recordings")
 ax.set_ylabel("")
@@ -346,10 +348,10 @@ fig.savefig(CFG.artifact_dir / "top_primary_labels.png", dpi=160)
 plt.show()
 
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-sns.histplot(label_counts["recordings"], bins=50, ax=axes[0], color="#2CA02C")
+sns.histplot(label_counts["recordings"], bins=50, ax=axes[0], color=VIRIDIS[3])
 axes[0].set_title("Class-count distribution")
 axes[0].set_xlabel("recordings per class")
-sns.lineplot(data=label_counts.reset_index(), x="index", y="cumulative_share", ax=axes[1], color="#D62728")
+sns.lineplot(data=label_counts.reset_index(), x="index", y="cumulative_share", ax=axes[1], color=VIRIDIS[6])
 axes[1].set_title("Cumulative share by ranked class")
 axes[1].set_xlabel("class rank")
 axes[1].set_ylabel("cumulative share")
@@ -383,7 +385,7 @@ if "duration" in train.columns:
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
     clipped = train["duration"].clip(upper=train["duration"].quantile(0.99))
-    sns.histplot(clipped, bins=60, ax=axes[0], color="#9467BD")
+    sns.histplot(clipped, bins=60, ax=axes[0], color=VIRIDIS[3])
     axes[0].set_title("Audio duration distribution, clipped at p99")
     axes[0].set_xlabel("seconds")
     sns.scatterplot(
@@ -394,7 +396,7 @@ if "duration" in train.columns:
         sizes=(20, 180),
         alpha=0.7,
         ax=axes[1],
-        color="#FF7F0E",
+        color=VIRIDIS[5],
     )
     axes[1].set_xscale("log")
     axes[1].set_yscale("log")
@@ -440,7 +442,7 @@ display(cooccurrence.head(30))
 
 if len(secondary_counts):
     fig, ax = plt.subplots(figsize=(12, 6))
-    sns.barplot(data=secondary_counts.head(CFG.top_n), x="mentions", y="secondary_label", ax=ax, color="#17BECF")
+    sns.barplot(data=secondary_counts.head(CFG.top_n), x="mentions", y="secondary_label", ax=ax, color=VIRIDIS[4])
     ax.set_title(f"Top {CFG.top_n} secondary labels")
     ax.set_xlabel("mentions")
     ax.set_ylabel("")
@@ -501,12 +503,12 @@ if "rating" in train.columns:
     display(rating_counts)
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    sns.barplot(data=rating_counts, x="rating", y="recordings", ax=axes[0], color="#7F7F7F")
+    sns.barplot(data=rating_counts, x="rating", y="recordings", ax=axes[0], color=VIRIDIS[4])
     axes[0].set_title("Recording rating distribution")
     if "class_name" in train.columns:
         quality_by_class = train.groupby("class_name")["rating"].agg(["count", "mean", "median"]).reset_index()
         quality_by_class.to_csv(CFG.artifact_dir / "quality_by_class.csv", index=False)
-        sns.boxplot(data=train, x="rating", y="class_name", ax=axes[1], color="#BCBD22")
+        sns.boxplot(data=train, x="rating", y="class_name", ax=axes[1], color=VIRIDIS[5])
         axes[1].set_title("Rating by biological class")
     else:
         axes[1].axis("off")
@@ -544,6 +546,7 @@ if {"latitude", "longitude"}.issubset(train.columns):
         x="longitude",
         y="latitude",
         hue="inside_pantanal_box",
+        palette={False: VIRIDIS[2], True: VIRIDIS[6]},
         s=8,
         alpha=0.35,
         ax=ax,
@@ -606,12 +609,12 @@ else:
         display(overlap_summary)
 
         fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-        sns.histplot(sc["n_labels"], discrete=True, ax=axes[0], color="#8C564B")
+        sns.histplot(sc["n_labels"], discrete=True, ax=axes[0], color=VIRIDIS[3])
         axes[0].set_title("Labels per soundscape segment")
         if sc["hour"].notna().any():
             hour_counts = sc["hour"].value_counts().sort_index().rename_axis("hour").reset_index(name="segments")
             hour_counts.to_csv(CFG.artifact_dir / "soundscape_hour_counts.csv", index=False)
-            sns.barplot(data=hour_counts, x="hour", y="segments", ax=axes[1], color="#E377C2")
+            sns.barplot(data=hour_counts, x="hour", y="segments", ax=axes[1], color=VIRIDIS[4])
             axes[1].set_title("Labeled soundscape segments by hour")
         else:
             axes[1].axis("off")
@@ -661,7 +664,7 @@ else:
         y = load_clip(row["filepath"], CFG.clip_seconds)
         mel = librosa.feature.melspectrogram(y=y, sr=CFG.sample_rate, n_mels=CFG.n_mels)
         mel_db = librosa.power_to_db(mel, ref=np.max)
-        librosa.display.specshow(mel_db, sr=CFG.sample_rate, x_axis="time", y_axis="mel", ax=ax)
+        librosa.display.specshow(mel_db, sr=CFG.sample_rate, x_axis="time", y_axis="mel", cmap=VIRIDIS_CMAP, ax=ax)
         ax.set_title(f"{row['primary_label']} | {row['filename']}")
     fig.tight_layout()
     fig.savefig(CFG.artifact_dir / "representative_mels.png", dpi=160)
