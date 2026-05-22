@@ -16,6 +16,7 @@ Perch v2 is best treated as an offline feature generator, teacher model, or dist
 | Classes | 206 |
 | Epochs | 20 max with early stopping |
 | Latest observed run | Early stopped after 7 epochs |
+| Diagnostic outputs | Validation predictions, per-class recall, summary JSON |
 | Runtime requirement | TensorFlow 2.20+ for the attached Perch export |
 | Primary notebook | `notebooks/3_bc2026_perch_v2.ipynb` |
 
@@ -57,3 +58,13 @@ The most practical next step is to use Perch as a teacher:
 3. Use Perch features for error analysis and class-similarity diagnostics.
 4. Compare EfficientNet failures against Perch successes to identify rare-class or domain-shift patterns.
 5. Train a PyTorch student on Perch-informed soft targets so hidden inference can stay lightweight.
+
+## 6. Added Diagnostics
+
+The notebook now saves three lightweight diagnostic artifacts:
+
+1. `validation_predictions.csv`: row-level validation target, top-1 prediction, top-1 confidence, top-5 labels, and correctness flags.
+2. `per_class_validation_metrics.csv`: class support, top-1 recall, top-5 recall, and mean top-1 confidence.
+3. `summary.json`: best validation accuracy, top-5 validation accuracy, best epoch, epochs run, and embedding shape.
+
+These files make the Perch result more actionable. Low top-1 recall with high top-5 recall points to class-confusion problems that may benefit from calibration or soft targets, while low top-5 recall suggests missing acoustic coverage or hard domain shift.
