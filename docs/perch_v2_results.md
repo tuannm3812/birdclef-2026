@@ -48,7 +48,7 @@ Recommended Perch workflow:
 2. Attach `/kaggle/input/datasets/jaejohn/perch-meta` or another Perch SavedModel input for local embedding extraction.
 3. Attach the uploaded Perch artifact model at `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/1/perch_v2` to reuse `train_embeddings.npz`, `best_perch_probe.pt`, labels, and diagnostics.
 4. For score experiments, set **`CFG.mode = "submission"`** so the notebook loads `best_perch_probe.pt` and `labels.json`, skips train embeddings, skips probe training, extracts Perch embeddings for test windows, and writes `/kaggle/working/submission.csv`.
-5. If Kaggle mounts the artifact under a different folder, set `CFG.submission_artifact_dir` to the directory that directly contains `best_perch_probe.pt` and `labels.json`.
+5. The confirmed artifact directory is `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/1/perch_v2`. If Kaggle mounts the artifact under a different folder, set `CFG.submission_artifact_dir` to the directory that directly contains `best_perch_probe.pt` and `labels.json`.
 6. Keep the final Perch experiment reproducible by using attached wheels and model inputs rather than runtime downloads.
 7. Restart the Kaggle session after any TensorFlow upgrade if TensorFlow was imported earlier.
 
