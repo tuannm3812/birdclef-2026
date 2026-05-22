@@ -34,7 +34,16 @@ Each notebook should include:
 
 Prefer readable, self-contained notebook code over imports from local project modules. Kaggle should be able to run the notebook after attaching only the required competition datasets and model inputs.
 
-## 4. Documentation Style
+## 4. Plot Style
+
+Use the Viridis palette as the default visual language across notebooks:
+
+- Use `sns.color_palette("viridis", ...)` for categorical or sequential accents.
+- Use `"viridis"` as the default colormap for heatmaps and spectrogram-like plots.
+- Change color palettes only when a specific chart needs clearer contrast, semantic coloring, or accessibility improvement.
+- Keep chart titles short and analytical; avoid decorative styling.
+
+## 5. Documentation Style
 
 Documentation should be written for a competition reviewer or teammate who wants the reasoning quickly:
 
@@ -45,7 +54,7 @@ Documentation should be written for a competition reviewer or teammate who wants
 - Keep model result pages separate by model.
 - Keep broad narrative in the root `README.md`; keep detailed evidence in focused docs.
 
-## 5. Git Hygiene
+## 6. Git Hygiene
 
 Do not commit:
 
