@@ -45,7 +45,7 @@ Full analysis: [docs/eda_full_insights.md](docs/eda_full_insights.md).
 | Model | Representation | Epochs | Best validation accuracy | Role |
 |---|---|---:|---:|---|
 | EfficientNet-B0 | 5-second mel-spectrogram | 5 observed / 15 max | **0.5273** | Reliable submission baseline |
-| Perch v2 probe | Frozen 1,536-d embeddings | 10 observed / 20 max | **0.8391** | Stronger feature experiment and teacher candidate |
+| Perch v2 probe | Frozen 1,536-d embeddings | 7 observed / 20 max | **0.8392** | Stronger feature experiment and teacher candidate |
 
 Result notes:
 
