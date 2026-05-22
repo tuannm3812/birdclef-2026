@@ -1,0 +1,48 @@
+# Perch v2 Probe Results
+
+## 1. Role
+
+The Perch v2 experiment evaluates Google Perch embeddings as frozen bioacoustic features. A shallow PyTorch probe is trained on top of 1,536-dimensional embeddings for the same 206 primary labels used by the EfficientNet-B0 baseline.
+
+Perch v2 is best treated as an offline feature generator, teacher model, or distillation source unless hidden-test inference has cached embeddings or a proven Kaggle-compatible runtime.
+
+## 2. Training Setup
+
+| Item | Value |
+|---|---|
+| Feature model | Google Perch v2 |
+| Embedding shape | 35,549 x 1,536 |
+| Probe | LayerNorm, Linear, ReLU, Dropout, Linear |
+| Classes | 206 |
+| Epochs | 10 |
+| Primary notebook | `notebooks/3_bc2026_perch_v2.ipynb` |
+
+## 3. Validation History
+
+| Epoch | Train loss | Valid accuracy |
+|---:|---:|---:|
+| 1 | 1.3074 | 0.8360 |
+| 2 | 0.5476 | 0.8329 |
+| 3 | 0.3383 | 0.8377 |
+| 4 | 0.2104 | 0.8360 |
+| 5 | 0.1436 | 0.8367 |
+| 6 | 0.1106 | 0.8316 |
+| 7 | 0.0910 | 0.8370 |
+| 8 | 0.0765 | 0.8403 |
+| 9 | 0.0714 | 0.8333 |
+| 10 | 0.0647 | 0.8350 |
+
+Best validation accuracy: **0.8403**.
+
+## 4. Interpretation
+
+The probe reaches strong validation accuracy almost immediately, which indicates that Perch embeddings already encode most of the useful acoustic structure. The best epoch is epoch 8, but the curve is fairly flat after epoch 1 while train loss keeps decreasing.
+
+Compared with EfficientNet-B0, Perch v2 improves validation accuracy by about **10.9 percentage points**. The result is important because it shows foundation-model representations are highly valuable for this competition, but the submission path is operationally heavier than the PyTorch baseline.
+
+The most practical next step is to use Perch as a teacher:
+
+1. Distill Perch predictions or embeddings into a faster PyTorch student.
+2. Use Perch features for error analysis and class-similarity diagnostics.
+3. Compare EfficientNet failures against Perch successes to identify rare-class or domain-shift patterns.
+4. Keep direct Perch submission experimental until hidden-test runtime is proven safe.

@@ -9,13 +9,6 @@ __pycache__/
 venv/
 env/
 
-data/*
-!data/.gitkeep
-models/*
-!models/.gitkeep
-outputs/*
-!outputs/.gitkeep
-
 *.pt
 *.pth
 *.ckpt
@@ -27,3 +20,9 @@ outputs/*
 
 .env
 kaggle.json
+
+data/
+models/
+outputs/
+artifacts/
+kaggle/

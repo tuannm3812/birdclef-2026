@@ -1,5 +1,0 @@
-takeaway
-Primary-label imbalance is substantial: top 10 classes cover 13.9% of training recordings.
-"Secondary labels appear in 12.3% of rows, so noisy multi-label context may help later even if the first baseline is single-label."
-Taxonomy metadata can support stratified diagnostics and class-family level error analysis.
-Soundscape annotations should be treated separately from clean training clips because they reflect the evaluation domain more closely.

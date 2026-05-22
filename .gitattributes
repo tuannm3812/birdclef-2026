@@ -1,7 +1,0 @@
-*.ipynb linguist-documentation
-*.csv -text
-*.parquet -text
-*.pt -text
-*.pth -text
-*.ckpt -text
-*.npz -text
