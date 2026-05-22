@@ -20,6 +20,7 @@ The Perch notebook is **not** the scored submission path. A full Perch run insta
 | Latest observed run | Early stopped after 7 epochs |
 | Diagnostic outputs | Validation predictions, per-class recall, summary JSON |
 | Runtime requirement | TensorFlow 2.20+ for the attached Perch export |
+| Uploaded artifact path | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/1/perch_v2` |
 | Primary notebook | `notebooks/3_bc2026_perch_v2.ipynb` |
 
 ## 3. Validation History
@@ -44,8 +45,9 @@ Recommended Perch workflow:
 
 1. Attach `/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0` for TensorFlow 2.20 wheels.
 2. Attach `/kaggle/input/datasets/jaejohn/perch-meta` or another Perch SavedModel input for local embedding extraction.
-3. Keep the final Perch experiment reproducible by using attached wheels and model inputs rather than runtime downloads.
-4. Restart the Kaggle session after any TensorFlow upgrade if TensorFlow was imported earlier.
+3. Attach the uploaded Perch artifact model at `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/1/perch_v2` to reuse `train_embeddings.npz`, `best_perch_probe.pt`, labels, and diagnostics.
+4. Keep the final Perch experiment reproducible by using attached wheels and model inputs rather than runtime downloads.
+5. Restart the Kaggle session after any TensorFlow upgrade if TensorFlow was imported earlier.
 
 ## 5. Interpretation
 
