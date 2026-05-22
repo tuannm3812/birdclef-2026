@@ -6,7 +6,7 @@ The Perch v2 experiment evaluates Google Perch embeddings as frozen bioacoustic 
 
 Perch v2 is best treated as an offline feature generator, teacher model, or distillation source unless hidden-test inference has cached embeddings or a proven Kaggle-compatible runtime.
 
-The Perch notebook is **not** the scored submission path. A full Perch run installs TensorFlow, extracts embeddings, trains the probe, and writes diagnostics; this is valuable for analysis but too slow for the competition scoring budget.
+The Perch notebook now has two modes: **`CFG.mode = "train"`** for the full experiment and **`CFG.mode = "submission"`** for loading the uploaded probe artifact and writing `submission.csv`. This is useful for score experiments, but it is still operationally heavier than EfficientNet because hidden-test audio must be embedded through the Perch SavedModel during scoring.
 
 ## 2. Training Setup
 
@@ -21,6 +21,7 @@ The Perch notebook is **not** the scored submission path. A full Perch run insta
 | Diagnostic outputs | Validation predictions, per-class recall, summary JSON |
 | Runtime requirement | TensorFlow 2.20+ for the attached Perch export |
 | Uploaded artifact path | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/1/perch_v2` |
+| Submission mode | Loads `best_perch_probe.pt` and `labels.json`; skips train embeddings, probe training, diagnostics, and artifact zip |
 | Primary notebook | `notebooks/3_bc2026_perch_v2.ipynb` |
 
 ## 3. Validation History
@@ -46,8 +47,9 @@ Recommended Perch workflow:
 1. Attach `/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0` for TensorFlow 2.20 wheels.
 2. Attach `/kaggle/input/datasets/jaejohn/perch-meta` or another Perch SavedModel input for local embedding extraction.
 3. Attach the uploaded Perch artifact model at `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/1/perch_v2` to reuse `train_embeddings.npz`, `best_perch_probe.pt`, labels, and diagnostics.
-4. Keep the final Perch experiment reproducible by using attached wheels and model inputs rather than runtime downloads.
-5. Restart the Kaggle session after any TensorFlow upgrade if TensorFlow was imported earlier.
+4. For score experiments, set **`CFG.mode = "submission"`** so the notebook loads `best_perch_probe.pt` and `labels.json`, skips training, extracts Perch embeddings for test windows, and writes `/kaggle/working/submission.csv`.
+5. Keep the final Perch experiment reproducible by using attached wheels and model inputs rather than runtime downloads.
+6. Restart the Kaggle session after any TensorFlow upgrade if TensorFlow was imported earlier.
 
 ## 5. Interpretation
 
