@@ -36,6 +36,8 @@ Prefer readable, self-contained notebook code over imports from local project mo
 
 When notebook code changes, clear all outputs before committing and rerun the notebook on Kaggle to regenerate trusted outputs. Keep committed notebooks lightweight; Kaggle is the execution record.
 
+Competition notebooks should not depend on internet access during final reruns. For pretrained models, attach local Kaggle input weights and load them explicitly; do not rely on runtime downloads from Hugging Face, timm, or other external hubs.
+
 ## 4. Plot Style
 
 Use the Viridis palette as the default visual language across notebooks:

@@ -4,7 +4,7 @@
 
 EfficientNet-B0 is the primary competition-safe baseline. It uses 5-second mono mel-spectrogram crops and a PyTorch EfficientNet-B0 classifier over the 206 training labels.
 
-This model is the preferred Kaggle submission path because it is fast, self-contained, and avoids TensorFlow/Perch runtime constraints during hidden reruns. The notebook disables external pretrained weights by default so it can run with Kaggle internet turned off.
+This model is the preferred Kaggle submission path because it is fast, self-contained, and avoids TensorFlow/Perch runtime constraints during hidden reruns. The notebook disables external pretrained downloads and forces offline Hugging Face mode so hidden reruns do not fail on network calls.
 
 The notebook now follows a single-run flow: train the checkpoint, load that checkpoint directly, then write `submission.csv`. This keeps submission logic simple and avoids broad artifact search code.
 
@@ -16,7 +16,7 @@ The notebook now follows a single-run flow: train the checkpoint, load that chec
 | Input | 5-second mono mel-spectrogram |
 | Classes | 206 |
 | Epochs | 5 |
-| Pretrained weights | Disabled by default for internet-off Kaggle reruns |
+| Pretrained weights | External downloads disabled; optional local Kaggle input checkpoint supported |
 | Loss | Cross entropy with label smoothing |
 | Optimizer | AdamW |
 | Scheduler | Cosine annealing |
@@ -34,7 +34,11 @@ The notebook now follows a single-run flow: train the checkpoint, load that chec
 
 Best validation accuracy from the saved reference run: **0.7318**.
 
-## 4. Interpretation
+## 4. Pretrained Weight Policy
+
+Do not leave Kaggle internet enabled for the final competition notebook. If pretrained EfficientNet initialization is needed, create a separate Kaggle dataset that contains the timm/Hugging Face weight file, usually `model.safetensors` or a `.pt` checkpoint, and point `CFG.pretrained_weight_path` to that file. The notebook always calls `timm.create_model(..., pretrained=False)` and then loads compatible local tensors, adapting the RGB stem to mono audio and skipping incompatible classifier weights.
+
+## 5. Interpretation
 
 The baseline learns steadily across all 5 epochs, with validation accuracy improving from **0.6134** to **0.7318**. Validation loss flattens by the final epochs, which suggests the current setup is a solid baseline but should benefit more from data and inference improvements than simply training longer.
 

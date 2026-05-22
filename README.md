@@ -56,7 +56,7 @@ Result notes:
 
 Run [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) on Kaggle to train the baseline and create `/kaggle/working/submission.csv`.
 
-The notebook uses the checkpoint produced in the same run and disables external pretrained-weight downloads by default. The public sample submission has only **3** rows, so a successful public run confirms notebook mechanics but does not prove hidden-test runtime.
+The notebook uses the checkpoint produced in the same run and disables external pretrained-weight downloads. For pretrained initialization, attach the weight file as a Kaggle input and set `CFG.pretrained_weight_path`; keep internet off for the final rerun. The public sample submission has only **3** rows, so a successful public run confirms notebook mechanics but does not prove hidden-test runtime.
 
 ## 5. Repository Layout
 
