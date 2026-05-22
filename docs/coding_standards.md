@@ -34,6 +34,8 @@ Each notebook should include:
 
 Prefer readable, self-contained notebook code over imports from local project modules. Kaggle should be able to run the notebook after attaching only the required competition datasets and model inputs.
 
+When notebook code changes, clear all outputs before committing and rerun the notebook on Kaggle to regenerate trusted outputs. Keep committed notebooks lightweight; Kaggle is the execution record.
+
 ## 4. Plot Style
 
 Use the Viridis palette as the default visual language across notebooks:
