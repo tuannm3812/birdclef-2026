@@ -15,7 +15,8 @@ The notebook now follows a single-run flow: train the checkpoint, load that chec
 | Backbone | EfficientNet-B0 |
 | Input | 5-second mono mel-spectrogram |
 | Classes | 206 |
-| Epochs | 5 |
+| Epochs | 15 max with early stopping |
+| Latest observed run | 5 completed epochs |
 | Pretrained weights | External downloads disabled; optional local Kaggle input checkpoint supported |
 | Loss | Cross entropy with label smoothing |
 | Optimizer | AdamW |
@@ -26,13 +27,13 @@ The notebook now follows a single-run flow: train the checkpoint, load that chec
 
 | Epoch | Train loss | Valid loss | Valid accuracy | LR |
 |---:|---:|---:|---:|---:|
-| 1 | 3.0352 | 2.0567 | 0.6134 | 0.000271 |
-| 2 | 1.7437 | 1.7819 | 0.6968 | 0.000196 |
-| 3 | 1.2337 | 1.7117 | 0.7153 | 0.000104 |
-| 4 | 0.8811 | 1.6919 | 0.7256 | 0.000029 |
-| 5 | 0.7143 | 1.6846 | 0.7318 | 0.000000 |
+| 1 | 4.3343 | 3.5052 | 0.2463 | 0.000271 |
+| 2 | 3.1107 | 2.8757 | 0.4025 | 0.000196 |
+| 3 | 2.4525 | 2.5757 | 0.4813 | 0.000104 |
+| 4 | 1.8975 | 2.4568 | 0.5225 | 0.000029 |
+| 5 | 1.4742 | 2.4470 | 0.5273 | 0.000000 |
 
-Best validation accuracy from the saved reference run: **0.7318**.
+Best validation accuracy from the latest Kaggle run: **0.5273**.
 
 ## 4. Pretrained Weight Policy
 
@@ -40,14 +41,16 @@ Do not leave Kaggle internet enabled for the final competition notebook. If pret
 
 ## 5. Interpretation
 
-The baseline learns steadily across all 5 epochs, with validation accuracy improving from **0.6134** to **0.7318**. Validation loss flattens by the final epochs, which suggests the current setup is a solid baseline but should benefit more from data and inference improvements than simply training longer.
+The offline-safe baseline now trains from random initialization unless a local pretrained checkpoint is attached. That explains the lower validation accuracy compared with earlier pretrained-style runs, but the learning curve is still improving at epoch 5: validation accuracy rises from **0.2463** to **0.5273**, and validation loss continues to drop.
+
+The notebook now allows up to **15** epochs with early stopping. This is worth running because the current 5-epoch curve has not saturated. If a local EfficientNet pretrained checkpoint is attached, expect a much stronger starting point and faster convergence.
 
 The next most useful improvements are:
 
-1. Multi-crop inference for soundscape windows.
-2. Class-aware sampling or rare-class augmentation.
-3. Per-class validation metrics and confusion analysis.
-4. Secondary-label soft targets once the single-label baseline is stable.
-5. Threshold or calibration work informed by soundscape label overlap.
+1. Run the 15-epoch early-stopping configuration and compare the best checkpoint.
+2. Attach a local EfficientNet-B0 pretrained weight file if allowed by the final Kaggle setup.
+3. Add multi-crop inference for soundscape windows.
+4. Add class-aware sampling or rare-class augmentation.
+5. Use secondary-label soft targets once the single-label baseline is stable.
 
 The current inference path intentionally raises a clear error if hidden-test audio is missing. The only exception is the tiny public dry-run case, where Kaggle may expose a 3-row sample submission without test audio.

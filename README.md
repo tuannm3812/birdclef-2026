@@ -44,15 +44,15 @@ Full analysis: [docs/eda_full_insights.md](docs/eda_full_insights.md).
 
 | Model | Representation | Epochs | Best validation accuracy | Role |
 |---|---|---:|---:|---|
-| EfficientNet-B0 | 5-second mel-spectrogram | 5 | **0.7318** | Reliable submission baseline |
-| Perch v2 probe | Frozen 1,536-d embeddings | 10 | **0.8403** | Stronger feature experiment and teacher candidate |
+| EfficientNet-B0 | 5-second mel-spectrogram | 5 observed / 15 max | **0.5273** | Reliable submission baseline |
+| Perch v2 probe | Frozen 1,536-d embeddings | 10 observed / 20 max | **0.8391** | Stronger feature experiment and teacher candidate |
 
 Result notes:
 
 - [EfficientNet-B0 results](docs/effnet_b0_results.md)
 - [Perch v2 results](docs/perch_v2_results.md)
 
-Perch v2 requires a compatible TensorFlow runtime. Notebook 3 expects TensorFlow 2.20 wheels from `/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0` and a local Perch SavedModel input such as `/kaggle/input/datasets/jaejohn/perch-meta` when internet is off; it no longer falls back to network installation by default.
+Perch v2 requires a compatible TensorFlow runtime. Notebook 3 expects TensorFlow 2.20 wheels from `/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0` and a local Perch SavedModel input such as `/kaggle/input/datasets/jaejohn/perch-meta` when internet is off.
 
 ## 4. Submission
 

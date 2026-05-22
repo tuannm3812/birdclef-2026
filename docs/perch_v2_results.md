@@ -14,7 +14,8 @@ Perch v2 is best treated as an offline feature generator, teacher model, or dist
 | Embedding shape | 35,549 x 1,536 |
 | Probe | LayerNorm, Linear, ReLU, Dropout, Linear |
 | Classes | 206 |
-| Epochs | 10 |
+| Epochs | 20 max with early stopping |
+| Latest observed run | 10 completed epochs |
 | Runtime requirement | TensorFlow 2.20+ for the attached Perch export |
 | Primary notebook | `notebooks/3_bc2026_perch_v2.ipynb` |
 
@@ -22,39 +23,39 @@ Perch v2 is best treated as an offline feature generator, teacher model, or dist
 
 | Epoch | Train loss | Valid accuracy |
 |---:|---:|---:|
-| 1 | 1.3074 | 0.8360 |
-| 2 | 0.5476 | 0.8329 |
-| 3 | 0.3383 | 0.8377 |
-| 4 | 0.2104 | 0.8360 |
-| 5 | 0.1436 | 0.8367 |
-| 6 | 0.1106 | 0.8316 |
-| 7 | 0.0910 | 0.8370 |
-| 8 | 0.0765 | 0.8403 |
-| 9 | 0.0714 | 0.8333 |
-| 10 | 0.0647 | 0.8350 |
+| 1 | 1.3072 | 0.8349 |
+| 2 | 0.5468 | 0.8323 |
+| 3 | 0.3383 | 0.8391 |
+| 4 | 0.2105 | 0.8368 |
+| 5 | 0.1434 | 0.8347 |
+| 6 | 0.1103 | 0.8335 |
+| 7 | 0.0945 | 0.8354 |
+| 8 | 0.0806 | 0.8370 |
+| 9 | 0.0725 | 0.8370 |
+| 10 | 0.0687 | 0.8350 |
 
-Best validation accuracy: **0.8403**.
+Best validation accuracy from the latest Kaggle run: **0.8391**.
 
 ## 4. Kaggle Runtime Notes
 
-The observed notebook 3 failure came from trying to install `tensorflow==2.20.0` from PyPI while Kaggle internet was disabled. The notebook now avoids that network fallback by default. It first checks `/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0`, then recursively scans attached Kaggle inputs for `tensorflow-2.20.0*.whl` and `tensorboard-2.20.0*.whl`; if no wheelhouse is attached, it raises a clear setup error instead of retrying DNS.
+The observed notebook 3 failure came from trying to install `tensorflow==2.20.0` from PyPI while Kaggle internet was disabled. The notebook now uses the attached `/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0` wheel input directly and keeps Perch execution local.
 
 Recommended Perch workflow:
 
-1. Attach `/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0` for TensorFlow 2.20 wheels, or use an internet-enabled exploratory run by setting `CFG.allow_internet_install=True`.
+1. Attach `/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0` for TensorFlow 2.20 wheels.
 2. Attach `/kaggle/input/datasets/jaejohn/perch-meta` or another Perch SavedModel input for local embedding extraction.
 3. Keep the final Perch experiment reproducible by using attached wheels and model inputs rather than runtime downloads.
 4. Restart the Kaggle session after any TensorFlow upgrade if TensorFlow was imported earlier.
 
 ## 5. Interpretation
 
-The probe reaches strong validation accuracy almost immediately, which indicates that Perch embeddings already encode most of the useful acoustic structure. The best epoch is epoch 8, but the curve is fairly flat after epoch 1 while train loss keeps decreasing.
+The probe reaches strong validation accuracy almost immediately, which indicates that Perch embeddings already encode most of the useful acoustic structure. The best epoch in the latest run is epoch 3, and the curve is fairly flat afterward while train loss keeps decreasing.
 
-Compared with EfficientNet-B0, Perch v2 improves validation accuracy by about **10.9 percentage points**. The result is important because it shows foundation-model representations are highly valuable for this competition, but the submission path is operationally heavier than the PyTorch baseline.
+Compared with the offline-safe EfficientNet-B0 run, Perch v2 improves validation accuracy by about **31.2 percentage points**. The result is important because it shows foundation-model representations are highly valuable for this competition, but the submission path is operationally heavier than the PyTorch baseline.
 
 The most practical next step is to use Perch as a teacher:
 
 1. Distill Perch predictions or embeddings into a faster PyTorch student.
-2. Use Perch features for error analysis and class-similarity diagnostics.
-3. Compare EfficientNet failures against Perch successes to identify rare-class or domain-shift patterns.
-4. Keep direct Perch submission experimental until hidden-test runtime is proven safe.
+2. Keep the 20-epoch cap with early stopping; the latest run suggests extra probe epochs are unlikely to help much after the first few epochs.
+3. Use Perch features for error analysis and class-similarity diagnostics.
+4. Compare EfficientNet failures against Perch successes to identify rare-class or domain-shift patterns.
