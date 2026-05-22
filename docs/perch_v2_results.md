@@ -37,13 +37,14 @@ Best validation accuracy: **0.8403**.
 
 ## 4. Kaggle Runtime Notes
 
-The observed notebook 3 failure came from trying to install `tensorflow==2.20.0` from PyPI while Kaggle internet was disabled. The notebook now avoids that network fallback by default. It first scans attached Kaggle inputs for `tensorflow-2.20.0*.whl` and `tensorboard-2.20.0*.whl`; if no wheelhouse is attached, it raises a clear setup error instead of retrying DNS.
+The observed notebook 3 failure came from trying to install `tensorflow==2.20.0` from PyPI while Kaggle internet was disabled. The notebook now avoids that network fallback by default. It first checks `/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0`, then recursively scans attached Kaggle inputs for `tensorflow-2.20.0*.whl` and `tensorboard-2.20.0*.whl`; if no wheelhouse is attached, it raises a clear setup error instead of retrying DNS.
 
 Recommended Perch workflow:
 
-1. Attach a Kaggle dataset containing TensorFlow 2.20 wheels, or use an internet-enabled exploratory run by setting `CFG.allow_internet_install=True`.
-2. Keep the final Perch experiment reproducible by using attached wheels and model inputs rather than runtime downloads.
-3. Restart the Kaggle session after any TensorFlow upgrade if TensorFlow was imported earlier.
+1. Attach `/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0` for TensorFlow 2.20 wheels, or use an internet-enabled exploratory run by setting `CFG.allow_internet_install=True`.
+2. Attach `/kaggle/input/datasets/jaejohn/perch-meta` or another Perch SavedModel input for local embedding extraction.
+3. Keep the final Perch experiment reproducible by using attached wheels and model inputs rather than runtime downloads.
+4. Restart the Kaggle session after any TensorFlow upgrade if TensorFlow was imported earlier.
 
 ## 5. Interpretation
 

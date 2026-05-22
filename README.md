@@ -52,7 +52,7 @@ Result notes:
 - [EfficientNet-B0 results](docs/effnet_b0_results.md)
 - [Perch v2 results](docs/perch_v2_results.md)
 
-Perch v2 requires a compatible TensorFlow runtime. Notebook 3 expects TensorFlow 2.20 wheels to be attached as a Kaggle input when internet is off; it no longer falls back to network installation by default.
+Perch v2 requires a compatible TensorFlow runtime. Notebook 3 expects TensorFlow 2.20 wheels from `/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0` and a local Perch SavedModel input such as `/kaggle/input/datasets/jaejohn/perch-meta` when internet is off; it no longer falls back to network installation by default.
 
 ## 4. Submission
 
