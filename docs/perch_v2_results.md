@@ -15,6 +15,7 @@ Perch v2 is best treated as an offline feature generator, teacher model, or dist
 | Probe | LayerNorm, Linear, ReLU, Dropout, Linear |
 | Classes | 206 |
 | Epochs | 10 |
+| Runtime requirement | TensorFlow 2.20+ for the attached Perch export |
 | Primary notebook | `notebooks/3_bc2026_perch_v2.ipynb` |
 
 ## 3. Validation History
@@ -34,7 +35,17 @@ Perch v2 is best treated as an offline feature generator, teacher model, or dist
 
 Best validation accuracy: **0.8403**.
 
-## 4. Interpretation
+## 4. Kaggle Runtime Notes
+
+The observed notebook 3 failure came from trying to install `tensorflow==2.20.0` from PyPI while Kaggle internet was disabled. The notebook now avoids that network fallback by default. It first scans attached Kaggle inputs for `tensorflow-2.20.0*.whl` and `tensorboard-2.20.0*.whl`; if no wheelhouse is attached, it raises a clear setup error instead of retrying DNS.
+
+Recommended Perch workflow:
+
+1. Attach a Kaggle dataset containing TensorFlow 2.20 wheels, or use an internet-enabled exploratory run by setting `CFG.allow_internet_install=True`.
+2. Keep the final Perch experiment reproducible by using attached wheels and model inputs rather than runtime downloads.
+3. Restart the Kaggle session after any TensorFlow upgrade if TensorFlow was imported earlier.
+
+## 5. Interpretation
 
 The probe reaches strong validation accuracy almost immediately, which indicates that Perch embeddings already encode most of the useful acoustic structure. The best epoch is epoch 8, but the curve is fairly flat after epoch 1 while train loss keeps decreasing.
 

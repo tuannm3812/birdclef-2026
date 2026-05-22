@@ -52,6 +52,8 @@ Result notes:
 - [EfficientNet-B0 results](docs/effnet_b0_results.md)
 - [Perch v2 results](docs/perch_v2_results.md)
 
+Perch v2 requires a compatible TensorFlow runtime. Notebook 3 expects TensorFlow 2.20 wheels to be attached as a Kaggle input when internet is off; it no longer falls back to network installation by default.
+
 ## 4. Submission
 
 Run [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) on Kaggle to train the baseline and create `/kaggle/working/submission.csv`.

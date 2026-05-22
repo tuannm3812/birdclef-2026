@@ -38,6 +38,8 @@ When notebook code changes, clear all outputs before committing and rerun the no
 
 Competition notebooks should not depend on internet access during final reruns. For pretrained models, attach local Kaggle input weights and load them explicitly; do not rely on runtime downloads from Hugging Face, timm, or other external hubs.
 
+For runtime packages that differ from the Kaggle image, prefer attached wheelhouse datasets. If an exploratory notebook allows internet installation, gate it behind an explicit config flag and keep the default offline-safe.
+
 ## 4. Plot Style
 
 Use the Viridis palette as the default visual language across notebooks:
