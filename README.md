@@ -23,7 +23,7 @@ BirdCLEF+ 2026 bioacoustic classification workspace with three Kaggle notebooks:
 | [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) | EfficientNet-B0 training and `submission.csv` generation |
 | [3_bc2026_perch_v2.ipynb](notebooks/3_bc2026_perch_v2.ipynb) | Perch v2 embedding extraction and shallow probe training |
 
-EfficientNet-B0 is the main submission path because it is fast and pure PyTorch. Perch v2 gives stronger validation features and is most useful as an offline teacher or feature source.
+EfficientNet-B0 is the main submission path because it is fast, pure PyTorch, and configured for Kaggle runs without internet access. Perch v2 gives stronger validation features and is most useful as an offline teacher or feature source.
 
 ## 2. Key EDA Findings
 
@@ -56,7 +56,7 @@ Result notes:
 
 Run [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) on Kaggle to train the baseline and create `/kaggle/working/submission.csv`.
 
-The public sample submission has only **3** rows, so a successful public run confirms notebook mechanics but does not prove hidden-test runtime.
+The notebook uses the checkpoint produced in the same run and disables external pretrained-weight downloads by default. The public sample submission has only **3** rows, so a successful public run confirms notebook mechanics but does not prove hidden-test runtime.
 
 ## 5. Repository Layout
 

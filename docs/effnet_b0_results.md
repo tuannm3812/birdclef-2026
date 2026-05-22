@@ -4,7 +4,9 @@
 
 EfficientNet-B0 is the primary competition-safe baseline. It uses 5-second mono mel-spectrogram crops and a PyTorch EfficientNet-B0 classifier over the 206 training labels.
 
-This model is the preferred Kaggle submission path because it is fast, self-contained, and avoids TensorFlow/Perch runtime constraints during hidden reruns.
+This model is the preferred Kaggle submission path because it is fast, self-contained, and avoids TensorFlow/Perch runtime constraints during hidden reruns. The notebook disables external pretrained weights by default so it can run with Kaggle internet turned off.
+
+The notebook now follows a single-run flow: train the checkpoint, load that checkpoint directly, then write `submission.csv`. This keeps submission logic simple and avoids broad artifact search code.
 
 ## 2. Training Setup
 
@@ -14,6 +16,7 @@ This model is the preferred Kaggle submission path because it is fast, self-cont
 | Input | 5-second mono mel-spectrogram |
 | Classes | 206 |
 | Epochs | 5 |
+| Pretrained weights | Disabled by default for internet-off Kaggle reruns |
 | Loss | Cross entropy with label smoothing |
 | Optimizer | AdamW |
 | Scheduler | Cosine annealing |
@@ -29,7 +32,7 @@ This model is the preferred Kaggle submission path because it is fast, self-cont
 | 4 | 0.8811 | 1.6919 | 0.7256 | 0.000029 |
 | 5 | 0.7143 | 1.6846 | 0.7318 | 0.000000 |
 
-Best validation accuracy: **0.7318**.
+Best validation accuracy from the saved reference run: **0.7318**.
 
 ## 4. Interpretation
 
@@ -42,3 +45,5 @@ The next most useful improvements are:
 3. Per-class validation metrics and confusion analysis.
 4. Secondary-label soft targets once the single-label baseline is stable.
 5. Threshold or calibration work informed by soundscape label overlap.
+
+The current inference path intentionally raises a clear error if hidden-test audio is missing. The only exception is the tiny public dry-run case, where Kaggle may expose a 3-row sample submission without test audio.

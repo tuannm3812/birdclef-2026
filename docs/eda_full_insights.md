@@ -92,6 +92,14 @@ The EDA notebook now also checks:
 
 These views matter because the labeled soundscape subset is not a uniform validation set. It can be used for calibration and domain diagnostics, but site concentration, partial annotation, and source coverage gaps should be accounted for before fitting priors or thresholds.
 
+Recommended deep-dive use:
+
+1. Use **soundscape-only labels** to identify classes that cannot be learned from clean training audio alone.
+2. Use **site/hour concentration** to avoid treating the labeled soundscape subset as a balanced validation set.
+3. Use **partial-file detection** before estimating priors from 12-window soundscape files.
+4. Use **class-by-hour activity** to decide whether hour-aware thresholds or logit offsets are justified.
+5. Use **co-occurrence pairs** to separate repeated chorus structure from independent species detections.
+
 ## 7. Spectrogram Observations
 
 ![Representative mel spectrograms](eda_artifacts/representative_mels.png)
