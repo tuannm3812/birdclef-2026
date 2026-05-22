@@ -20,8 +20,8 @@ BirdCLEF+ 2026 bioacoustic classification workspace with three Kaggle notebooks:
 | Notebook | Purpose |
 |---|---|
 | [1_bc2026_eda.ipynb](notebooks/1_bc2026_eda.ipynb) | Dataset audit, class imbalance, secondary labels, metadata bias, soundscape domain analysis, and spectrogram inspection |
-| [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) | EfficientNet-B0 training and `submission.csv` generation |
-| [3_bc2026_perch_v2.ipynb](notebooks/3_bc2026_perch_v2.ipynb) | Perch v2 embedding extraction and shallow probe training |
+| [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) | EfficientNet-B0 training plus fast checkpoint-based submission mode |
+| [3_bc2026_perch_v2.ipynb](notebooks/3_bc2026_perch_v2.ipynb) | Perch v2 embedding extraction, diagnostics, and teacher-signal analysis |
 
 EfficientNet-B0 is the main submission path because it is fast, pure PyTorch, and configured for Kaggle runs without internet access. Perch v2 gives stronger validation features and is most useful as an offline teacher or feature source.
 
@@ -56,9 +56,9 @@ Perch v2 requires a compatible TensorFlow runtime. Notebook 3 expects TensorFlow
 
 ## 4. Submission
 
-Run [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) on Kaggle to train the baseline and create `/kaggle/working/submission.csv`.
+Use [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) for competition submission. For experiments, keep `CFG.mode = "train"` to produce `best_effnet_b0.pt` and `labels.json`. For scored reruns, attach that artifact dataset, set `CFG.mode = "submission"`, and run only checkpoint loading plus inference.
 
-The notebook uses the checkpoint produced in the same run and disables external pretrained-weight downloads. For pretrained initialization, attach the weight file as a Kaggle input and set `CFG.pretrained_weight_path`; keep internet off for the final rerun. The public sample submission has only **3** rows, so a successful public run confirms notebook mechanics but does not prove hidden-test runtime.
+Perch v2 is not the scored submission path because TensorFlow setup and embedding extraction exceed the competition runtime budget. Use it as a teacher, diagnostic model, or distillation source. The public sample submission has only **3** rows, so a successful public run confirms notebook mechanics but does not prove hidden-test runtime.
 
 ## 5. Repository Layout
 

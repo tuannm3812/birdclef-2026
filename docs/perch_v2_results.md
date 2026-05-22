@@ -6,6 +6,8 @@ The Perch v2 experiment evaluates Google Perch embeddings as frozen bioacoustic 
 
 Perch v2 is best treated as an offline feature generator, teacher model, or distillation source unless hidden-test inference has cached embeddings or a proven Kaggle-compatible runtime.
 
+The Perch notebook is **not** the scored submission path. A full Perch run installs TensorFlow, extracts embeddings, trains the probe, and writes diagnostics; this is valuable for analysis but too slow for the competition scoring budget.
+
 ## 2. Training Setup
 
 | Item | Value |

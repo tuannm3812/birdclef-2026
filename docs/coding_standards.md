@@ -22,12 +22,43 @@ Use numbered, stable notebook names:
 
 Notebook names should describe the actual Kaggle workflow. Do not split training and submission into separate notebooks when the competition flow is meant to run end-to-end.
 
-## 3. Notebook Style
+## 3. Code Style
+
+Follow **PEP 8** for Python code:
+
+- Use **4 spaces** for indentation.
+- Keep lines to **79 characters or fewer** where practical.
+- Prefer **concise, optimized syntax** such as list comprehensions, f-strings, and small utility functions when they improve readability.
+- Add **type hints** for functions and class methods when the type is clear.
+- Group imports in this order:
+  1. Standard library
+  2. Third-party libraries
+  3. Local modules
+- Separate import groups with a blank line.
+
+Use **Google-style docstrings** for reusable functions and classes:
+
+```python
+def func(x: int) -> int:
+    """One-line summary.
+
+    Args:
+        x (int): Description.
+
+    Returns:
+        int: Description.
+    """
+```
+
+Add short inline comments only when they explain **why** a decision was made. Avoid comments that restate what the code already says.
+
+## 4. Notebook Style
 
 Each notebook should include:
 
 - A short purpose statement at the top.
 - A clear `CFG` section for tunable values.
+- Explicit mode flags when runtime behavior differs between **training** and **submission**.
 - Kaggle path auto-detection where practical.
 - Markdown insight cells after important plots or metrics.
 - Artifact-writing cells for reusable outputs such as `submission.csv`, histories, or plots.
@@ -40,7 +71,9 @@ Competition notebooks should not depend on internet access during final reruns. 
 
 For runtime packages that differ from the Kaggle image, prefer attached wheelhouse datasets. If an exploratory notebook allows internet installation, gate it behind an explicit config flag and keep the default offline-safe.
 
-## 4. Plot Style
+Submission notebooks must be optimized for Kaggle scoring limits. Do not run EDA, model training, TensorFlow embedding extraction, or large artifact creation in a scored submission path. Attach trained checkpoints or cached features as Kaggle inputs and keep submission mode focused on loading, inference, and writing `submission.csv`.
+
+## 5. Plot Style
 
 Use the Viridis palette as the default visual language across notebooks:
 
@@ -49,7 +82,7 @@ Use the Viridis palette as the default visual language across notebooks:
 - Change color palettes only when a specific chart needs clearer contrast, semantic coloring, or accessibility improvement.
 - Keep chart titles short and analytical; avoid decorative styling.
 
-## 5. Documentation Style
+## 6. Documentation Style
 
 Documentation should be written for a competition reviewer or teammate who wants the reasoning quickly:
 
@@ -60,7 +93,7 @@ Documentation should be written for a competition reviewer or teammate who wants
 - Keep model result pages separate by model.
 - Keep broad narrative in the root `README.md`; keep detailed evidence in focused docs.
 
-## 6. Git Hygiene
+## 7. Git Hygiene
 
 Do not commit:
 

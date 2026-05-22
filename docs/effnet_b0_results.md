@@ -6,7 +6,7 @@ EfficientNet-B0 is the primary competition-safe baseline. It uses 5-second mono 
 
 This model is the preferred Kaggle submission path because it is fast, self-contained, and avoids TensorFlow/Perch runtime constraints during hidden reruns. The notebook disables external pretrained downloads and forces offline Hugging Face mode so hidden reruns do not fail on network calls.
 
-The notebook now follows a single-run flow: train the checkpoint, load that checkpoint directly, then write `submission.csv`. This keeps submission logic simple and avoids broad artifact search code.
+The notebook supports two modes: **`CFG.mode = "train"`** for producing the checkpoint and **`CFG.mode = "submission"`** for scored reruns that load an attached checkpoint artifact and write `submission.csv` quickly.
 
 ## 2. Training Setup
 
@@ -21,6 +21,7 @@ The notebook now follows a single-run flow: train the checkpoint, load that chec
 | Loss | Cross entropy with label smoothing |
 | Optimizer | AdamW |
 | Scheduler | Cosine annealing |
+| Submission mode | Loads `best_effnet_b0.pt` and `labels.json` from an attached artifact dataset |
 | Primary notebook | `notebooks/2_bc2026_effnet_b0.ipynb` |
 
 ## 3. Validation History
@@ -54,3 +55,13 @@ The next most useful improvements are:
 5. Use secondary-label soft targets once the single-label baseline is stable.
 
 The current inference path intentionally raises a clear error if hidden-test audio is missing. The only exception is the tiny public dry-run case, where Kaggle may expose a 3-row sample submission without test audio.
+
+## 6. Submission Runtime
+
+Do not submit a notebook that trains the model during scoring. Kaggle scoring has a tight runtime budget, so the final run should use **`CFG.mode = "submission"`**:
+
+1. Run training once with `CFG.mode = "train"`.
+2. Save the generated `best_effnet_b0.pt` and `labels.json` as a Kaggle dataset.
+3. Attach that dataset to the submission notebook.
+4. Set `CFG.mode = "submission"` and, if needed, `CFG.submission_artifact_dir`.
+5. Submit the notebook so it only loads the checkpoint, scores test windows, and writes `submission.csv`.
