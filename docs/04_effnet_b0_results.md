@@ -4,9 +4,9 @@
 
 EfficientNet-B0 is the primary competition-safe baseline. It uses 5-second mono mel-spectrogram crops and a PyTorch EfficientNet-B0 classifier over the 206 training labels.
 
-This model is the reliable Kaggle submission baseline because it is fast, self-contained, and avoids TensorFlow/Perch runtime constraints during hidden reruns. The notebook disables external pretrained downloads and forces offline Hugging Face mode so hidden reruns do not fail on network calls.
+This model is the reliable Kaggle submission baseline because it is fast, self-contained, and avoids TensorFlow/Perch runtime constraints during hidden reruns.
 
-The notebook supports two modes: **`CFG.mode = "train"`** for producing the checkpoint and **`CFG.mode = "submission"`** for scored reruns that load an attached checkpoint artifact and write `submission.csv` quickly.
+The notebook has two modes: **`CFG.mode = "train"`** for producing the checkpoint and **`CFG.mode = "submission"`** for scored reruns that load the checkpoint artifact and write `submission.csv` quickly.
 
 ## 2. Training Setup
 
@@ -21,7 +21,7 @@ The notebook supports two modes: **`CFG.mode = "train"`** for producing the chec
 | Loss | Cross entropy with label smoothing |
 | Optimizer | AdamW |
 | Scheduler | Cosine annealing |
-| Submission mode | Loads `best_effnet_b0.pt` and `labels.json` from an attached artifact dataset |
+| Submission mode | Loads `best_effnet_b0.pt` and `labels.json` from the artifact dataset |
 | CPU public score | **0.646** |
 | Uploaded artifact path | `/kaggle/input/models/tuannm3812/irdclef-efficientnet-b0-artifacts/pytorch/default/1/effnet_b0` |
 | Primary notebook | `notebooks/2_bc2026_effnet_b0.ipynb` |
@@ -48,40 +48,34 @@ The notebook supports two modes: **`CFG.mode = "train"`** for producing the chec
 
 Best validation accuracy from the latest Kaggle run: **0.5464** at epoch **14**.
 
-## 4. Pretrained Weight Policy
+## 4. Artifact
 
-Do not leave Kaggle internet enabled for the final competition notebook. If pretrained EfficientNet initialization is needed, create a separate Kaggle dataset that contains the timm/Hugging Face weight file, usually `model.safetensors` or a `.pt` checkpoint, and point `CFG.pretrained_weight_path` to that file. The notebook always calls `timm.create_model(..., pretrained=False)` and then loads compatible local tensors, adapting the RGB stem to mono audio and skipping incompatible classifier weights.
+The CPU submission uses the uploaded EfficientNet artifact at:
+
+```text
+/kaggle/input/models/tuannm3812/irdclef-efficientnet-b0-artifacts/pytorch/default/1/effnet_b0
+```
+
+The notebook also supports local pretrained EfficientNet initialization through `CFG.pretrained_weight_path`. Compatible RGB stem weights are averaged into the mono input stem, while incompatible classifier tensors are skipped.
 
 ## 5. Interpretation
 
-The offline-safe baseline now trains from random initialization unless a local pretrained checkpoint is attached. The full 15-epoch run still improves meaningfully: validation accuracy rises from **0.2451** to **0.5464**, and the CPU submission scored **0.646** publicly.
+The offline-safe baseline now trains from random initialization unless a local pretrained checkpoint is configured. The full 15-epoch run still improves meaningfully: validation accuracy rises from **0.2451** to **0.5464**, and the CPU submission scored **0.646** publicly.
 
-The curve starts to overfit after the middle epochs: training loss keeps falling sharply, while validation loss bottoms out around epoch **14** and accuracy only improves slowly after epoch **8**. The saved best checkpoint should therefore come from epoch **14**, not the final epoch. If a local EfficientNet pretrained checkpoint is attached, expect a stronger starting point and faster convergence.
+The curve starts to overfit after the middle epochs: training loss keeps falling sharply, while validation loss bottoms out around epoch **14** and accuracy only improves slowly after epoch **8**. The saved best checkpoint comes from epoch **14**, not the final epoch. A local EfficientNet pretrained checkpoint would likely provide a stronger starting point and faster convergence.
 
 EffNet is no longer the lead submission because Perch v2 scored **0.770**, but it remains valuable as a fast fallback and potential ensemble member.
 
 The next most useful improvements are:
 
 1. Add lightweight test-time augmentation or multi-crop scoring only if CPU runtime remains comfortable.
-2. Attach a local EfficientNet-B0 pretrained weight file if allowed by the final Kaggle setup.
+2. Test a local EfficientNet-B0 pretrained weight artifact.
 3. Use Perch predictions as soft targets to distill a stronger CPU-safe PyTorch model.
 4. Add class-aware sampling or rare-class augmentation.
 5. Use secondary-label soft targets once the single-label baseline is stable.
 
-The current inference path intentionally raises a clear error if hidden-test audio is missing. The only exception is the tiny public dry-run case, where Kaggle may expose a 3-row sample submission without test audio.
+The current inference path handles the tiny public dry-run case where Kaggle exposes a 3-row sample submission without test audio.
 
 ## 6. Submission Runtime
 
-Do not submit a notebook that trains the model during scoring. Kaggle scoring has a tight runtime budget, so the final run should use **`CFG.mode = "submission"`**:
-
-1. Run training once with `CFG.mode = "train"`.
-2. Save the generated `best_effnet_b0.pt` and `labels.json` as a Kaggle dataset.
-3. Attach that dataset to the submission notebook.
-4. Set `CFG.mode = "submission"` and, if needed, `CFG.submission_artifact_dir`.
-5. Submit the notebook so it only loads the checkpoint, scores test windows, and writes `submission.csv`.
-
-Confirmed artifact directory:
-
-```text
-/kaggle/input/models/tuannm3812/irdclef-efficientnet-b0-artifacts/pytorch/default/1/effnet_b0
-```
+EfficientNet-B0 remains the simplest CPU-safe fallback. In submission mode it loads `best_effnet_b0.pt` and `labels.json`, scores hidden-test windows, and writes `submission.csv` without running the training loop.

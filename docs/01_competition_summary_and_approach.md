@@ -1,86 +1,63 @@
 # Competition Summary And Approach
 
-## 1. Competition Objective
+## 1. Storyline
 
-BirdCLEF+ 2026 is a CPU-scored Kaggle code competition for passive acoustic monitoring in the Brazilian Pantanal. The task is to predict which wildlife species are present in each **5-second window** of hidden **1-minute soundscape recordings**.
+BirdCLEF+ 2026 turns passive acoustic monitoring into a multi-label soundscape problem. The hidden test set contains Brazilian Pantanal soundscapes, and each 1-minute recording is evaluated as **12 contiguous 5-second windows**. A useful solution therefore needs two qualities at the same time: strong wildlife representations and CPU inference that finishes inside Kaggle scoring.
 
-The target set contains **234 submission columns** spanning birds, amphibians, mammals, reptiles, and insects. The training set in this repository currently contains **35,549 short recordings** across **206 primary labels**, plus expert-labeled in-domain train soundscapes.
+The project now has that split clearly mapped. **EfficientNet-B0** proves the pipeline is stable and gives a simple PyTorch fallback. **Perch v2** provides stronger bioacoustic features and, after switching to the CPU export with full-file batching, becomes the current lead submission.
 
-## 2. Evaluation And Runtime Constraints
+## 2. Task Shape
 
-The leaderboard score is based on multi-label ranking quality across species. The practical implementation target is a `submission.csv` with one row per soundscape window and one probability column per species.
+The submission contract contains **234 target columns** across birds, amphibians, mammals, reptiles, and insects. The local training metadata used in this repo has **35,549 short recordings** across **206 primary labels**, plus expert-labeled soundscape windows that better match the hidden-test domain.
 
-Key constraints:
+This gap between short clean clips and long soundscapes is the central modeling challenge. Clean clips are useful for learning species signatures, while soundscape labels are better for calibration, co-occurrence, site/hour priors, and domain shift checks.
 
-- Hidden `test_soundscapes/` are populated only during Kaggle scoring.
-- Scored notebooks must run on **CPU** within the competition runtime budget.
-- Internet must not be required during final scoring.
-- Checkpoints, pretrained weights, wheel files, and model exports must be attached as Kaggle inputs.
-- Submission mode should load artifacts, run inference, and write `submission.csv`; it should not train models or create large diagnostic bundles.
+## 3. Evidence So Far
 
-## 3. Current Public Scores
+| Notebook | Representation | Public score | Main lesson |
+|---|---|---:|---|
+| `2_bc2026_effnet_b0.ipynb` | 5-second mel-spectrogram CNN | **0.646** | Stable CPU-safe baseline |
+| `3_bc2026_perch_v2.ipynb` | Frozen Perch embeddings + probe | **0.770** | Foundation features transfer strongly |
 
-| Notebook | Mode | Public score | Runtime note | Role |
-|---|---|---:|---|---|
-| `2_bc2026_effnet_b0.ipynb` | CPU submission | **0.646** | Completed successfully | Fast PyTorch baseline |
-| `3_bc2026_perch_v2.ipynb` | CPU submission | **0.770** | Completed successfully | Stronger foundation-feature submission |
+The public leaderboard result matches the validation story. EfficientNet-B0 reaches **0.5464** validation accuracy and establishes a working submission path. Perch v2 reaches **0.8392** validation accuracy and improves the public score by **+0.124**, which is large enough to make it the lead model.
 
-The public leaderboard confirms the validation pattern: Perch features are materially stronger than the EfficientNet-B0 baseline. The public gap is **+0.124** in favor of Perch.
+## 4. Dataset Signals
 
-## 4. Dataset Insights That Drive Modeling
+- **Class imbalance** is severe: class counts range from **1** to **499** recordings.
+- The top **30** labels account for **40.3%** of recordings, so head classes can dominate aggregate metrics.
+- Secondary labels appear in **4,372** recordings with **7,431** total mentions, making co-occurrence a meaningful signal.
+- Deduplicated soundscape windows are strongly multi-label, with a median of **4** labels and a maximum of **10**.
+- Soundscape site and hour structure matter because hidden-test audio is evaluated as long contextual recordings, not isolated clips.
+- Non-bird taxa are strategically important because they are less naturally covered by bird-specialized pretrained models.
 
-- Class imbalance is severe: training labels range from **1** to **499** recordings.
-- The top **30** labels account for **40.3%** of recordings, so naive training favors common species.
-- Secondary labels are common enough to matter: **4,372** recordings include secondary labels, with **7,431** total secondary-label mentions.
-- In-domain train soundscape labels are especially valuable because they match the hidden-test recording style more closely than isolated training clips.
-- Non-bird taxa are likely high-leverage because they are rarer and less covered by bird-specialized models.
-- CPU inference is now a first-class modeling constraint; a slower model is not useful if it cannot finish scoring.
+## 5. Current Approach
 
-## 5. Recommended Approach
+The lead path is **Perch v2 submission mode**. It combines a Google Perch CPU SavedModel with the uploaded PyTorch probe artifact. The speed improvement comes from reading each 60-second soundscape once, reshaping it into 12 windows, and batching multiple files per TensorFlow call.
 
-### 5.1 Primary Submission
+EfficientNet-B0 stays in the project as the fallback and comparison model. It is less accurate publicly, but it is pure PyTorch, smaller, and easier to reason about when runtime or TensorFlow compatibility becomes unstable.
 
-Use **Notebook 3: Perch v2** as the current primary scored submission because it has the best public score:
+## 6. Next Experiments
 
-1. Set `CFG.mode = "submission"`.
-2. Attach TensorFlow 2.20 wheels.
-3. Attach the Google Perch CPU SavedModel.
-4. Attach the uploaded Perch artifact containing `best_perch_probe.pt` and `labels.json`.
-5. Keep full-file batched inference enabled so each 60-second file is read once and reshaped into 12 windows.
+The next runs are ordered by expected gain and risk:
 
-### 5.2 Reliable Fallback
+1. **Notebook 3 submission rerun after each Perch change**: this is the current leaderboard model, so every scoring-facing change gets validated there first.
+2. **Notebook 3 train mode for calibration diagnostics**: use validation predictions and per-class metrics to find weak labels, especially rare taxa and non-bird classes.
+3. **Notebook 1 EDA only when adding new priors**: rerun EDA if site/hour, co-occurrence, or soundscape coverage features change.
+4. **Notebook 2 submission as fallback**: rerun only after artifact-path, inference, or ensemble changes.
+5. **Notebook 2 train mode only for a new checkpoint**: useful for distillation, pretrained-weight experiments, or class-aware training.
 
-Keep **Notebook 2: EfficientNet-B0** as the fallback submission because it is simpler, pure PyTorch, and already successful on CPU:
+## 7. Refinement Roadmap
 
-1. Set `CFG.mode = "submission"`.
-2. Attach the EfficientNet artifact directory containing `best_effnet_b0.pt` and `labels.json`.
-3. Use it whenever TensorFlow/Perch runtime becomes unstable.
+The strongest next modeling ideas are:
 
-The confirmed EfficientNet artifact directory is:
+1. Add site/hour priors from train soundscape labels to Perch predictions.
+2. Calibrate class logits using soundscape validation windows rather than only clip-level validation.
+3. Improve non-bird taxa with proxy classes, taxonomy-aware priors, or targeted calibration.
+4. Compare EffNet and Perch errors to find ensemble candidates that improve public score without much CPU cost.
+5. Distill Perch outputs into a faster PyTorch student if the Perch path becomes too heavy for future submissions.
 
-```text
-/kaggle/input/models/tuannm3812/irdclef-efficientnet-b0-artifacts/pytorch/default/1/effnet_b0
-```
-
-### 5.3 Next Refinements
-
-The highest-value next steps are:
-
-1. Add light post-processing to Perch predictions using soundscape priors from site/hour metadata.
-2. Use train soundscape labels to calibrate species thresholds or logits.
-3. Distill Perch predictions into a faster PyTorch model for a runtime-safe ensemble.
-4. Improve non-bird taxa handling with proxy labels, class-specific priors, or targeted augmentation.
-5. Compare Perch and EffNet predictions to identify classes where an ensemble improves public score without large runtime cost.
-
-## 6. Source Links
+## 8. Source Links
 
 - Kaggle competition overview: https://www.kaggle.com/competitions/birdclef-2026/overview
 - Kaggle competition page: https://www.kaggle.com/competitions/birdclef-2026
 - Kaggle dataset mirror used for public file descriptions: https://www.kaggle.com/datasets/llkh0a/birdclef-2026-repack
-
-## 7. Decision Log
-
-- **EffNet-B0 remains useful** because it is the simplest CPU-safe baseline and validates the submission pipeline.
-- **Perch v2 is now the lead model** because it finishes CPU scoring and improves the public score from **0.646** to **0.770**.
-- **Do not add training to submission mode** for either notebook. Training belongs in experiment mode; scoring should only load artifacts and infer.
-- **Keep notebook outputs clear after code edits** and rerun on Kaggle to regenerate trusted execution outputs.

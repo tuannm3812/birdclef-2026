@@ -16,7 +16,7 @@ BirdCLEF+ 2026 bioacoustic classification workspace with three Kaggle notebooks:
 
 ## 1. Competition Snapshot
 
-The competition asks participants to identify wildlife species in Brazilian Pantanal soundscapes. During scoring, hidden `test_soundscapes/` are mounted and each 1-minute file must be scored as **12 contiguous 5-second windows** with probability columns for the target species.
+The competition asks participants to identify wildlife species in Brazilian Pantanal soundscapes. During scoring, hidden `test_soundscapes/` are mounted and each 1-minute file is scored as **12 contiguous 5-second windows** with probability columns for the target species.
 
 Current CPU submission results:
 

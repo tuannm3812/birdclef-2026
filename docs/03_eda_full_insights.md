@@ -5,7 +5,7 @@
 - Training metadata contains **35,549 recordings** across **206 primary labels**.
 - All **35,549** training audio paths were found during the Kaggle EDA run.
 - Taxonomy coverage is complete for train labels: **206/206**.
-- Taxonomy includes **28 labels not present in train**, so submission columns should be treated as the output contract.
+- Taxonomy includes **28 labels not present in train**, making submission columns the output contract.
 - The public sample submission has only **3 rows**, making it a smoke test rather than a runtime proxy for hidden scoring.
 
 ## 2. Data Integrity
@@ -14,7 +14,7 @@
 - Training keys are clean: no duplicate `filename`, `filepath`, or `primary_label + filename` rows.
 - `train_soundscapes_labels.csv` has **1,478 rows**, but only **739 unique soundscape segments** after deduplication.
 
-Clean clips are structurally safe for baseline training. Soundscape labels should be deduplicated before prevalence, overlap, or calibration analysis.
+Clean clips are structurally safe for baseline training. Soundscape labels need deduplication before prevalence, overlap, or calibration analysis.
 
 ## 3. Class Imbalance
 
@@ -37,7 +37,7 @@ Clean clips are structurally safe for baseline training. Soundscape labels shoul
 | 4 | `soulap1` | 497 |
 | 5 | `houspa` | 496 |
 
-The main imbalance risk is the gap between capped head classes and rare tail classes. Per-class validation metrics, class-aware sampling, and rare-class augmentation should come before larger backbones.
+The main imbalance risk is the gap between capped head classes and rare tail classes. Per-class validation metrics, class-aware sampling, and rare-class augmentation come before larger backbones.
 
 ## 4. Secondary Labels
 
@@ -90,7 +90,7 @@ The EDA notebook now also checks:
 - Taxonomic activity by hour.
 - Top soundscape species pairs and repeated chorus structure.
 
-These views matter because the labeled soundscape subset is not a uniform validation set. It can be used for calibration and domain diagnostics, but site concentration, partial annotation, and source coverage gaps should be accounted for before fitting priors or thresholds.
+These views matter because the labeled soundscape subset is not a uniform validation set. It can support calibration and domain diagnostics once site concentration, partial annotation, and source coverage gaps are accounted for.
 
 Recommended deep-dive use:
 
