@@ -25,7 +25,7 @@ Current CPU submission results:
 | [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) | **0.646** | Reliable PyTorch fallback |
 | [3_bc2026_perch_v2.ipynb](notebooks/3_bc2026_perch_v2.ipynb) | **0.770** | Current lead submission |
 
-Competition summary and approach: [docs/01_competition_summary_and_approach.md](docs/01_competition_summary_and_approach.md).
+Competition instructions and approach: [docs/01_instructions.md](docs/01_instructions.md).
 
 ## 2. Notebooks
 
@@ -93,7 +93,7 @@ notebooks/
   3_bc2026_perch_v2.ipynb
 
 docs/
-  01_competition_summary_and_approach.md
+  01_instructions.md
   02_coding_standards.md
   03_eda_full_insights.md
   04_effnet_b0_results.md

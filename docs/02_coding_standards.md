@@ -24,7 +24,7 @@ Notebook names should describe the actual Kaggle workflow. Do not split training
 
 Use numbered documentation filenames so the reading order is obvious:
 
-1. `01_competition_summary_and_approach.md`
+1. `01_instructions.md`
 2. `02_coding_standards.md`
 3. `03_eda_full_insights.md`
 4. `04_effnet_b0_results.md`
