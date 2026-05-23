@@ -22,6 +22,7 @@ The Perch notebook now has two modes: **`CFG.mode = "train"`** for the full expe
 | Runtime requirement | TensorFlow 2.20+ for the attached Perch export |
 | Uploaded artifact path | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/1/perch_v2` |
 | Submission mode | Loads `best_perch_probe.pt` and `labels.json`; skips train embeddings, probe training, diagnostics, and artifact zip |
+| Submission speedup | Prefers the CPU Perch export and batches full 60-second soundscape files into 12 windows per file |
 | Primary notebook | `notebooks/3_bc2026_perch_v2.ipynb` |
 
 ## 3. Validation History
@@ -57,6 +58,8 @@ Recommended Perch workflow:
 The probe reaches strong validation accuracy almost immediately, which indicates that Perch embeddings already encode most of the useful acoustic structure. The best epoch in the latest run is epoch 3; early stopping ends the run at epoch 7 after validation stops improving while train loss continues to fall.
 
 Compared with the offline-safe EfficientNet-B0 run, Perch v2 improves validation accuracy by about **31.2 percentage points**. The result is important because it shows foundation-model representations are highly valuable for this competition, but the submission path is operationally heavier than the PyTorch baseline.
+
+The fast starter notebook runs well on CPU because it uses the **`perch_v2_cpu`** SavedModel, reads each 60-second soundscape once with `soundfile`, reshapes it into **12 contiguous 5-second windows**, and batches multiple files per TensorFlow call. Notebook 3 now mirrors that submission strategy while keeping the PyTorch probe artifact path.
 
 The most practical next step is to use Perch as a teacher:
 
