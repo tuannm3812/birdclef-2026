@@ -9,23 +9,35 @@
     <img src="https://img.shields.io/badge/Kaggle-BirdCLEF%2B%202026-20BEFF?logo=kaggle&logoColor=white" alt="Kaggle competition">
   </a>
   <img src="https://img.shields.io/badge/Notebook-EDA%20%7C%20EffNet%20%7C%20Perch-F37626?logo=jupyter" alt="Notebook workflow">
-  <img src="https://img.shields.io/badge/PyTorch-EfficientNet--B0-EE4C2C?logo=pytorch" alt="PyTorch EfficientNet-B0">
-  <img src="https://img.shields.io/badge/TensorFlow-Perch%20v2-FF6F00?logo=tensorflow" alt="TensorFlow Perch v2">
+  <img src="https://img.shields.io/badge/Public-EffNet%200.646%20%7C%20Perch%200.770-2EA44F" alt="Public scores">
 </p>
 
-BirdCLEF+ 2026 bioacoustic classification workspace with three Kaggle notebooks: EDA, EfficientNet-B0 submission baseline, and Google Perch v2 probe. The project focuses on dataset insight, reproducible notebook execution, and clear model result reporting.
+BirdCLEF+ 2026 bioacoustic classification workspace with three Kaggle notebooks: EDA, EfficientNet-B0 baseline, and Google Perch v2 submission. The project focuses on dataset insight, CPU-safe inference, reproducible notebook execution, and clear model result reporting.
 
-## 1. Notebooks
+## 1. Competition Snapshot
+
+The competition asks participants to identify wildlife species in Brazilian Pantanal soundscapes. During scoring, hidden `test_soundscapes/` are mounted and each 1-minute file must be scored as **12 contiguous 5-second windows** with probability columns for the target species.
+
+Current CPU submission results:
+
+| Notebook | Public score | Role |
+|---|---:|---|
+| [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) | **0.646** | Reliable PyTorch fallback |
+| [3_bc2026_perch_v2.ipynb](notebooks/3_bc2026_perch_v2.ipynb) | **0.770** | Current lead submission |
+
+Competition summary and approach: [docs/01_competition_summary_and_approach.md](docs/01_competition_summary_and_approach.md).
+
+## 2. Notebooks
 
 | Notebook | Purpose |
 |---|---|
 | [1_bc2026_eda.ipynb](notebooks/1_bc2026_eda.ipynb) | Dataset audit, class imbalance, secondary labels, metadata bias, soundscape domain analysis, and spectrogram inspection |
 | [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) | EfficientNet-B0 training plus fast checkpoint-based submission mode |
-| [3_bc2026_perch_v2.ipynb](notebooks/3_bc2026_perch_v2.ipynb) | Perch v2 embedding extraction, diagnostics, and teacher-signal analysis |
+| [3_bc2026_perch_v2.ipynb](notebooks/3_bc2026_perch_v2.ipynb) | Perch v2 probe training plus CPU-optimized submission mode |
 
-EfficientNet-B0 is the main submission path because it is fast, pure PyTorch, and configured for Kaggle runs without internet access. Perch v2 gives stronger validation features and is most useful as an offline teacher or feature source.
+Perch v2 is now the lead submission path after the successful CPU run. EfficientNet-B0 remains important as a simpler fallback and possible ensemble component.
 
-## 2. Key EDA Findings
+## 3. Key EDA Findings
 
 - **35,549** recordings across **206** primary labels.
 - Complete taxonomy coverage for train labels: **206/206**.
@@ -34,33 +46,45 @@ EfficientNet-B0 is the main submission path because it is fast, pure PyTorch, an
 - Median class size is **125** recordings; the range is **1-499**.
 - Top **30** labels account for **40.3%** of training recordings.
 - Secondary labels include **161** distinct labels and **7,431** mentions.
-- Only **847** recordings (**2.38%**) fall inside the rough Pantanal geography box used in EDA.
 - Deduplicated soundscape segments are strongly multi-label, with a median of **4** labels and a maximum of **10**.
-- The EDA notebook includes deeper soundscape coverage checks: site/hour concentration, partially labeled files, soundscape-only species, taxonomic activity by hour, and label co-occurrence.
 
-Full analysis: [docs/eda_full_insights.md](docs/eda_full_insights.md).
+Full analysis: [docs/03_eda_full_insights.md](docs/03_eda_full_insights.md).
 
-## 3. Model Results
+## 4. Model Results
 
-| Model | Representation | Epochs | Best validation accuracy | Role |
+| Model | Representation | Best validation accuracy | Public score | Role |
 |---|---|---:|---:|---|
-| EfficientNet-B0 | 5-second mel-spectrogram | 5 observed / 15 max | **0.5273** | Reliable submission baseline |
-| Perch v2 probe | Frozen 1,536-d embeddings | 7 observed / 20 max | **0.8392** | Stronger feature experiment and teacher candidate |
+| EfficientNet-B0 | 5-second mel-spectrogram | **0.5464** | **0.646** | Reliable fallback |
+| Perch v2 probe | Frozen 1,536-d embeddings | **0.8392** | **0.770** | Lead submission |
 
 Result notes:
 
-- [EfficientNet-B0 results](docs/effnet_b0_results.md)
-- [Perch v2 results](docs/perch_v2_results.md)
+- [EfficientNet-B0 results](docs/04_effnet_b0_results.md)
+- [Perch v2 results](docs/05_perch_v2_results.md)
 
-Perch v2 requires a compatible TensorFlow runtime. Notebook 3 expects TensorFlow 2.20 wheels from `/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0` and a local Perch SavedModel input such as `/kaggle/input/datasets/jaejohn/perch-meta` when internet is off.
+## 5. Submission
 
-## 4. Submission
+Use [3_bc2026_perch_v2.ipynb](notebooks/3_bc2026_perch_v2.ipynb) as the current primary submission:
 
-Use [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) for competition submission. For experiments, keep `CFG.mode = "train"` to produce `best_effnet_b0.pt` and `labels.json`. For scored reruns, attach that artifact dataset, set `CFG.mode = "submission"`, and run only checkpoint loading plus inference.
+```python
+CFG.mode = "submission"
+```
 
-Perch v2 is not the scored submission path because TensorFlow setup and embedding extraction exceed the competition runtime budget. Use it as a teacher, diagnostic model, or distillation source. The public sample submission has only **3** rows, so a successful public run confirms notebook mechanics but does not prove hidden-test runtime.
+It loads the uploaded Perch probe artifact, uses the CPU Perch export, batches full 60-second soundscapes into 12 windows per file, and writes `/kaggle/working/submission.csv`.
 
-## 5. Repository Layout
+Use [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) as the fallback submission:
+
+```python
+CFG.mode = "submission"
+```
+
+Confirmed EffNet artifact directory:
+
+```text
+/kaggle/input/models/tuannm3812/irdclef-efficientnet-b0-artifacts/pytorch/default/1/effnet_b0
+```
+
+## 6. Repository Layout
 
 ```text
 notebooks/
@@ -69,11 +93,12 @@ notebooks/
   3_bc2026_perch_v2.ipynb
 
 docs/
-  coding_standards.md
-  eda_full_insights.md
-  effnet_b0_results.md
-  perch_v2_results.md
+  01_competition_summary_and_approach.md
+  02_coding_standards.md
+  03_eda_full_insights.md
+  04_effnet_b0_results.md
+  05_perch_v2_results.md
   eda_artifacts/
 ```
 
-Standards: [docs/coding_standards.md](docs/coding_standards.md).
+Standards: [docs/02_coding_standards.md](docs/02_coding_standards.md).

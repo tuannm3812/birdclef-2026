@@ -22,6 +22,14 @@ Use numbered, stable notebook names:
 
 Notebook names should describe the actual Kaggle workflow. Do not split training and submission into separate notebooks when the competition flow is meant to run end-to-end.
 
+Use numbered documentation filenames so the reading order is obvious:
+
+1. `01_competition_summary_and_approach.md`
+2. `02_coding_standards.md`
+3. `03_eda_full_insights.md`
+4. `04_effnet_b0_results.md`
+5. `05_perch_v2_results.md`
+
 ## 3. Code Style
 
 Follow **PEP 8** for Python code:
@@ -87,6 +95,7 @@ Use the Viridis palette as the default visual language across notebooks:
 Documentation should be written for a competition reviewer or teammate who wants the reasoning quickly:
 
 - Use numbered sections.
+- Use numbered markdown filenames for stable reading order.
 - Lead with findings and implications.
 - Include exact metrics when available.
 - Link notebooks and docs with relative paths.

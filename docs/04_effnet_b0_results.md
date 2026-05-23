@@ -4,7 +4,7 @@
 
 EfficientNet-B0 is the primary competition-safe baseline. It uses 5-second mono mel-spectrogram crops and a PyTorch EfficientNet-B0 classifier over the 206 training labels.
 
-This model is the preferred Kaggle submission path because it is fast, self-contained, and avoids TensorFlow/Perch runtime constraints during hidden reruns. The notebook disables external pretrained downloads and forces offline Hugging Face mode so hidden reruns do not fail on network calls.
+This model is the reliable Kaggle submission baseline because it is fast, self-contained, and avoids TensorFlow/Perch runtime constraints during hidden reruns. The notebook disables external pretrained downloads and forces offline Hugging Face mode so hidden reruns do not fail on network calls.
 
 The notebook supports two modes: **`CFG.mode = "train"`** for producing the checkpoint and **`CFG.mode = "submission"`** for scored reruns that load an attached checkpoint artifact and write `submission.csv` quickly.
 
@@ -22,6 +22,8 @@ The notebook supports two modes: **`CFG.mode = "train"`** for producing the chec
 | Optimizer | AdamW |
 | Scheduler | Cosine annealing |
 | Submission mode | Loads `best_effnet_b0.pt` and `labels.json` from an attached artifact dataset |
+| CPU public score | **0.646** |
+| Uploaded artifact path | `/kaggle/input/models/tuannm3812/irdclef-efficientnet-b0-artifacts/pytorch/default/1/effnet_b0` |
 | Primary notebook | `notebooks/2_bc2026_effnet_b0.ipynb` |
 
 ## 3. Validation History
@@ -52,15 +54,17 @@ Do not leave Kaggle internet enabled for the final competition notebook. If pret
 
 ## 5. Interpretation
 
-The offline-safe baseline now trains from random initialization unless a local pretrained checkpoint is attached. That explains the lower validation accuracy compared with earlier pretrained-style runs, but the full 15-epoch run still improves meaningfully: validation accuracy rises from **0.2451** to **0.5464**.
+The offline-safe baseline now trains from random initialization unless a local pretrained checkpoint is attached. The full 15-epoch run still improves meaningfully: validation accuracy rises from **0.2451** to **0.5464**, and the CPU submission scored **0.646** publicly.
 
 The curve starts to overfit after the middle epochs: training loss keeps falling sharply, while validation loss bottoms out around epoch **14** and accuracy only improves slowly after epoch **8**. The saved best checkpoint should therefore come from epoch **14**, not the final epoch. If a local EfficientNet pretrained checkpoint is attached, expect a stronger starting point and faster convergence.
 
+EffNet is no longer the lead submission because Perch v2 scored **0.770**, but it remains valuable as a fast fallback and potential ensemble member.
+
 The next most useful improvements are:
 
-1. Run the 15-epoch early-stopping configuration and compare the best checkpoint.
+1. Add lightweight test-time augmentation or multi-crop scoring only if CPU runtime remains comfortable.
 2. Attach a local EfficientNet-B0 pretrained weight file if allowed by the final Kaggle setup.
-3. Add multi-crop inference for soundscape windows.
+3. Use Perch predictions as soft targets to distill a stronger CPU-safe PyTorch model.
 4. Add class-aware sampling or rare-class augmentation.
 5. Use secondary-label soft targets once the single-label baseline is stable.
 
@@ -75,3 +79,9 @@ Do not submit a notebook that trains the model during scoring. Kaggle scoring ha
 3. Attach that dataset to the submission notebook.
 4. Set `CFG.mode = "submission"` and, if needed, `CFG.submission_artifact_dir`.
 5. Submit the notebook so it only loads the checkpoint, scores test windows, and writes `submission.csv`.
+
+Confirmed artifact directory:
+
+```text
+/kaggle/input/models/tuannm3812/irdclef-efficientnet-b0-artifacts/pytorch/default/1/effnet_b0
+```

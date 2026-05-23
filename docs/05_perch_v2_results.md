@@ -23,6 +23,7 @@ The Perch notebook now has two modes: **`CFG.mode = "train"`** for the full expe
 | Uploaded artifact path | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/1/perch_v2` |
 | Submission mode | Loads `best_perch_probe.pt` and `labels.json`; skips train embeddings, probe training, diagnostics, and artifact zip |
 | Submission speedup | Prefers the CPU Perch export and batches full 60-second soundscape files into 12 windows per file |
+| CPU public score | **0.770** |
 | Primary notebook | `notebooks/3_bc2026_perch_v2.ipynb` |
 
 ## 3. Validation History
@@ -57,17 +58,17 @@ Recommended Perch workflow:
 
 The probe reaches strong validation accuracy almost immediately, which indicates that Perch embeddings already encode most of the useful acoustic structure. The best epoch in the latest run is epoch 3; early stopping ends the run at epoch 7 after validation stops improving while train loss continues to fall.
 
-Compared with the offline-safe EfficientNet-B0 run, Perch v2 improves validation accuracy by about **31.2 percentage points**. The result is important because it shows foundation-model representations are highly valuable for this competition, but the submission path is operationally heavier than the PyTorch baseline.
+Compared with the offline-safe EfficientNet-B0 run, Perch v2 improves validation accuracy by about **31.2 percentage points**. The CPU submission also improves the public score from **0.646** to **0.770**, a **+0.124** gain over EffNet-B0. The result is important because it shows foundation-model representations are highly valuable for this competition, provided the CPU inference path stays optimized.
 
 The fast starter notebook runs well on CPU because it uses the **`perch_v2_cpu`** SavedModel, reads each 60-second soundscape once with `soundfile`, reshapes it into **12 contiguous 5-second windows**, and batches multiple files per TensorFlow call. Notebook 3 now mirrors that submission strategy while keeping the PyTorch probe artifact path.
 
-The most practical next step is to use Perch as a teacher:
+The most practical next step is to strengthen Perch without losing CPU viability:
 
-1. Distill Perch predictions or embeddings into a faster PyTorch student.
-2. Keep early stopping; the latest run suggests extra probe epochs are unlikely to help much after the first few epochs.
-3. Use Perch features for error analysis and class-similarity diagnostics.
-4. Compare EfficientNet failures against Perch successes to identify rare-class or domain-shift patterns.
-5. Train a PyTorch student on Perch-informed soft targets so hidden inference can stay lightweight.
+1. Add soundscape priors from site/hour metadata and validate the effect on train soundscapes.
+2. Calibrate logits per class, especially rare and non-bird taxa.
+3. Compare EfficientNet failures against Perch successes to identify ensemble opportunities.
+4. Distill Perch predictions or embeddings into a faster PyTorch student.
+5. Keep early stopping; the latest run suggests extra probe epochs are unlikely to help much after the first few epochs.
 
 ## 6. Added Diagnostics
 
