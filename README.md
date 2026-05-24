@@ -25,7 +25,7 @@ Current CPU submission results:
 | [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) | **0.646** | Reliable PyTorch fallback |
 | [3_bc2026_perch_v2.ipynb](notebooks/3_bc2026_perch_v2.ipynb) | **0.770** | Current lead submission |
 
-Competition instructions and approach: [docs/01_instructions.md](docs/01_instructions.md).
+Competition instructions and approach: [docs/1_instructions.md](docs/1_instructions.md).
 
 ## 2. Notebooks
 
@@ -48,7 +48,7 @@ Perch v2 is now the lead submission path after the successful CPU run. Efficient
 - Secondary labels include **161** distinct labels and **7,431** mentions.
 - Deduplicated soundscape segments are strongly multi-label, with a median of **4** labels and a maximum of **10**.
 
-Full analysis: [docs/03_eda_full_insights.md](docs/03_eda_full_insights.md).
+Full analysis: [docs/3_eda_full_insights.md](docs/3_eda_full_insights.md).
 
 ## 4. Model Results
 
@@ -59,8 +59,8 @@ Full analysis: [docs/03_eda_full_insights.md](docs/03_eda_full_insights.md).
 
 Result notes:
 
-- [EfficientNet-B0 results](docs/04_effnet_b0_results.md)
-- [Perch v2 results](docs/05_perch_v2_results.md)
+- [EfficientNet-B0 results](docs/4_effnet_b0_results.md)
+- [Perch v2 results](docs/5_perch_v2_results.md)
 
 ## 5. Submission
 
@@ -93,12 +93,12 @@ notebooks/
   3_bc2026_perch_v2.ipynb
 
 docs/
-  01_instructions.md
-  02_coding_standards.md
-  03_eda_full_insights.md
-  04_effnet_b0_results.md
-  05_perch_v2_results.md
+  1_instructions.md
+  2_coding_standards.md
+  3_eda_full_insights.md
+  4_effnet_b0_results.md
+  5_perch_v2_results.md
   eda_artifacts/
 ```
 
-Standards: [docs/02_coding_standards.md](docs/02_coding_standards.md).
+Standards: [docs/2_coding_standards.md](docs/2_coding_standards.md).
