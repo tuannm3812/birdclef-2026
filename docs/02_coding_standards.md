@@ -16,19 +16,20 @@ Avoid adding local-only folders such as `data/`, `models/`, `outputs/`, `configs
 
 Use numbered, stable notebook names:
 
-1. `1_bc2026_eda.ipynb`
-2. `2_bc2026_effnet_b0.ipynb`
-3. `3_bc2026_perch_v2.ipynb`
+1. `01_eda.ipynb`
+2. `02_effnet_b0.ipynb`
+3. `03_perch_v2.ipynb`
 
 Notebook names should describe the actual Kaggle workflow. Do not split training and submission into separate notebooks when the competition flow is meant to run end-to-end.
 
 Use numbered documentation filenames so the reading order is obvious:
 
-1. `1_instructions.md`
-2. `2_coding_standards.md`
-3. `3_eda_full_insights.md`
-4. `4_effnet_b0_results.md`
-5. `5_perch_v2_results.md`
+1. `01_project_overview.md`
+2. `02_coding_standards.md`
+3. `03_eda_insights.md`
+4. `04_effnet_b0_results.md`
+5. `05_perch_v2_results.md`
+6. `06_next_steps.md`
 
 ## 3. Code Style
 
@@ -101,6 +102,7 @@ Documentation should be written for a competition reviewer or teammate who wants
 - Link notebooks and docs with relative paths.
 - Keep model result pages separate by model.
 - Keep broad narrative in the root `README.md`; keep detailed evidence in focused docs.
+- Store documentation figures under `docs/figures/`.
 
 ## 7. Git Hygiene
 

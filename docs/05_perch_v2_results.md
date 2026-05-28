@@ -24,7 +24,7 @@ The Perch notebook now has two modes: **`CFG.mode = "train"`** for the full expe
 | Submission mode | Loads `best_perch_probe.pt` and `labels.json`; skips train embeddings, probe training, diagnostics, and artifact zip |
 | Submission speedup | Prefers the CPU Perch export and batches full 60-second soundscape files into 12 windows per file |
 | CPU public score | **0.770** |
-| Primary notebook | `notebooks/3_bc2026_perch_v2.ipynb` |
+| Primary notebook | `notebooks/03_perch_v2.ipynb` |
 
 ## 3. Validation History
 

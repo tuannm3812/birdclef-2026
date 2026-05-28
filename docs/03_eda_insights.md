@@ -18,7 +18,7 @@ Clean clips are structurally safe for baseline training. Soundscape labels need 
 
 ## 3. Class Imbalance
 
-![Class imbalance diagnostics](eda_artifacts/class_imbalance_diagnostics.png)
+![Class imbalance diagnostics](figures/eda/class_imbalance_diagnostics.png)
 
 - Median recordings per class: **125**.
 - Range: **1** to **499** recordings per class.
@@ -27,7 +27,7 @@ Clean clips are structurally safe for baseline training. Soundscape labels need 
 - There are **4 singleton classes**.
 - A few-shot bucket view is now included in the EDA notebook to separate near-singleton labels from the broader mid-frequency tail.
 
-![Top primary labels](eda_artifacts/top_primary_labels.png)
+![Top primary labels](figures/eda/top_primary_labels.png)
 
 | Rank | Primary label | Recordings |
 |---:|---|---:|
@@ -41,7 +41,7 @@ The main imbalance risk is the gap between capped head classes and rare tail cla
 
 ## 4. Secondary Labels
 
-![Top secondary labels](eda_artifacts/top_secondary_labels.png)
+![Top secondary labels](figures/eda/top_secondary_labels.png)
 
 - **161** distinct secondary labels.
 - **7,431** total secondary mentions.
@@ -51,7 +51,7 @@ The EfficientNet baseline stays single-label for clarity. Secondary labels are b
 
 ## 5. Metadata Quality And Geography
 
-![Metadata quality and rating](eda_artifacts/metadata_quality_rating.png)
+![Metadata quality and rating](figures/eda/metadata_quality_rating.png)
 
 - **12,849** recordings have rating `0.0`.
 - Ratings `4.0` and `5.0` together cover **14,863** recordings.
@@ -62,13 +62,13 @@ The EfficientNet baseline stays single-label for clarity. Secondary labels are b
 - The `type` field is empty for **12,975** rows.
 - The top author contributes **2,874** recordings.
 
-![Training recording geography](eda_artifacts/recording_geography.png)
+![Training recording geography](figures/eda/recording_geography.png)
 
 All training rows include coordinates. Only **847 recordings** (**2.38%**) fall inside the rough Pantanal box used in this EDA, covering **119 species**. Geography is therefore a likely domain-shift variable, not a balanced training axis.
 
 ## 6. Soundscape Domain
 
-![Soundscape overlap and time](eda_artifacts/soundscape_overlap_time.png)
+![Soundscape overlap and time](figures/eda/soundscape_overlap_time.png)
 
 After deduplication, the soundscape table has **739** unique labeled segments.
 
@@ -102,7 +102,7 @@ Recommended deep-dive use:
 
 ## 7. Spectrogram Observations
 
-![Representative mel spectrograms](eda_artifacts/representative_mels.png)
+![Representative mel spectrograms](figures/eda/representative_mels.png)
 
 - Some classes show repeated phrase structure throughout a 5-second crop.
 - Sparse calls can be missed by random crops.

@@ -12,32 +12,70 @@
   <img src="https://img.shields.io/badge/Public-EffNet%200.646%20%7C%20Perch%200.770-2EA44F" alt="Public scores">
 </p>
 
-BirdCLEF+ 2026 bioacoustic classification workspace with three Kaggle notebooks: EDA, EfficientNet-B0 baseline, and Google Perch v2 submission. The project focuses on dataset insight, CPU-safe inference, reproducible notebook execution, and clear model result reporting.
+BirdCLEF+ 2026 bioacoustic classification workspace for identifying wildlife
+species in Brazilian Pantanal soundscapes. The project documents the path from
+dataset understanding to a reliable EfficientNet-B0 baseline and a stronger
+Google Perch v2 transfer-learning model.
 
 ## 1. Competition Snapshot
 
 The competition asks participants to identify wildlife species in Brazilian Pantanal soundscapes. During scoring, hidden `test_soundscapes/` are mounted and each 1-minute file is scored as **12 contiguous 5-second windows** with probability columns for the target species.
 
-Current CPU submission results:
+The task is multi-taxon rather than bird-only. The target set includes birds,
+amphibians, mammals, reptiles, and insects, so the problem is closer to
+ecosystem soundscape recognition than ordinary single-species bird-call
+classification.
 
-| Notebook | Public score | Role |
-|---|---:|---|
-| [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) | **0.646** | Reliable PyTorch fallback |
-| [3_bc2026_perch_v2.ipynb](notebooks/3_bc2026_perch_v2.ipynb) | **0.770** | Current lead submission |
+## 2. Key Highlights
 
-Competition instructions and approach: [docs/1_instructions.md](docs/1_instructions.md).
+| Area | Result |
+|---|---|
+| Dataset scale | **35,549** training recordings across **206** primary labels |
+| Output contract | **234** species probability columns |
+| Soundscape labels | **739** deduplicated labeled 5-second windows |
+| EfficientNet-B0 | **0.5464** best validation accuracy, **0.646** public score |
+| Perch v2 probe | **0.8392** best validation accuracy, **0.770** public score |
+| Best gain | Perch v2 improved public score by **+0.124** over EfficientNet-B0 |
 
-## 2. Notebooks
+Project overview and approach: [docs/01_project_overview.md](docs/01_project_overview.md).
+
+## 3. What We Achieved
+
+- Built a structured EDA notebook that audits label quality, class imbalance,
+  metadata shift, soundscape overlap, and representative spectrograms.
+- Trained a compact EfficientNet-B0 mel-spectrogram baseline that remains a
+  dependable PyTorch fallback.
+- Trained a shallow classifier on frozen **1,536-dimensional** Google Perch v2
+  embeddings, producing the strongest current result in the repo.
+- Optimized the Perch scoring path for CPU by reading full 60-second
+  soundscapes once and reshaping them into **12** contiguous 5-second windows.
+- Added lightweight result documentation so EDA findings, model behavior, and
+  next experiments are easy to review without opening every notebook.
+
+## 4. Lessons Learned
+
+- Foundation bioacoustic features transfer much better than a small CNN trained
+  from scratch for this dataset.
+- Clean-clip validation is useful but incomplete; labeled soundscape windows are
+  closer to hidden scoring and should guide calibration.
+- Class imbalance is severe enough that aggregate accuracy can hide weak rare
+  labels and non-bird taxa.
+- Secondary labels and co-occurrence patterns are valuable, but they should be
+  introduced after the single-label pipeline is stable.
+- CPU-safe inference matters as much as model quality because Kaggle scoring
+  depends on finishing hidden soundscape inference inside the runtime limit.
+
+## 5. Notebooks
 
 | Notebook | Purpose |
 |---|---|
-| [1_bc2026_eda.ipynb](notebooks/1_bc2026_eda.ipynb) | Dataset audit, class imbalance, secondary labels, metadata bias, soundscape domain analysis, and spectrogram inspection |
-| [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) | EfficientNet-B0 training plus fast checkpoint-based submission mode |
-| [3_bc2026_perch_v2.ipynb](notebooks/3_bc2026_perch_v2.ipynb) | Perch v2 probe training plus CPU-optimized submission mode |
+| [01_eda.ipynb](notebooks/01_eda.ipynb) | Dataset audit, class imbalance, secondary labels, metadata bias, soundscape domain analysis, and spectrogram inspection |
+| [02_effnet_b0.ipynb](notebooks/02_effnet_b0.ipynb) | EfficientNet-B0 training plus fast checkpoint-based submission mode |
+| [03_perch_v2.ipynb](notebooks/03_perch_v2.ipynb) | Perch v2 probe training plus CPU-optimized soundscape scoring |
 
-Perch v2 is now the lead submission path after the successful CPU run. EfficientNet-B0 remains important as a simpler fallback and possible ensemble component.
+Perch v2 is now the lead modeling path after the successful CPU run. EfficientNet-B0 remains important as a simpler fallback and possible ensemble component.
 
-## 3. Key EDA Findings
+## 6. Key EDA Findings
 
 - **35,549** recordings across **206** primary labels.
 - Complete taxonomy coverage for train labels: **206/206**.
@@ -48,9 +86,9 @@ Perch v2 is now the lead submission path after the successful CPU run. Efficient
 - Secondary labels include **161** distinct labels and **7,431** mentions.
 - Deduplicated soundscape segments are strongly multi-label, with a median of **4** labels and a maximum of **10**.
 
-Full analysis: [docs/3_eda_full_insights.md](docs/3_eda_full_insights.md).
+Full analysis: [docs/03_eda_insights.md](docs/03_eda_insights.md).
 
-## 4. Model Results
+## 7. Model Results
 
 | Model | Representation | Best validation accuracy | Public score | Role |
 |---|---|---:|---:|---|
@@ -59,46 +97,26 @@ Full analysis: [docs/3_eda_full_insights.md](docs/3_eda_full_insights.md).
 
 Result notes:
 
-- [EfficientNet-B0 results](docs/4_effnet_b0_results.md)
-- [Perch v2 results](docs/5_perch_v2_results.md)
+- [EfficientNet-B0 results](docs/04_effnet_b0_results.md)
+- [Perch v2 results](docs/05_perch_v2_results.md)
+- [Next steps](docs/06_next_steps.md)
 
-## 5. Submission
-
-Use [3_bc2026_perch_v2.ipynb](notebooks/3_bc2026_perch_v2.ipynb) as the current primary submission:
-
-```python
-CFG.mode = "submission"
-```
-
-It loads the uploaded Perch probe artifact, uses the CPU Perch export, batches full 60-second soundscapes into 12 windows per file, and writes `/kaggle/working/submission.csv`.
-
-Use [2_bc2026_effnet_b0.ipynb](notebooks/2_bc2026_effnet_b0.ipynb) as the fallback submission:
-
-```python
-CFG.mode = "submission"
-```
-
-Confirmed EffNet artifact directory:
-
-```text
-/kaggle/input/models/tuannm3812/irdclef-efficientnet-b0-artifacts/pytorch/default/1/effnet_b0
-```
-
-## 6. Repository Layout
+## 8. Repository Layout
 
 ```text
 notebooks/
-  1_bc2026_eda.ipynb
-  2_bc2026_effnet_b0.ipynb
-  3_bc2026_perch_v2.ipynb
+  01_eda.ipynb
+  02_effnet_b0.ipynb
+  03_perch_v2.ipynb
 
 docs/
-  1_instructions.md
-  2_coding_standards.md
-  3_eda_full_insights.md
-  4_effnet_b0_results.md
-  5_perch_v2_results.md
-  eda_artifacts/
+  01_project_overview.md
+  02_coding_standards.md
+  03_eda_insights.md
+  04_effnet_b0_results.md
+  05_perch_v2_results.md
+  06_next_steps.md
+  figures/eda/
 ```
 
-Standards: [docs/2_coding_standards.md](docs/2_coding_standards.md).
+Standards: [docs/02_coding_standards.md](docs/02_coding_standards.md).

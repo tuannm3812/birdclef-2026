@@ -24,7 +24,7 @@ The notebook has two modes: **`CFG.mode = "train"`** for producing the checkpoin
 | Submission mode | Loads `best_effnet_b0.pt` and `labels.json` from the artifact dataset |
 | CPU public score | **0.646** |
 | Uploaded artifact path | `/kaggle/input/models/tuannm3812/irdclef-efficientnet-b0-artifacts/pytorch/default/1/effnet_b0` |
-| Primary notebook | `notebooks/2_bc2026_effnet_b0.ipynb` |
+| Primary notebook | `notebooks/02_effnet_b0.ipynb` |
 
 ## 3. Validation History
 

@@ -1,4 +1,4 @@
-# Instructions
+# Project Overview
 
 ## 1. Competition Overview
 
@@ -40,9 +40,9 @@ The competition reduces to five practical questions:
 
 | Task | Notebook | Purpose |
 |---|---|---|
-| Explore the dataset | `1_bc2026_eda.ipynb` | Audit labels, soundscape annotations, metadata shift, and acoustic examples |
-| Build a simple baseline | `2_bc2026_effnet_b0.ipynb` | Train and score a 5-second mel-spectrogram EfficientNet-B0 model |
-| Build the lead model | `3_bc2026_perch_v2.ipynb` | Train and score a shallow classifier on frozen Google Perch v2 embeddings |
+| Explore the dataset | `01_eda.ipynb` | Audit labels, soundscape annotations, metadata shift, and acoustic examples |
+| Build a simple baseline | `02_effnet_b0.ipynb` | Train and score a 5-second mel-spectrogram EfficientNet-B0 model |
+| Build the lead model | `03_perch_v2.ipynb` | Train and score a shallow classifier on frozen Google Perch v2 embeddings |
 
 The notebooks are intentionally ordered from understanding to baseline to stronger transfer model. EDA explains why validation, calibration, and runtime choices matter; EfficientNet validates the end-to-end Kaggle pipeline; Perch v2 gives the best current score.
 
@@ -82,7 +82,8 @@ The result shows that foundation bioacoustic features transfer better than the s
 
 ## 5. Next Questions
 
-The next experiments are ordered by likely gain:
+The next experiments are ordered by likely gain. The working roadmap lives in
+[06_next_steps.md](06_next_steps.md).
 
 1. **Can Perch predictions improve with soundscape priors?**
    Test hour, site, and co-occurrence logit offsets from labeled soundscape windows.
