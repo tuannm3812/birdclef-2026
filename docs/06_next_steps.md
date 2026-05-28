@@ -16,6 +16,9 @@ one soundscape-like diagnostic.
 
 ### 2.1 Add Perch Soundscape Priors
 
+Status: implemented in `03_perch_v2.ipynb`; needs a fresh Kaggle train run and
+leaderboard validation.
+
 Goal: use labeled soundscape structure without overfitting it.
 
 Work items:
@@ -39,6 +42,9 @@ Deliverables:
 
 ### 2.2 Inspect Weak Labels
 
+Status: implemented in `03_perch_v2.ipynb` via
+`weak_label_diagnostics.csv`; needs review after the next training run.
+
 Goal: identify where Perch is confidently wrong or missing rare/non-bird taxa.
 
 Work items:
@@ -60,6 +66,9 @@ Deliverables:
 - Optional figure under `docs/figures/perch/`.
 
 ### 2.3 Test Lightweight Calibration
+
+Status: implemented in `03_perch_v2.ipynb` via `temperature_grid.csv` and
+`calibration.json`; needs a controlled submission test.
 
 Goal: improve probability ranking without retraining the embedding model.
 

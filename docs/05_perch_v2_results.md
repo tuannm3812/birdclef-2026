@@ -18,7 +18,7 @@ The Perch notebook now has two modes: **`CFG.mode = "train"`** for the full expe
 | Classes | 206 |
 | Epochs | 20 max with early stopping |
 | Latest observed run | Early stopped after 7 epochs |
-| Diagnostic outputs | Validation predictions, per-class recall, summary JSON |
+| Diagnostic outputs | Validation predictions, per-class recall, weak-label diagnostics, calibration JSON, soundscape priors |
 | Runtime requirement | TensorFlow 2.20+ for the Perch export |
 | Uploaded artifact path | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/1/perch_v2` |
 | Submission mode | Loads `best_perch_probe.pt` and `labels.json`; skips train embeddings, probe training, diagnostics, and artifact zip |
@@ -71,10 +71,36 @@ The most practical next step is to strengthen Perch without losing CPU viability
 
 ## 6. Added Diagnostics
 
-The notebook now saves three lightweight diagnostic artifacts:
+The notebook now saves lightweight diagnostic artifacts:
 
 1. `validation_predictions.csv`: row-level validation target, top-1 prediction, top-1 confidence, top-5 labels, and correctness flags.
 2. `per_class_validation_metrics.csv`: class support, top-1 recall, top-5 recall, and mean top-1 confidence.
-3. `summary.json`: best validation accuracy, top-5 validation accuracy, best epoch, epochs run, and embedding shape.
+3. `weak_label_diagnostics.csv`: labels ranked by low recall, high-confidence mistakes, and most common wrong prediction.
+4. `temperature_grid.csv` and `calibration.json`: validation log-loss sweep for global temperature scaling.
+5. `soundscape_priors.json`: deduplicated soundscape priors by hour, site, and co-occurrence.
+6. `summary.json`: best validation accuracy, top-5 validation accuracy, log loss, selected temperature, best epoch, epochs run, and embedding shape.
 
 These files make the Perch result more actionable. Low top-1 recall with high top-5 recall points to class-confusion problems that may benefit from calibration or soft targets, while low top-5 recall suggests missing acoustic coverage or hard domain shift.
+
+## 7. New Experiment Hooks
+
+Notebook 3 now includes the next experimental layer without changing the default
+score path:
+
+1. **Temperature calibration.** Training mode collects validation logits, sweeps a global temperature, and saves the best setting in `calibration.json`.
+2. **Weak-label inspection.** Training mode writes `weak_label_diagnostics.csv` so rare labels, non-bird taxa, and high-confidence confusions can be reviewed directly.
+3. **Soundscape priors.** Training mode deduplicates `train_soundscapes_labels.csv` and builds hour, site, and co-occurrence logit-offset tables in `soundscape_priors.json`.
+
+`CFG.use_soundscape_priors` is still `False` by default. This keeps the current
+**0.770** Perch result comparable until a fresh Kaggle run validates that the
+prior offsets improve scoring. After uploading a newly trained artifact, turn
+`CFG.use_soundscape_priors = True` for a controlled leaderboard test.
+
+Recommended test order:
+
+1. Run training mode once and inspect `calibration.json`,
+   `weak_label_diagnostics.csv`, and `soundscape_prior_summary.csv`.
+2. Submit with calibration only, leaving `CFG.use_soundscape_priors = False`.
+3. Submit with `CFG.use_soundscape_priors = True`.
+4. If priors help, tune `hour_prior_weight`, `site_prior_weight`, and
+   `cooccurrence_prior_weight` conservatively.
