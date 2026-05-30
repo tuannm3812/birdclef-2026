@@ -132,18 +132,19 @@ Deliverables:
 
 ### 2.6 Test Unmapped-Class Proxy Mapping
 
-Status: next.
+Status: mapping diagnostics reviewed.
 
 Goal: improve target columns that exact scientific-name mapping leaves without
 direct Perch logits.
 
 Work items:
 
-1. Inspect `perch_mapping_diagnostics.csv` from the W0.25 run.
-2. Build a separate proxy-mapping variant for unmapped labels only.
-3. Use conservative genus-level Perch proxies rather than changing mapped
+1. Use `docs/12_perch_mapping_diagnostics.md` as the mapping review.
+2. Do not proxy the 25 anonymous insect sonotype columns.
+3. If testing proxy mapping, restrict it to the 6 named unmapped taxa only.
+4. Use conservative genus-level Perch proxies rather than changing mapped
    classes.
-4. Keep the base blend weight unchanged unless the proxy variant needs a
+5. Keep the base blend weight unchanged unless the proxy variant needs a
    separate tuning pass.
 
 Success signal:
@@ -152,8 +153,8 @@ Success signal:
 
 Deliverables:
 
-- A new notebook only if the mapping diagnostics show enough unmapped classes
-  to justify it.
+- A new notebook only if we decide the 6 named taxa justify one more controlled
+  submission.
 
 ### 2.7 Add Perch Soundscape Priors
 

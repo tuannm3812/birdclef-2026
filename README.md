@@ -126,6 +126,7 @@ Result notes:
 - [ONNX SED results](docs/09_onnx_sed_results.md)
 - [ONNX Perch speed results](docs/10_onnx_perch_speed_results.md)
 - [ONNX Perch + SED blend results](docs/11_onnx_perch_sed_blend_results.md)
+- [Perch mapping diagnostics](docs/12_perch_mapping_diagnostics.md)
 - [Next steps](docs/06_next_steps.md)
 
 ## 8. Repository Layout
@@ -154,6 +155,7 @@ docs/
   09_onnx_sed_results.md
   10_onnx_perch_speed_results.md
   11_onnx_perch_sed_blend_results.md
+  12_perch_mapping_diagnostics.md
   figures/eda/
 ```
 
