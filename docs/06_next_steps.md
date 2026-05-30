@@ -60,7 +60,7 @@ Deliverables:
 
 ### 2.3 Test ONNX Perch Speed
 
-Status: active in `06_onnx_perch_speed_test.ipynb`.
+Status: succeeded in `06_onnx_perch_speed_test.ipynb`.
 
 Goal: measure whether ONNX Perch can replace the slower TensorFlow Perch
 submission path.
@@ -73,16 +73,45 @@ Work items:
 4. Report wall time per file and projected hidden-test runtime.
 5. Avoid blending, priors, sequence modeling, and heavy post-processing.
 
-Success signal:
+Result:
 
-- ONNX Perch inference is comfortably inside the Kaggle CPU limit.
+- The public dry-run timing used 20 `train_soundscapes` files.
+- Median runtime was **1.86 seconds per 60-second file**.
+- ONNX outputs were `(48, 14795)` label logits and `(48, 1536)` embeddings per
+  4-file batch.
 
 Deliverables:
 
-- `onnx_perch_timing.csv` from `06_onnx_perch_speed_test.ipynb`.
-- A go/no-go note before creating `07_onnx_perch_sed_blend.ipynb`.
+- `docs/10_onnx_perch_speed_results.md`.
 
-### 2.4 Add Perch Soundscape Priors
+### 2.4 Blend ONNX SED And ONNX Perch
+
+Status: next.
+
+Goal: test whether fast ONNX Perch logits add useful signal to the **0.822**
+ONNX SED champion.
+
+Work items:
+
+1. Create `07_onnx_perch_sed_blend.ipynb`.
+2. Reuse the current ONNX SED inference path.
+3. Reuse ONNX Perch waveform inference from `06_onnx_perch_speed_test.ipynb`.
+4. Map the **14,795** ONNX Perch output labels to the **234** submission
+   columns.
+5. Start with a simple conservative blend before adding priors or sequence
+   modeling.
+
+Success signal:
+
+- The blend submission finishes within the CPU limit and improves over **0.822**
+  public score.
+
+Deliverables:
+
+- `07_onnx_perch_sed_blend.ipynb`.
+- A result note if the blend submits successfully.
+
+### 2.5 Add Perch Soundscape Priors
 
 Status: implemented in `03_perch_v2_train.ipynb`; needs a fresh Kaggle train run and
 leaderboard validation.
@@ -108,7 +137,7 @@ Deliverables:
 - A small prior summary table saved by the training notebook.
 - A note added to `05_perch_v2_results.md`.
 
-### 2.5 Inspect Weak Labels
+### 2.6 Inspect Weak Labels
 
 Status: implemented in `03_perch_v2_train.ipynb` via
 `weak_label_diagnostics.csv`; needs review after the next training run.
@@ -133,7 +162,7 @@ Deliverables:
 - Add a weak-label section to `05_perch_v2_results.md`.
 - Optional figure under `docs/figures/perch/`.
 
-### 2.6 Test Lightweight Calibration
+### 2.7 Test Lightweight Calibration
 
 Status: implemented in `03_perch_v2_train.ipynb` via `temperature_grid.csv` and
 `calibration.json`; needs a controlled submission test through
@@ -159,7 +188,7 @@ Deliverables:
   `04_perch_v2_submit.ipynb`.
 - Updated result table in `05_perch_v2_results.md`.
 
-### 2.7 Compare Perch And EfficientNet Errors
+### 2.8 Compare Perch And EfficientNet Errors
 
 Goal: decide whether an ensemble is worth the CPU cost.
 
@@ -180,7 +209,7 @@ Deliverables:
   `05_perch_v2_results.md`.
 - If useful, a simple weighted-average submission path.
 
-### 2.8 Distill Perch Into A Faster Student
+### 2.9 Distill Perch Into A Faster Student
 
 Goal: reduce dependency on TensorFlow Perch inference if scoring runtime becomes
 fragile.
@@ -205,9 +234,8 @@ Deliverables:
 ## 3. Recommended Order
 
 1. Freeze the three successful baselines.
-2. Run `06_onnx_perch_speed_test.ipynb` using the ONNX Perch direction
-   summarized in `08_protossm_review.md`.
-3. If ONNX Perch is fast enough, create `07_onnx_perch_sed_blend.ipynb`.
+2. Preserve the ONNX Perch speed-test result.
+3. Create `07_onnx_perch_sed_blend.ipynb`.
 4. Move to our own Perch-distilled PyTorch/ONNX student only after the public
    ONNX SED path finishes under the runtime limit.
 5. Use priors, calibration, and weak-label work only after runtime is stable.

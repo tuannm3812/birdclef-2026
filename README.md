@@ -120,6 +120,7 @@ Result notes:
 - [Distilled SED review](docs/07_distilled_sed_review.md)
 - [ProtoSSM review](docs/08_protossm_review.md)
 - [ONNX SED results](docs/09_onnx_sed_results.md)
+- [ONNX Perch speed results](docs/10_onnx_perch_speed_results.md)
 - [Next steps](docs/06_next_steps.md)
 
 ## 8. Repository Layout
@@ -144,6 +145,7 @@ docs/
   07_distilled_sed_review.md
   08_protossm_review.md
   09_onnx_sed_results.md
+  10_onnx_perch_speed_results.md
   figures/eda/
 ```
 
