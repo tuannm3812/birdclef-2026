@@ -108,14 +108,14 @@ Deliverables:
 
 ### 2.5 Tune Simple Blend Variants
 
-Status: next.
+Status: active in `08_onnx_perch_sed_blend_w025.ipynb`.
 
 Goal: test small changes around the champion without adding a fragile modeling
 stack.
 
 Work items:
 
-1. Sweep Perch blend weight near the current conservative value.
+1. Run `08_onnx_perch_sed_blend_w025.ipynb` with `perch_weight = 0.25`.
 2. Save each variant as a clearly named Kaggle notebook version, not a
    replacement for the champion.
 3. Record exact Perch mapping count and unmapped target classes from the run
@@ -255,7 +255,8 @@ Deliverables:
 1. Preserve the **0.890** ONNX Perch + SED champion.
 2. Select the **0.890** blend and **0.822** ONNX SED submissions for final-score
    tracking unless a stronger variant appears.
-3. Run only small blend-weight variants next.
+3. Run `08_onnx_perch_sed_blend_w025.ipynb` as the next small blend-weight
+   variant.
 4. Try genus proxy mapping only as a separate variant after weight tuning.
 5. Avoid full ProtoSSM-style sequence modeling until simple variants stop
    improving.

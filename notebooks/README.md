@@ -13,7 +13,8 @@ project-owned, reproducible, and tied to a documented experiment.
 | `04_perch_v2_submit.ipynb` | Protected Perch v2 submission reference |
 | `05_onnx_sed_submit.ipynb` | Protected distilled SED ONNX champion submission |
 | `06_onnx_perch_speed_test.ipynb` | ONNX Perch runtime experiment |
-| `07_onnx_perch_sed_blend.ipynb` | Active ONNX Perch + SED blend experiment |
+| `07_onnx_perch_sed_blend.ipynb` | Protected ONNX Perch + SED champion submission |
+| `08_onnx_perch_sed_blend_w025.ipynb` | Active blend-weight variant with Perch weight 0.25 |
 
 ## Active Notebook Lane
 
@@ -21,7 +22,7 @@ Use **one** active notebook slot at a time. The current lane is:
 
 | Notebook | Purpose |
 |---|---|
-| `07_onnx_perch_sed_blend.ipynb` | Blend ONNX Perch and SED predictions after both standalone paths finished reliably |
+| `08_onnx_perch_sed_blend_w025.ipynb` | Test whether a stronger exact-mapped Perch contribution improves over the 0.890 champion |
 
 Do not add separate notebooks for every public reference. Review external
 notebooks in `docs/`, then promote only the cleaned project-owned version.
