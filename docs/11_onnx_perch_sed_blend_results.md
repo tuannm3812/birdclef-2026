@@ -8,12 +8,18 @@ workspace.
 | Submission | Notebook | Public score | Status |
 |---|---|---:|---|
 | ONNX Perch + SED blend version 2 | `07_onnx_perch_sed_blend.ipynb` | **0.890** | New champion |
+| ONNX Perch + SED W0.25 version 2 | `08_onnx_perch_sed_blend_w025.ipynb` | **0.890** | Tied champion |
 | ONNX distilled SED version 2 | `05_onnx_sed_submit.ipynb` | **0.822** | Protected baseline |
 | Perch v2 version 14 | `04_perch_v2_submit.ipynb` | **0.770** | Protected baseline |
 | EfficientNet-B0 version 9 | `02_effnet_b0.ipynb` | **0.646** | CPU-safe fallback |
 
 The blend improves public score by **+0.068** over ONNX SED alone and by
 **+0.244** over the original EfficientNet-B0 fallback.
+
+The first blend-weight variant increased Perch weight from **0.15** to
+**0.25** and tied the public score at **0.890**. That suggests the simple
+exact-mapped blend is robust, but more Perch weight alone is not the next clear
+source of improvement.
 
 ## 2. What Worked
 
@@ -37,16 +43,16 @@ as small variants, not overwrite it.
 
 ## 4. Recommended Next Experiments
 
-Use the remaining submissions carefully. The next work should be small
-controlled variants:
+Use the remaining submissions carefully. The next work should stay small and
+controlled:
 
-1. Tune the Perch blend weight around the current conservative value.
-2. Inspect the exact mapping count and unmapped taxa.
-3. Consider genus-level proxy mapping only for unmapped classes, and only as a
+1. Inspect the exact mapping count and unmapped taxa from
+   `perch_mapping_diagnostics.csv`.
+2. Consider genus-level proxy mapping only for unmapped classes, and only as a
    separate variant.
-4. Try light temporal smoothing or rank blending only after a blend-weight
-   sweep is understood.
+3. If testing weights again, try **0.20** before going higher than **0.25**.
+4. Try light temporal smoothing or rank blending only after mapping variants
+   are understood.
 
 Avoid jumping directly to the full ProtoSSM-style stack until simple blend
 variants stop improving.
-

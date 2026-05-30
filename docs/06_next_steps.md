@@ -108,14 +108,14 @@ Deliverables:
 
 ### 2.5 Tune Simple Blend Variants
 
-Status: active in `08_onnx_perch_sed_blend_w025.ipynb`.
+Status: W0.25 tied the champion at **0.890**.
 
 Goal: test small changes around the champion without adding a fragile modeling
 stack.
 
 Work items:
 
-1. Run `08_onnx_perch_sed_blend_w025.ipynb` with `perch_weight = 0.25`.
+1. Preserve `08_onnx_perch_sed_blend_w025.ipynb` as a tied variant.
 2. Save each variant as a clearly named Kaggle notebook version, not a
    replacement for the champion.
 3. Record exact Perch mapping count and unmapped target classes from the run
@@ -128,9 +128,34 @@ Success signal:
 
 Deliverables:
 
-- A short result note comparing blend weights and mapping counts.
+- `docs/11_onnx_perch_sed_blend_results.md` updated with W0.25 result.
 
-### 2.6 Add Perch Soundscape Priors
+### 2.6 Test Unmapped-Class Proxy Mapping
+
+Status: next.
+
+Goal: improve target columns that exact scientific-name mapping leaves without
+direct Perch logits.
+
+Work items:
+
+1. Inspect `perch_mapping_diagnostics.csv` from the W0.25 run.
+2. Build a separate proxy-mapping variant for unmapped labels only.
+3. Use conservative genus-level Perch proxies rather than changing mapped
+   classes.
+4. Keep the base blend weight unchanged unless the proxy variant needs a
+   separate tuning pass.
+
+Success signal:
+
+- A proxy-mapping variant improves over **0.890** without harming runtime.
+
+Deliverables:
+
+- A new notebook only if the mapping diagnostics show enough unmapped classes
+  to justify it.
+
+### 2.7 Add Perch Soundscape Priors
 
 Status: implemented in `03_perch_v2_train.ipynb`; needs a fresh Kaggle train run and
 leaderboard validation.
@@ -156,7 +181,7 @@ Deliverables:
 - A small prior summary table saved by the training notebook.
 - A note added to `05_perch_v2_results.md`.
 
-### 2.7 Inspect Weak Labels
+### 2.8 Inspect Weak Labels
 
 Status: implemented in `03_perch_v2_train.ipynb` via
 `weak_label_diagnostics.csv`; needs review after the next training run.
@@ -181,7 +206,7 @@ Deliverables:
 - Add a weak-label section to `05_perch_v2_results.md`.
 - Optional figure under `docs/figures/perch/`.
 
-### 2.8 Test Lightweight Calibration
+### 2.9 Test Lightweight Calibration
 
 Status: implemented in `03_perch_v2_train.ipynb` via `temperature_grid.csv` and
 `calibration.json`; needs a controlled submission test through
@@ -207,7 +232,7 @@ Deliverables:
   `04_perch_v2_submit.ipynb`.
 - Updated result table in `05_perch_v2_results.md`.
 
-### 2.9 Compare Perch And EfficientNet Errors
+### 2.10 Compare Perch And EfficientNet Errors
 
 Goal: decide whether an ensemble is worth the CPU cost.
 
@@ -228,7 +253,7 @@ Deliverables:
   `05_perch_v2_results.md`.
 - If useful, a simple weighted-average submission path.
 
-### 2.10 Distill Perch Into A Faster Student
+### 2.11 Distill Perch Into A Faster Student
 
 Goal: reduce dependency on TensorFlow Perch inference if scoring runtime becomes
 fragile.
@@ -255,9 +280,9 @@ Deliverables:
 1. Preserve the **0.890** ONNX Perch + SED champion.
 2. Select the **0.890** blend and **0.822** ONNX SED submissions for final-score
    tracking unless a stronger variant appears.
-3. Run `08_onnx_perch_sed_blend_w025.ipynb` as the next small blend-weight
-   variant.
-4. Try genus proxy mapping only as a separate variant after weight tuning.
+3. Use the W0.25 tie as evidence that higher Perch weight alone is not enough.
+4. Inspect mapping diagnostics, then try genus proxy mapping only as a separate
+   variant if enough target columns are unmapped.
 5. Avoid full ProtoSSM-style sequence modeling until simple variants stop
    improving.
 
