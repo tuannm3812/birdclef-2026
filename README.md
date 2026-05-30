@@ -8,14 +8,14 @@
   <a href="https://www.kaggle.com/competitions/birdclef-2026">
     <img src="https://img.shields.io/badge/Kaggle-BirdCLEF%2B%202026-20BEFF?logo=kaggle&logoColor=white" alt="Kaggle competition">
   </a>
-  <img src="https://img.shields.io/badge/Notebook-EDA%20%7C%20EffNet%20%7C%20Perch-F37626?logo=jupyter" alt="Notebook workflow">
+  <img src="https://img.shields.io/badge/Notebook-EDA%20%7C%20EffNet%20%7C%20Perch%20%7C%20ONNX%20SED-F37626?logo=jupyter" alt="Notebook workflow">
   <img src="https://img.shields.io/badge/Public-EffNet%200.646%20%7C%20Perch%200.770-2EA44F" alt="Public scores">
 </p>
 
 BirdCLEF+ 2026 bioacoustic classification workspace for identifying wildlife
 species in Brazilian Pantanal soundscapes. The project documents the path from
-dataset understanding to a reliable EfficientNet-B0 baseline and a stronger
-Google Perch v2 transfer-learning model.
+dataset understanding to a reliable EfficientNet-B0 baseline, a stronger Google
+Perch v2 transfer-learning model, and the next ONNX-based submission lane.
 
 ## 1. Competition Snapshot
 
@@ -73,8 +73,12 @@ Project overview and approach: [docs/01_project_overview.md](docs/01_project_ove
 | [02_effnet_b0.ipynb](notebooks/02_effnet_b0.ipynb) | EfficientNet-B0 training plus fast checkpoint-based submission mode |
 | [03_perch_v2_train.ipynb](notebooks/03_perch_v2_train.ipynb) | Perch v2 probe training, diagnostics, calibration, and artifact packaging |
 | [04_perch_v2_submit.ipynb](notebooks/04_perch_v2_submit.ipynb) | Lean Perch v2 scoring notebook for CPU Kaggle submission |
+| [05_onnx_sed_submit.ipynb](notebooks/05_onnx_sed_submit.ipynb) | Active distilled SED ONNX submission experiment |
 
-Perch v2 is now the lead modeling path after the successful CPU run. EfficientNet-B0 remains important as a simpler fallback and possible ensemble component.
+Perch v2 version 14 remains the protected champion after the successful CPU
+run. EfficientNet-B0 remains the simpler fallback. New leaderboard work should
+move through the ONNX lane: distilled SED first, then ONNX Perch speed testing,
+then blending only if both complete reliably.
 
 ## 6. Key EDA Findings
 
@@ -120,6 +124,7 @@ notebooks/
   02_effnet_b0.ipynb
   03_perch_v2_train.ipynb
   04_perch_v2_submit.ipynb
+  05_onnx_sed_submit.ipynb
 
 docs/
   01_project_overview.md

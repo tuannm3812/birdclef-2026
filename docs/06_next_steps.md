@@ -2,10 +2,10 @@
 
 ## 1. Current Position
 
-Perch v2 is the lead path with a **0.770** public score, while
-EfficientNet-B0 remains the reliable PyTorch fallback at **0.646**. We should
-protect both successful submissions before adding new leaderboard experiments:
-Perch v2 is the champion, and EfficientNet-B0 is the CPU-safe fallback.
+Perch v2 is the protected champion with a **0.770** public score, while
+EfficientNet-B0 remains the reliable PyTorch fallback at **0.646**. The next
+active experiment is now the distilled SED ONNX submission path in
+`notebooks/05_onnx_sed_submit.ipynb`.
 
 The main risk is hidden-test runtime. Public notebook runs can pass with only
 three sample rows and no test audio, while real submissions must score hidden
@@ -36,33 +36,54 @@ Deliverables:
 - Add a baseline registry table to `README.md` or `05_perch_v2_results.md`.
 - Keep experimental submission notebooks as separate versions, not replacements.
 
-### 2.2 Diagnose Perch Runtime Regression
+### 2.2 Run Distilled SED ONNX Submission
 
-Status: next.
+Status: active in `05_onnx_sed_submit.ipynb`.
 
-Goal: explain why Perch v2 version 14 succeeded while the latest Perch CPU
-submission timed out.
+Goal: establish a fast ONNX submission baseline before adding Perch back into
+the scoring path.
 
 Work items:
 
-1. Compare version 14 submission notebook against the current
-   `04_perch_v2_submit.ipynb`.
-2. Check artifact version, TensorFlow wheel, CPU Perch input, batch size, and
-   whether predictions were streamed or accumulated in memory.
-3. Remove any optional scoring work from the current submission path.
-4. If version 14 is materially faster, port only that runtime path forward.
+1. Attach the BirdCLEF+ 2026 competition data.
+2. Attach the public distilled SED ONNX fold dataset.
+3. Attach an offline ONNX Runtime wheel dataset if Kaggle does not already have
+   `onnxruntime`.
+4. Submit `05_onnx_sed_submit.ipynb` without adding Perch, training, or debug
+   fallback scoring.
 
 Success signal:
 
-- A controlled Perch submission finishes under the Kaggle time limit, or we
-  decide direct Perch CPU scoring is too fragile and stop spending submissions
-  on it.
+- The notebook finishes hidden-test CPU scoring and produces a public score.
 
 Deliverables:
 
-- Short note in `05_perch_v2_results.md` describing the runtime finding.
+- Add the score and runtime note to this file or a new ONNX SED result note.
 
-### 2.3 Add Perch Soundscape Priors
+### 2.3 Test ONNX Perch Speed
+
+Status: reserved for `06_onnx_perch_speed_test.ipynb` after SED succeeds.
+
+Goal: measure whether ONNX Perch can replace the slower TensorFlow Perch
+submission path.
+
+Work items:
+
+1. Load the ONNX Perch no-DFT model only.
+2. Score hidden-style 60-second files as 12 contiguous 5-second windows.
+3. Report wall time per file and projected hidden-test runtime.
+4. Avoid blending, priors, sequence modeling, and heavy post-processing.
+
+Success signal:
+
+- ONNX Perch inference is comfortably inside the Kaggle CPU limit.
+
+Deliverables:
+
+- Promote `06_onnx_perch_speed_test.ipynb` only after `05_onnx_sed_submit.ipynb`
+  has a successful submission result.
+
+### 2.4 Add Perch Soundscape Priors
 
 Status: implemented in `03_perch_v2_train.ipynb`; needs a fresh Kaggle train run and
 leaderboard validation.
@@ -88,7 +109,7 @@ Deliverables:
 - A small prior summary table saved by the training notebook.
 - A note added to `05_perch_v2_results.md`.
 
-### 2.4 Inspect Weak Labels
+### 2.5 Inspect Weak Labels
 
 Status: implemented in `03_perch_v2_train.ipynb` via
 `weak_label_diagnostics.csv`; needs review after the next training run.
@@ -113,7 +134,7 @@ Deliverables:
 - Add a weak-label section to `05_perch_v2_results.md`.
 - Optional figure under `docs/figures/perch/`.
 
-### 2.5 Test Lightweight Calibration
+### 2.6 Test Lightweight Calibration
 
 Status: implemented in `03_perch_v2_train.ipynb` via `temperature_grid.csv` and
 `calibration.json`; needs a controlled submission test through
@@ -139,7 +160,7 @@ Deliverables:
   `04_perch_v2_submit.ipynb`.
 - Updated result table in `05_perch_v2_results.md`.
 
-### 2.6 Compare Perch And EfficientNet Errors
+### 2.7 Compare Perch And EfficientNet Errors
 
 Goal: decide whether an ensemble is worth the CPU cost.
 
@@ -160,7 +181,7 @@ Deliverables:
   `05_perch_v2_results.md`.
 - If useful, a simple weighted-average submission path.
 
-### 2.7 Distill Perch Into A Faster Student
+### 2.8 Distill Perch Into A Faster Student
 
 Goal: reduce dependency on TensorFlow Perch inference if scoring runtime becomes
 fragile.
@@ -185,15 +206,13 @@ Deliverables:
 ## 3. Recommended Order
 
 1. Freeze the two successful baselines.
-2. Diagnose the Perch version 14 versus current timeout difference.
-3. Submit only one controlled Perch runtime fix if the diagnosis is promising.
-4. Reproduce the distilled SED ONNX inference path from
-   `07_distilled_sed_review.md` as `05_onnx_sed_submit.ipynb`.
-5. If SED finishes, test the ONNX Perch direction summarized in
-   `08_protossm_review.md`.
-6. Move to our own Perch-distilled PyTorch/ONNX student if the public distilled
-   SED path finishes under the runtime limit.
-7. Use priors, calibration, and weak-label work only after runtime is stable.
+2. Submit `05_onnx_sed_submit.ipynb`.
+3. If SED finishes, create `06_onnx_perch_speed_test.ipynb` from the ONNX Perch
+   direction summarized in `08_protossm_review.md`.
+4. If both SED and ONNX Perch finish, create `07_onnx_perch_sed_blend.ipynb`.
+5. Move to our own Perch-distilled PyTorch/ONNX student only after the public
+   ONNX SED path finishes under the runtime limit.
+6. Use priors, calibration, and weak-label work only after runtime is stable.
 
 ## 4. Guardrails
 
@@ -204,4 +223,6 @@ Deliverables:
 - Do not use raw soundscape label counts without deduplication.
 - Keep the Perch training and submission notebooks split because artifact
   management and CPU scoring now have different constraints.
+- Keep direct TensorFlow Perch notebooks as protected references, not the active
+  improvement lane.
 - Keep attached model artifacts and wheelhouses outside git.
