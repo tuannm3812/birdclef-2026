@@ -187,8 +187,11 @@ Deliverables:
 1. Freeze the two successful baselines.
 2. Diagnose the Perch version 14 versus current timeout difference.
 3. Submit only one controlled Perch runtime fix if the diagnosis is promising.
-4. Move to Perch-distilled PyTorch student if direct Perch CPU remains fragile.
-5. Use priors, calibration, and weak-label work only after runtime is stable.
+4. Reproduce the distilled SED ONNX inference path from
+   `07_distilled_sed_review.md`.
+5. Move to our own Perch-distilled PyTorch/ONNX student if the public distilled
+   SED path finishes under the runtime limit.
+6. Use priors, calibration, and weak-label work only after runtime is stable.
 
 ## 4. Guardrails
 

@@ -107,6 +107,7 @@ Result notes:
 
 - [EfficientNet-B0 results](docs/04_effnet_b0_results.md)
 - [Perch v2 results](docs/05_perch_v2_results.md)
+- [Distilled SED review](docs/07_distilled_sed_review.md)
 - [Next steps](docs/06_next_steps.md)
 
 ## 8. Repository Layout
@@ -125,6 +126,7 @@ docs/
   04_effnet_b0_results.md
   05_perch_v2_results.md
   06_next_steps.md
+  07_distilled_sed_review.md
   figures/eda/
 ```
 
