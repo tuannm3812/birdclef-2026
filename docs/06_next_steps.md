@@ -2,10 +2,10 @@
 
 ## 1. Current Position
 
-Perch v2 is the protected champion with a **0.770** public score, while
+ONNX distilled SED is the protected champion with a **0.822** public score.
+Perch v2 remains the strongest older baseline at **0.770**, while
 EfficientNet-B0 remains the reliable PyTorch fallback at **0.646**. The next
-active experiment is now the distilled SED ONNX submission path in
-`notebooks/05_onnx_sed_submit.ipynb`.
+active experiment should be ONNX Perch speed testing.
 
 The main risk is hidden-test runtime. Public notebook runs can pass with only
 three sample rows and no test audio, while real submissions must score hidden
@@ -36,43 +36,42 @@ Deliverables:
 - Add a baseline registry table to `README.md` or `05_perch_v2_results.md`.
 - Keep experimental submission notebooks as separate versions, not replacements.
 
-### 2.2 Run Distilled SED ONNX Submission
+### 2.2 Preserve Distilled SED ONNX Champion
 
-Status: active in `05_onnx_sed_submit.ipynb`.
+Status: succeeded with **0.822** public score.
 
-Goal: establish a fast ONNX submission baseline before adding Perch back into
+Goal: keep the new best submission reproducible before adding Perch back into
 the scoring path.
 
 Work items:
 
-1. Attach the BirdCLEF+ 2026 competition data.
-2. Attach the public distilled SED ONNX fold dataset.
-3. Attach an offline ONNX Runtime wheel dataset if Kaggle does not already have
-   `onnxruntime`.
-4. Submit `05_onnx_sed_submit.ipynb` without adding Perch, training, or debug
-   fallback scoring.
+1. Preserve `05_onnx_sed_submit.ipynb`.
+2. Record attached Kaggle inputs and notebook version.
+3. Avoid changing the champion notebook while testing ONNX Perch.
+4. Document the result in `docs/09_onnx_sed_results.md`.
 
 Success signal:
 
-- The notebook finishes hidden-test CPU scoring and produces a public score.
+- We can restore the **0.822** path without guessing inputs or code changes.
 
 Deliverables:
 
-- Add the score and runtime note to this file or a new ONNX SED result note.
+- `docs/09_onnx_sed_results.md`.
 
 ### 2.3 Test ONNX Perch Speed
 
-Status: reserved for `06_onnx_perch_speed_test.ipynb` after SED succeeds.
+Status: next.
 
 Goal: measure whether ONNX Perch can replace the slower TensorFlow Perch
 submission path.
 
 Work items:
 
-1. Load the ONNX Perch no-DFT model only.
-2. Score hidden-style 60-second files as 12 contiguous 5-second windows.
-3. Report wall time per file and projected hidden-test runtime.
-4. Avoid blending, priors, sequence modeling, and heavy post-processing.
+1. Create `06_onnx_perch_speed_test.ipynb`.
+2. Load the ONNX Perch no-DFT model only.
+3. Score hidden-style 60-second files as 12 contiguous 5-second windows.
+4. Report wall time per file and projected hidden-test runtime.
+5. Avoid blending, priors, sequence modeling, and heavy post-processing.
 
 Success signal:
 
@@ -80,8 +79,7 @@ Success signal:
 
 Deliverables:
 
-- Promote `06_onnx_perch_speed_test.ipynb` only after `05_onnx_sed_submit.ipynb`
-  has a successful submission result.
+- `06_onnx_perch_speed_test.ipynb` with timing output and a go/no-go note.
 
 ### 2.4 Add Perch Soundscape Priors
 
@@ -205,14 +203,13 @@ Deliverables:
 
 ## 3. Recommended Order
 
-1. Freeze the two successful baselines.
-2. Submit `05_onnx_sed_submit.ipynb`.
-3. If SED finishes, create `06_onnx_perch_speed_test.ipynb` from the ONNX Perch
+1. Freeze the three successful baselines.
+2. Create `06_onnx_perch_speed_test.ipynb` from the ONNX Perch
    direction summarized in `08_protossm_review.md`.
-4. If both SED and ONNX Perch finish, create `07_onnx_perch_sed_blend.ipynb`.
-5. Move to our own Perch-distilled PyTorch/ONNX student only after the public
+3. If ONNX Perch is fast enough, create `07_onnx_perch_sed_blend.ipynb`.
+4. Move to our own Perch-distilled PyTorch/ONNX student only after the public
    ONNX SED path finishes under the runtime limit.
-6. Use priors, calibration, and weak-label work only after runtime is stable.
+5. Use priors, calibration, and weak-label work only after runtime is stable.
 
 ## 4. Guardrails
 

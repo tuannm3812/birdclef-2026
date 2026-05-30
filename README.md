@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/badge/Kaggle-BirdCLEF%2B%202026-20BEFF?logo=kaggle&logoColor=white" alt="Kaggle competition">
   </a>
   <img src="https://img.shields.io/badge/Notebook-EDA%20%7C%20EffNet%20%7C%20Perch%20%7C%20ONNX%20SED-F37626?logo=jupyter" alt="Notebook workflow">
-  <img src="https://img.shields.io/badge/Public-EffNet%200.646%20%7C%20Perch%200.770-2EA44F" alt="Public scores">
+  <img src="https://img.shields.io/badge/Public-EffNet%200.646%20%7C%20Perch%200.770%20%7C%20ONNX%20SED%200.822-2EA44F" alt="Public scores">
 </p>
 
 BirdCLEF+ 2026 bioacoustic classification workspace for identifying wildlife
@@ -35,7 +35,8 @@ classification.
 | Soundscape labels | **739** deduplicated labeled 5-second windows |
 | EfficientNet-B0 | **0.5464** best validation accuracy, **0.646** public score |
 | Perch v2 probe | **0.8392** best validation accuracy, **0.770** public score |
-| Best gain | Perch v2 improved public score by **+0.124** over EfficientNet-B0 |
+| ONNX distilled SED | **0.822** public score |
+| Best gain | ONNX distilled SED improved public score by **+0.176** over EfficientNet-B0 |
 
 Project overview and approach: [docs/01_project_overview.md](docs/01_project_overview.md).
 
@@ -46,7 +47,9 @@ Project overview and approach: [docs/01_project_overview.md](docs/01_project_ove
 - Trained a compact EfficientNet-B0 mel-spectrogram baseline that remains a
   dependable PyTorch fallback.
 - Trained a shallow classifier on frozen **1,536-dimensional** Google Perch v2
-  embeddings, producing the strongest current result in the repo.
+  embeddings, producing the first strong transfer-learning result.
+- Promoted a distilled SED ONNX submission path that is now the best current
+  public score in the repo.
 - Optimized the Perch scoring path for CPU by reading full 60-second
   soundscapes once and reshaping them into **12** contiguous 5-second windows.
 - Added lightweight result documentation so EDA findings, model behavior, and
@@ -73,12 +76,12 @@ Project overview and approach: [docs/01_project_overview.md](docs/01_project_ove
 | [02_effnet_b0.ipynb](notebooks/02_effnet_b0.ipynb) | EfficientNet-B0 training plus fast checkpoint-based submission mode |
 | [03_perch_v2_train.ipynb](notebooks/03_perch_v2_train.ipynb) | Perch v2 probe training, diagnostics, calibration, and artifact packaging |
 | [04_perch_v2_submit.ipynb](notebooks/04_perch_v2_submit.ipynb) | Lean Perch v2 scoring notebook for CPU Kaggle submission |
-| [05_onnx_sed_submit.ipynb](notebooks/05_onnx_sed_submit.ipynb) | Active distilled SED ONNX submission experiment |
+| [05_onnx_sed_submit.ipynb](notebooks/05_onnx_sed_submit.ipynb) | Protected distilled SED ONNX champion submission |
 
-Perch v2 version 14 remains the protected champion after the successful CPU
-run. EfficientNet-B0 remains the simpler fallback. New leaderboard work should
-move through the ONNX lane: distilled SED first, then ONNX Perch speed testing,
-then blending only if both complete reliably.
+ONNX distilled SED is now the protected champion. Perch v2 version 14 remains a
+valuable protected baseline, and EfficientNet-B0 remains the simpler fallback.
+New leaderboard work should continue through the ONNX lane: ONNX Perch speed
+testing next, then blending only if both standalone paths complete reliably.
 
 ## 6. Key EDA Findings
 
@@ -98,14 +101,16 @@ Full analysis: [docs/03_eda_insights.md](docs/03_eda_insights.md).
 | Model | Representation | Best validation accuracy | Public score | Role |
 |---|---|---:|---:|---|
 | EfficientNet-B0 | 5-second mel-spectrogram | **0.5464** | **0.646** | Reliable fallback |
-| Perch v2 probe | Frozen 1,536-d embeddings | **0.8392** | **0.770** | Lead submission |
+| Perch v2 probe | Frozen 1,536-d embeddings | **0.8392** | **0.770** | Protected baseline |
+| ONNX distilled SED | 5-fold SED ONNX student | N/A | **0.822** | Current champion |
 
 Successful Kaggle submissions to preserve:
 
 | Submission | Public score | Current role | Next action |
 |---|---:|---|---|
 | EfficientNet-B0 version 9 | **0.646** | CPU-safe fallback | Keep exact notebook and artifact inputs unchanged |
-| Perch v2 version 14 | **0.770** | Current champion | Compare against newer timeout runs before changing the scoring path |
+| Perch v2 version 14 | **0.770** | Protected baseline | Keep as reference while moving new work to ONNX |
+| ONNX distilled SED version 1 | **0.822** | Current champion | Preserve and test ONNX Perch speed next |
 
 Result notes:
 
@@ -113,6 +118,7 @@ Result notes:
 - [Perch v2 results](docs/05_perch_v2_results.md)
 - [Distilled SED review](docs/07_distilled_sed_review.md)
 - [ProtoSSM review](docs/08_protossm_review.md)
+- [ONNX SED results](docs/09_onnx_sed_results.md)
 - [Next steps](docs/06_next_steps.md)
 
 ## 8. Repository Layout
@@ -135,6 +141,7 @@ docs/
   06_next_steps.md
   07_distilled_sed_review.md
   08_protossm_review.md
+  09_onnx_sed_results.md
   figures/eda/
 ```
 
