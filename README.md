@@ -96,6 +96,13 @@ Full analysis: [docs/03_eda_insights.md](docs/03_eda_insights.md).
 | EfficientNet-B0 | 5-second mel-spectrogram | **0.5464** | **0.646** | Reliable fallback |
 | Perch v2 probe | Frozen 1,536-d embeddings | **0.8392** | **0.770** | Lead submission |
 
+Successful Kaggle submissions to preserve:
+
+| Submission | Public score | Current role | Next action |
+|---|---:|---|---|
+| EfficientNet-B0 version 9 | **0.646** | CPU-safe fallback | Keep exact notebook and artifact inputs unchanged |
+| Perch v2 version 14 | **0.770** | Current champion | Compare against newer timeout runs before changing the scoring path |
+
 Result notes:
 
 - [EfficientNet-B0 results](docs/04_effnet_b0_results.md)

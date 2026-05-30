@@ -3,18 +3,66 @@
 ## 1. Current Position
 
 Perch v2 is the lead path with a **0.770** public score, while
-EfficientNet-B0 remains the reliable PyTorch fallback at **0.646**. The next
-work should improve Perch calibration and soundscape behavior before spending
-time on larger models.
+EfficientNet-B0 remains the reliable PyTorch fallback at **0.646**. We should
+protect both successful submissions before adding new leaderboard experiments:
+Perch v2 is the champion, and EfficientNet-B0 is the CPU-safe fallback.
 
-The main risk is optimizing clean-clip validation accuracy while hidden scoring
-happens on noisy 1-minute soundscapes split into 5-second windows. Every new
-experiment should therefore report both normal validation metrics and at least
-one soundscape-like diagnostic.
+The main risk is hidden-test runtime. Public notebook runs can pass with only
+three sample rows and no test audio, while real submissions must score hidden
+soundscapes. Every new experiment should therefore report validation quality and
+submission runtime risk.
 
 ## 2. Priority Experiments
 
-### 2.1 Add Perch Soundscape Priors
+### 2.1 Freeze The Two Working Baselines
+
+Status: urgent.
+
+Goal: keep reproducible copies of the only two successful submissions.
+
+Work items:
+
+1. Preserve the exact EfficientNet-B0 version 9 notebook and artifact inputs.
+2. Preserve the exact Perch v2 version 14 notebook and artifact inputs.
+3. Record attached Kaggle inputs, artifact versions, public scores, and runtime.
+4. Avoid overwriting those notebooks while testing new variants.
+
+Success signal:
+
+- We can rerun or restore both baselines without guessing paths or versions.
+
+Deliverables:
+
+- Add a baseline registry table to `README.md` or `05_perch_v2_results.md`.
+- Keep experimental submission notebooks as separate versions, not replacements.
+
+### 2.2 Diagnose Perch Runtime Regression
+
+Status: next.
+
+Goal: explain why Perch v2 version 14 succeeded while the latest Perch CPU
+submission timed out.
+
+Work items:
+
+1. Compare version 14 submission notebook against the current
+   `04_perch_v2_submit.ipynb`.
+2. Check artifact version, TensorFlow wheel, CPU Perch input, batch size, and
+   whether predictions were streamed or accumulated in memory.
+3. Remove any optional scoring work from the current submission path.
+4. If version 14 is materially faster, port only that runtime path forward.
+
+Success signal:
+
+- A controlled Perch submission finishes under the Kaggle time limit, or we
+  decide direct Perch CPU scoring is too fragile and stop spending submissions
+  on it.
+
+Deliverables:
+
+- Short note in `05_perch_v2_results.md` describing the runtime finding.
+
+### 2.3 Add Perch Soundscape Priors
 
 Status: implemented in `03_perch_v2_train.ipynb`; needs a fresh Kaggle train run and
 leaderboard validation.
@@ -40,7 +88,7 @@ Deliverables:
 - A small prior summary table saved by the training notebook.
 - A note added to `05_perch_v2_results.md`.
 
-### 2.2 Inspect Weak Labels
+### 2.4 Inspect Weak Labels
 
 Status: implemented in `03_perch_v2_train.ipynb` via
 `weak_label_diagnostics.csv`; needs review after the next training run.
@@ -65,7 +113,7 @@ Deliverables:
 - Add a weak-label section to `05_perch_v2_results.md`.
 - Optional figure under `docs/figures/perch/`.
 
-### 2.3 Test Lightweight Calibration
+### 2.5 Test Lightweight Calibration
 
 Status: implemented in `03_perch_v2_train.ipynb` via `temperature_grid.csv` and
 `calibration.json`; needs a controlled submission test through
@@ -91,7 +139,7 @@ Deliverables:
   `04_perch_v2_submit.ipynb`.
 - Updated result table in `05_perch_v2_results.md`.
 
-### 2.4 Compare Perch And EfficientNet Errors
+### 2.6 Compare Perch And EfficientNet Errors
 
 Goal: decide whether an ensemble is worth the CPU cost.
 
@@ -112,7 +160,7 @@ Deliverables:
   `05_perch_v2_results.md`.
 - If useful, a simple weighted-average submission path.
 
-### 2.5 Distill Perch Into A Faster Student
+### 2.7 Distill Perch Into A Faster Student
 
 Goal: reduce dependency on TensorFlow Perch inference if scoring runtime becomes
 fragile.
@@ -136,15 +184,17 @@ Deliverables:
 
 ## 3. Recommended Order
 
-1. Soundscape priors for Perch.
-2. Weak-label inspection.
-3. Lightweight calibration.
-4. Perch/EfficientNet error overlap.
-5. Distillation only if runtime or ensemble cost becomes a blocker.
+1. Freeze the two successful baselines.
+2. Diagnose the Perch version 14 versus current timeout difference.
+3. Submit only one controlled Perch runtime fix if the diagnosis is promising.
+4. Move to Perch-distilled PyTorch student if direct Perch CPU remains fragile.
+5. Use priors, calibration, and weak-label work only after runtime is stable.
 
 ## 4. Guardrails
 
 - Do not optimize only against the public leaderboard.
+- Do not assume public dry runs measure hidden-test runtime; public runs can have
+  three rows and zero audio files.
 - Do not add heavy test-time augmentation until CPU runtime is measured.
 - Do not use raw soundscape label counts without deduplication.
 - Keep the Perch training and submission notebooks split because artifact
