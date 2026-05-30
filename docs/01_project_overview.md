@@ -42,9 +42,10 @@ The competition reduces to five practical questions:
 |---|---|---|
 | Explore the dataset | `01_eda.ipynb` | Audit labels, soundscape annotations, metadata shift, and acoustic examples |
 | Build a simple baseline | `02_effnet_b0.ipynb` | Train and score a 5-second mel-spectrogram EfficientNet-B0 model |
-| Build the lead model | `03_perch_v2.ipynb` | Train and score a shallow classifier on frozen Google Perch v2 embeddings |
+| Build the lead model | `03_perch_v2_train.ipynb` | Train a shallow classifier on frozen Google Perch v2 embeddings and package artifacts |
+| Submit the lead model | `04_perch_v2_submit.ipynb` | Load Perch artifacts, run CPU soundscape scoring, and write `submission.csv` |
 
-The notebooks are intentionally ordered from understanding to baseline to stronger transfer model. EDA explains why validation, calibration, and runtime choices matter; EfficientNet validates the end-to-end Kaggle pipeline; Perch v2 gives the best current score.
+The notebooks are intentionally ordered from understanding to baseline to stronger transfer model. EDA explains why validation, calibration, and runtime choices matter; EfficientNet validates the end-to-end Kaggle pipeline; Perch v2 training produces the strongest artifact, and the separate Perch submission notebook keeps CPU scoring lean.
 
 ## 4. Current Solution Approach
 

@@ -71,7 +71,8 @@ Project overview and approach: [docs/01_project_overview.md](docs/01_project_ove
 |---|---|
 | [01_eda.ipynb](notebooks/01_eda.ipynb) | Dataset audit, class imbalance, secondary labels, metadata bias, soundscape domain analysis, and spectrogram inspection |
 | [02_effnet_b0.ipynb](notebooks/02_effnet_b0.ipynb) | EfficientNet-B0 training plus fast checkpoint-based submission mode |
-| [03_perch_v2.ipynb](notebooks/03_perch_v2.ipynb) | Perch v2 probe training plus CPU-optimized soundscape scoring |
+| [03_perch_v2_train.ipynb](notebooks/03_perch_v2_train.ipynb) | Perch v2 probe training, diagnostics, calibration, and artifact packaging |
+| [04_perch_v2_submit.ipynb](notebooks/04_perch_v2_submit.ipynb) | Lean Perch v2 scoring notebook for CPU Kaggle submission |
 
 Perch v2 is now the lead modeling path after the successful CPU run. EfficientNet-B0 remains important as a simpler fallback and possible ensemble component.
 
@@ -107,7 +108,8 @@ Result notes:
 notebooks/
   01_eda.ipynb
   02_effnet_b0.ipynb
-  03_perch_v2.ipynb
+  03_perch_v2_train.ipynb
+  04_perch_v2_submit.ipynb
 
 docs/
   01_project_overview.md

@@ -24,7 +24,8 @@ The Perch notebook now has two modes: **`CFG.mode = "train"`** for the full expe
 | Submission mode | Loads `best_perch_probe.pt` and `labels.json`; skips train embeddings, probe training, diagnostics, and artifact zip |
 | Submission speedup | Prefers the CPU Perch export and batches full 60-second soundscape files into 12 windows per file |
 | CPU public score | **0.770** |
-| Primary notebook | `notebooks/03_perch_v2.ipynb` |
+| Training notebook | `notebooks/03_perch_v2_train.ipynb` |
+| Submission notebook | `notebooks/04_perch_v2_submit.ipynb` |
 
 ## 3. Validation History
 
@@ -65,7 +66,7 @@ The probe reaches strong validation accuracy almost immediately, which indicates
 
 Compared with the offline-safe EfficientNet-B0 run, Perch v2 improves validation accuracy by about **31.2 percentage points**. The CPU submission also improves the public score from **0.646** to **0.770**, a **+0.124** gain over EffNet-B0. The result is important because it shows foundation-model representations are highly valuable for this competition, provided the CPU inference path stays optimized.
 
-The fast starter notebook runs well on CPU because it uses the **`perch_v2_cpu`** SavedModel, reads each 60-second soundscape once with `soundfile`, reshapes it into **12 contiguous 5-second windows**, and batches multiple files per TensorFlow call. Notebook 3 now mirrors that submission strategy while keeping the PyTorch probe artifact path.
+The fast starter notebook runs well on CPU because it uses the **`perch_v2_cpu`** SavedModel, reads each 60-second soundscape once with `soundfile`, reshapes it into **12 contiguous 5-second windows**, and batches multiple files per TensorFlow call. The dedicated Perch submission notebook now mirrors that strategy while keeping the training notebook focused on artifacts and diagnostics.
 
 The most practical next step is to strengthen Perch without losing CPU viability:
 
@@ -90,8 +91,8 @@ These files make the Perch result more actionable. Low top-1 recall with high to
 
 ## 7. New Experiment Hooks
 
-Notebook 3 now includes the next experimental layer without changing the default
-score path:
+The Perch training and submission notebooks now include the next experimental
+layer without changing the default score path:
 
 1. **Temperature calibration.** Training mode collects validation logits, sweeps a global temperature, and saves the best setting in `calibration.json`.
 2. **Weak-label inspection.** Training mode writes `weak_label_diagnostics.csv` so rare labels, non-bird taxa, and high-confidence confusions can be reviewed directly.

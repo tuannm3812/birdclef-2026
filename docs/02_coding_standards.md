@@ -18,9 +18,10 @@ Use numbered, stable notebook names:
 
 1. `01_eda.ipynb`
 2. `02_effnet_b0.ipynb`
-3. `03_perch_v2.ipynb`
+3. `03_perch_v2_train.ipynb`
+4. `04_perch_v2_submit.ipynb`
 
-Notebook names should describe the actual Kaggle workflow. Do not split training and submission into separate notebooks when the competition flow is meant to run end-to-end.
+Notebook names should describe the actual Kaggle workflow. Keep training and submission together for simple baselines, but split them when artifact management, runtime constraints, or Kaggle scoring safety make the responsibilities meaningfully different.
 
 Use numbered documentation filenames so the reading order is obvious:
 

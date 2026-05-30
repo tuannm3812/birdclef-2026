@@ -16,7 +16,7 @@ one soundscape-like diagnostic.
 
 ### 2.1 Add Perch Soundscape Priors
 
-Status: implemented in `03_perch_v2.ipynb`; needs a fresh Kaggle train run and
+Status: implemented in `03_perch_v2_train.ipynb`; needs a fresh Kaggle train run and
 leaderboard validation.
 
 Goal: use labeled soundscape structure without overfitting it.
@@ -36,13 +36,13 @@ Success signal:
 
 Deliverables:
 
-- Updated `03_perch_v2.ipynb`.
+- Updated `03_perch_v2_train.ipynb` and `04_perch_v2_submit.ipynb`.
 - A small prior summary table saved during training mode.
 - A note added to `05_perch_v2_results.md`.
 
 ### 2.2 Inspect Weak Labels
 
-Status: implemented in `03_perch_v2.ipynb` via
+Status: implemented in `03_perch_v2_train.ipynb` via
 `weak_label_diagnostics.csv`; needs review after the next training run.
 
 Goal: identify where Perch is confidently wrong or missing rare/non-bird taxa.
@@ -67,8 +67,9 @@ Deliverables:
 
 ### 2.3 Test Lightweight Calibration
 
-Status: implemented in `03_perch_v2.ipynb` via `temperature_grid.csv` and
-`calibration.json`; needs a controlled submission test.
+Status: implemented in `03_perch_v2_train.ipynb` via `temperature_grid.csv` and
+`calibration.json`; needs a controlled submission test through
+`04_perch_v2_submit.ipynb`.
 
 Goal: improve probability ranking without retraining the embedding model.
 
@@ -86,7 +87,8 @@ Success signal:
 
 Deliverables:
 
-- Calibration config in `03_perch_v2.ipynb`.
+- Calibration config in `03_perch_v2_train.ipynb` and scoring use in
+  `04_perch_v2_submit.ipynb`.
 - Updated result table in `05_perch_v2_results.md`.
 
 ### 2.4 Compare Perch And EfficientNet Errors
@@ -145,6 +147,6 @@ Deliverables:
 - Do not optimize only against the public leaderboard.
 - Do not add heavy test-time augmentation until CPU runtime is measured.
 - Do not use raw soundscape label counts without deduplication.
-- Do not split train and submission notebooks unless Kaggle execution becomes
-  hard to manage.
+- Keep the Perch training and submission notebooks split because artifact
+  management and CPU scoring now have different constraints.
 - Keep attached model artifacts and wheelhouses outside git.
