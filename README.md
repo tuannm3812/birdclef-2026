@@ -108,12 +108,14 @@ Result notes:
 - [EfficientNet-B0 results](docs/04_effnet_b0_results.md)
 - [Perch v2 results](docs/05_perch_v2_results.md)
 - [Distilled SED review](docs/07_distilled_sed_review.md)
+- [ProtoSSM review](docs/08_protossm_review.md)
 - [Next steps](docs/06_next_steps.md)
 
 ## 8. Repository Layout
 
 ```text
 notebooks/
+  README.md
   01_eda.ipynb
   02_effnet_b0.ipynb
   03_perch_v2_train.ipynb
@@ -127,7 +129,9 @@ docs/
   05_perch_v2_results.md
   06_next_steps.md
   07_distilled_sed_review.md
+  08_protossm_review.md
   figures/eda/
 ```
 
 Standards: [docs/02_coding_standards.md](docs/02_coding_standards.md).
+Notebook promotion rules: [notebooks/README.md](notebooks/README.md).
