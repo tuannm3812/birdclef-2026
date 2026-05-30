@@ -20,7 +20,7 @@ The Perch notebook now has two modes: **`CFG.mode = "train"`** for the full expe
 | Latest observed run | Early stopped after 7 epochs |
 | Diagnostic outputs | Validation predictions, per-class recall, weak-label diagnostics, calibration JSON, soundscape priors |
 | Runtime requirement | TensorFlow 2.20+ for the Perch export |
-| Uploaded artifact path | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/1/perch_v2` |
+| Uploaded artifact path | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/3/perch_v2` for latest probe/calibration artifacts |
 | Submission mode | Loads `best_perch_probe.pt` and `labels.json`; skips train embeddings, probe training, diagnostics, and artifact zip |
 | Submission speedup | Prefers the CPU Perch export and batches full 60-second soundscape files into 12 windows per file |
 | CPU public score | **0.770** |
@@ -44,12 +44,18 @@ Best validation accuracy from the latest Kaggle run: **0.8392**.
 
 An earlier notebook 3 failure came from trying to install `tensorflow==2.20.0` from PyPI during an offline Kaggle run. The current notebook uses the local TensorFlow 2.20 wheel input and keeps Perch execution local.
 
+The Kaggle model has two useful versions attached. Version **3** contains the
+latest probe, calibration, and diagnostics. Version **1** still contains
+`train_embeddings.npz`, so the notebook uses version 1 only as the cached
+embedding source for future training runs.
+
 The current Perch submission stack uses:
 
 | Component | Path |
 |---|---|
 | TensorFlow 2.20 wheels | `/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0` |
-| Perch artifact | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/1/perch_v2` |
+| Perch artifact | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/3/perch_v2` |
+| Cached train embeddings | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/1/perch_v2/train_embeddings.npz` |
 | Probe checkpoint | `best_perch_probe.pt` |
 | Label map | `labels.json` |
 
