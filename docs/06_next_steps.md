@@ -4,8 +4,8 @@
 
 ONNX distilled SED is the protected champion with a **0.822** public score.
 Perch v2 remains the strongest older baseline at **0.770**, while
-EfficientNet-B0 remains the reliable PyTorch fallback at **0.646**. The next
-active experiment should be ONNX Perch speed testing.
+EfficientNet-B0 remains the reliable PyTorch fallback at **0.646**. The active
+experiment is now a conservative ONNX Perch + SED blend.
 
 The main risk is hidden-test runtime. Public notebook runs can pass with only
 three sample rows and no test audio, while real submissions must score hidden
@@ -86,14 +86,14 @@ Deliverables:
 
 ### 2.4 Blend ONNX SED And ONNX Perch
 
-Status: next.
+Status: active in `07_onnx_perch_sed_blend.ipynb`.
 
 Goal: test whether fast ONNX Perch logits add useful signal to the **0.822**
 ONNX SED champion.
 
 Work items:
 
-1. Create `07_onnx_perch_sed_blend.ipynb`.
+1. Run `07_onnx_perch_sed_blend.ipynb` on Kaggle.
 2. Reuse the current ONNX SED inference path.
 3. Reuse ONNX Perch waveform inference from `06_onnx_perch_speed_test.ipynb`.
 4. Map the **14,795** ONNX Perch output labels to the **234** submission
@@ -235,7 +235,7 @@ Deliverables:
 
 1. Freeze the three successful baselines.
 2. Preserve the ONNX Perch speed-test result.
-3. Create `07_onnx_perch_sed_blend.ipynb`.
+3. Run `07_onnx_perch_sed_blend.ipynb`.
 4. Move to our own Perch-distilled PyTorch/ONNX student only after the public
    ONNX SED path finishes under the runtime limit.
 5. Use priors, calibration, and weak-label work only after runtime is stable.

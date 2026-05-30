@@ -77,12 +77,13 @@ Project overview and approach: [docs/01_project_overview.md](docs/01_project_ove
 | [03_perch_v2_train.ipynb](notebooks/03_perch_v2_train.ipynb) | Perch v2 probe training, diagnostics, calibration, and artifact packaging |
 | [04_perch_v2_submit.ipynb](notebooks/04_perch_v2_submit.ipynb) | Lean Perch v2 scoring notebook for CPU Kaggle submission |
 | [05_onnx_sed_submit.ipynb](notebooks/05_onnx_sed_submit.ipynb) | Protected distilled SED ONNX champion submission |
-| [06_onnx_perch_speed_test.ipynb](notebooks/06_onnx_perch_speed_test.ipynb) | Active ONNX Perch runtime experiment |
+| [06_onnx_perch_speed_test.ipynb](notebooks/06_onnx_perch_speed_test.ipynb) | ONNX Perch runtime experiment |
+| [07_onnx_perch_sed_blend.ipynb](notebooks/07_onnx_perch_sed_blend.ipynb) | Active ONNX Perch + SED blend experiment |
 
 ONNX distilled SED is now the protected champion. Perch v2 version 14 remains a
 valuable protected baseline, and EfficientNet-B0 remains the simpler fallback.
-New leaderboard work should continue through the ONNX lane: ONNX Perch speed
-testing next, then blending only if both standalone paths complete reliably.
+New leaderboard work should continue through the ONNX lane: the active
+experiment is now a conservative ONNX Perch + SED blend.
 
 ## 6. Key EDA Findings
 
@@ -111,7 +112,7 @@ Successful Kaggle submissions to preserve:
 |---|---:|---|---|
 | EfficientNet-B0 version 9 | **0.646** | CPU-safe fallback | Keep exact notebook and artifact inputs unchanged |
 | Perch v2 version 14 | **0.770** | Protected baseline | Keep as reference while moving new work to ONNX |
-| ONNX distilled SED version 1 | **0.822** | Current champion | Preserve and test ONNX Perch speed next |
+| ONNX distilled SED version 1 | **0.822** | Current champion | Preserve while testing ONNX Perch + SED blend |
 
 Result notes:
 
@@ -134,6 +135,7 @@ notebooks/
   04_perch_v2_submit.ipynb
   05_onnx_sed_submit.ipynb
   06_onnx_perch_speed_test.ipynb
+  07_onnx_perch_sed_blend.ipynb
 
 docs/
   01_project_overview.md

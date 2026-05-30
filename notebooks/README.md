@@ -12,7 +12,8 @@ project-owned, reproducible, and tied to a documented experiment.
 | `03_perch_v2_train.ipynb` | Perch probe training, diagnostics, and artifact packaging |
 | `04_perch_v2_submit.ipynb` | Protected Perch v2 submission reference |
 | `05_onnx_sed_submit.ipynb` | Protected distilled SED ONNX champion submission |
-| `06_onnx_perch_speed_test.ipynb` | Active ONNX Perch runtime experiment |
+| `06_onnx_perch_speed_test.ipynb` | ONNX Perch runtime experiment |
+| `07_onnx_perch_sed_blend.ipynb` | Active ONNX Perch + SED blend experiment |
 
 ## Active Notebook Lane
 
@@ -20,13 +21,7 @@ Use **one** active notebook slot at a time. The current lane is:
 
 | Notebook | Purpose |
 |---|---|
-| `06_onnx_perch_speed_test.ipynb` | Measure ONNX Perch inference speed without blending or sequence modeling |
-
-If this succeeds on Kaggle, add the next notebook only:
-
-| Reserved notebook | Purpose |
-|---|---|
-| `07_onnx_perch_sed_blend.ipynb` | Blend ONNX Perch and SED predictions only after both paths finish reliably |
+| `07_onnx_perch_sed_blend.ipynb` | Blend ONNX Perch and SED predictions after both standalone paths finished reliably |
 
 Do not add separate notebooks for every public reference. Review external
 notebooks in `docs/`, then promote only the cleaned project-owned version.
