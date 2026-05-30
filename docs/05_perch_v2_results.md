@@ -48,8 +48,9 @@ An earlier submission failure came from using the CUDA-only Perch export on CPU.
 
 The Kaggle model has two useful versions attached. Version **3** contains the
 latest probe, calibration, and diagnostics. Version **1** still contains
-`train_embeddings.npz`, but the training notebook now prefers the dedicated
-`perch-meta` cached embedding dataset when it is attached.
+`train_embeddings.npz`. The training notebook now writes our own aligned
+`train_embeddings_aligned.npz` into each new artifact package, so future runs can
+use a project-owned cache before falling back to older or external caches.
 
 The current Perch submission stack uses:
 
@@ -58,8 +59,9 @@ The current Perch submission stack uses:
 | Competition data | `/kaggle/input/competitions/birdclef-2026` |
 | TensorFlow 2.20 wheels | `/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0` |
 | Perch artifact | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/3/perch_v2` |
-| Preferred cached train embeddings | `/kaggle/input/datasets/jaejohn/perch-meta/full_perch_arrays.npz` with `/kaggle/input/datasets/jaejohn/perch-meta/full_perch_meta.parquet` |
+| Preferred cached train embeddings | Latest uploaded artifact containing `train_embeddings_aligned.npz` |
 | Legacy cached train embeddings | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/1/perch_v2/train_embeddings.npz` |
+| External fallback cache | `/kaggle/input/datasets/jaejohn/perch-meta/full_perch_arrays.npz` with `/kaggle/input/datasets/jaejohn/perch-meta/full_perch_meta.parquet` |
 | Probe checkpoint | `best_perch_probe.pt` |
 | Label map | `labels.json` |
 
