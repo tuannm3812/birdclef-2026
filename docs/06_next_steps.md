@@ -37,7 +37,7 @@ Success signal:
 Deliverables:
 
 - Updated `03_perch_v2_train.ipynb` and `04_perch_v2_submit.ipynb`.
-- A small prior summary table saved during training mode.
+- A small prior summary table saved by the training notebook.
 - A note added to `05_perch_v2_results.md`.
 
 ### 2.2 Inspect Weak Labels

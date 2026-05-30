@@ -6,7 +6,7 @@ The Perch v2 experiment evaluates Google Perch embeddings as frozen bioacoustic 
 
 Perch v2 is best treated as an offline feature generator, teacher model, or distillation source unless hidden-test inference has cached embeddings or a proven Kaggle-compatible runtime.
 
-The Perch notebook now has two modes: **`CFG.mode = "train"`** for the full experiment and **`CFG.mode = "submission"`** for loading the probe artifact and writing `submission.csv`. This is useful for score experiments, but it is still operationally heavier than EfficientNet because hidden-test audio is embedded through the Perch SavedModel during scoring.
+The Perch workflow is now split into two notebooks. The training notebook uses cached Perch embeddings and does not load TensorFlow or the Perch SavedModel. The submission notebook is the only place that loads the CPU Perch export for hidden-test soundscape scoring.
 
 ## 2. Training Setup
 
@@ -19,7 +19,8 @@ The Perch notebook now has two modes: **`CFG.mode = "train"`** for the full expe
 | Epochs | 20 max with early stopping |
 | Latest observed run | Early stopped after 7 epochs |
 | Diagnostic outputs | Validation predictions, per-class recall, weak-label diagnostics, calibration JSON, soundscape priors |
-| Runtime requirement | TensorFlow 2.20+ for the Perch export |
+| Training runtime requirement | Cached `train_embeddings.npz` |
+| Submission runtime requirement | TensorFlow 2.20+ and CPU Perch export |
 | Uploaded artifact path | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/3/perch_v2` for latest probe/calibration artifacts |
 | Submission mode | Loads `best_perch_probe.pt` and `labels.json`; skips train embeddings, probe training, diagnostics, and artifact zip |
 | Submission speedup | Prefers the CPU Perch export and batches full 60-second soundscape files into 12 windows per file |
@@ -43,7 +44,7 @@ Best validation accuracy from the latest Kaggle run: **0.8392**.
 
 ## 4. Kaggle Runtime Notes
 
-An earlier notebook 3 failure came from trying to install `tensorflow==2.20.0` from PyPI during an offline Kaggle run. The current notebook uses the local TensorFlow 2.20 wheel input and keeps Perch execution local.
+An earlier submission failure came from using the CUDA-only Perch export on CPU. The submission notebook must use the CPU Perch export, while the training notebook avoids this issue by training from cached embeddings only.
 
 The Kaggle model has two useful versions attached. Version **3** contains the
 latest probe, calibration, and diagnostics. Version **1** still contains
@@ -94,9 +95,9 @@ These files make the Perch result more actionable. Low top-1 recall with high to
 The Perch training and submission notebooks now include the next experimental
 layer without changing the default score path:
 
-1. **Temperature calibration.** Training mode collects validation logits, sweeps a global temperature, and saves the best setting in `calibration.json`.
-2. **Weak-label inspection.** Training mode writes `weak_label_diagnostics.csv` so rare labels, non-bird taxa, and high-confidence confusions can be reviewed directly.
-3. **Soundscape priors.** Training mode deduplicates `train_soundscapes_labels.csv` and builds hour, site, and co-occurrence logit-offset tables in `soundscape_priors.json`.
+1. **Temperature calibration.** The training notebook collects validation logits, sweeps a global temperature, and saves the best setting in `calibration.json`.
+2. **Weak-label inspection.** The training notebook writes `weak_label_diagnostics.csv` so rare labels, non-bird taxa, and high-confidence confusions can be reviewed directly.
+3. **Soundscape priors.** The training notebook deduplicates `train_soundscapes_labels.csv` and builds hour, site, and co-occurrence logit-offset tables in `soundscape_priors.json`.
 
 `CFG.use_soundscape_priors` is still `False` by default. This keeps the current
 **0.770** Perch result comparable until a fresh Kaggle run validates that the
@@ -105,7 +106,7 @@ prior offsets improve scoring. After uploading a newly trained artifact, turn
 
 Recommended test order:
 
-1. Run training mode once and inspect `calibration.json`,
+1. Run the training notebook once and inspect `calibration.json`,
    `weak_label_diagnostics.csv`, and `soundscape_prior_summary.csv`.
 2. Submit with calibration only, leaving `CFG.use_soundscape_priors = False`.
 3. Submit with `CFG.use_soundscape_priors = True`.
