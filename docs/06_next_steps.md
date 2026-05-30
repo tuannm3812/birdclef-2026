@@ -60,15 +60,15 @@ Deliverables:
 
 ### 2.3 Test ONNX Perch Speed
 
-Status: next.
+Status: active in `06_onnx_perch_speed_test.ipynb`.
 
 Goal: measure whether ONNX Perch can replace the slower TensorFlow Perch
 submission path.
 
 Work items:
 
-1. Create `06_onnx_perch_speed_test.ipynb`.
-2. Load the ONNX Perch no-DFT model only.
+1. Run `06_onnx_perch_speed_test.ipynb` on Kaggle.
+2. Attach the ONNX Perch no-DFT model input.
 3. Score hidden-style 60-second files as 12 contiguous 5-second windows.
 4. Report wall time per file and projected hidden-test runtime.
 5. Avoid blending, priors, sequence modeling, and heavy post-processing.
@@ -79,7 +79,8 @@ Success signal:
 
 Deliverables:
 
-- `06_onnx_perch_speed_test.ipynb` with timing output and a go/no-go note.
+- `onnx_perch_timing.csv` from `06_onnx_perch_speed_test.ipynb`.
+- A go/no-go note before creating `07_onnx_perch_sed_blend.ipynb`.
 
 ### 2.4 Add Perch Soundscape Priors
 
@@ -204,8 +205,8 @@ Deliverables:
 ## 3. Recommended Order
 
 1. Freeze the three successful baselines.
-2. Create `06_onnx_perch_speed_test.ipynb` from the ONNX Perch
-   direction summarized in `08_protossm_review.md`.
+2. Run `06_onnx_perch_speed_test.ipynb` using the ONNX Perch direction
+   summarized in `08_protossm_review.md`.
 3. If ONNX Perch is fast enough, create `07_onnx_perch_sed_blend.ipynb`.
 4. Move to our own Perch-distilled PyTorch/ONNX student only after the public
    ONNX SED path finishes under the runtime limit.

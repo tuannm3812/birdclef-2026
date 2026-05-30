@@ -21,13 +21,13 @@ Use numbered, stable notebook names:
 3. `03_perch_v2_train.ipynb`
 4. `04_perch_v2_submit.ipynb`
 5. `05_onnx_sed_submit.ipynb`
+6. `06_onnx_perch_speed_test.ipynb`
 
 Notebook names should describe the actual Kaggle workflow. Keep training and submission together for simple baselines, but split them when artifact management, runtime constraints, or Kaggle scoring safety make the responsibilities meaningfully different.
 
 Reserve new numbers for promoted project-owned workflows only. The current
-planned order is `06_onnx_perch_speed_test.ipynb` after ONNX SED succeeds, then
-`07_onnx_perch_sed_blend.ipynb` only after both standalone paths run
-successfully.
+planned next notebook is `07_onnx_perch_sed_blend.ipynb`, and it should be
+created only after both standalone ONNX paths run successfully.
 
 Use numbered documentation filenames so the reading order is obvious:
 
