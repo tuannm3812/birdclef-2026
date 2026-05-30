@@ -2,10 +2,10 @@
 
 ## 1. Current Position
 
-ONNX distilled SED is the protected champion with a **0.822** public score.
-Perch v2 remains the strongest older baseline at **0.770**, while
-EfficientNet-B0 remains the reliable PyTorch fallback at **0.646**. The active
-experiment is now a conservative ONNX Perch + SED blend.
+ONNX Perch + SED is the protected champion with a **0.890** public score. ONNX
+distilled SED remains the strongest simpler baseline at **0.822**, Perch v2 is
+the strongest older baseline at **0.770**, and EfficientNet-B0 remains the
+reliable PyTorch fallback at **0.646**.
 
 The main risk is hidden-test runtime. Public notebook runs can pass with only
 three sample rows and no test audio, while real submissions must score hidden
@@ -84,34 +84,53 @@ Deliverables:
 
 - `docs/10_onnx_perch_speed_results.md`.
 
-### 2.4 Blend ONNX SED And ONNX Perch
+### 2.4 Preserve ONNX Perch + SED Champion
 
-Status: active in `07_onnx_perch_sed_blend.ipynb`.
+Status: succeeded with **0.890** public score.
 
-Goal: test whether fast ONNX Perch logits add useful signal to the **0.822**
-ONNX SED champion.
+Goal: keep the new best submission reproducible before testing variants.
 
 Work items:
 
-1. Run `07_onnx_perch_sed_blend.ipynb` on Kaggle.
-2. Reuse the current ONNX SED inference path.
-3. Reuse ONNX Perch waveform inference from `06_onnx_perch_speed_test.ipynb`.
-4. Map the **14,795** ONNX Perch output labels to the **234** submission
-   columns.
-5. Start with a simple conservative blend before adding priors or sequence
-   modeling.
+1. Preserve `07_onnx_perch_sed_blend.ipynb`.
+2. Record attached Kaggle inputs and notebook version.
+3. Keep the exact-mapped conservative blend unchanged as the protected
+   champion.
+4. Document the result in `docs/11_onnx_perch_sed_blend_results.md`.
 
 Success signal:
 
-- The blend submission finishes within the CPU limit and improves over **0.822**
-  public score.
+- We can restore the **0.890** path without guessing inputs or code changes.
 
 Deliverables:
 
-- `07_onnx_perch_sed_blend.ipynb`.
-- A result note if the blend submits successfully.
+- `docs/11_onnx_perch_sed_blend_results.md`.
 
-### 2.5 Add Perch Soundscape Priors
+### 2.5 Tune Simple Blend Variants
+
+Status: next.
+
+Goal: test small changes around the champion without adding a fragile modeling
+stack.
+
+Work items:
+
+1. Sweep Perch blend weight near the current conservative value.
+2. Save each variant as a clearly named Kaggle notebook version, not a
+   replacement for the champion.
+3. Record exact Perch mapping count and unmapped target classes from the run
+   output.
+4. Consider one genus-proxy variant only after exact-mapped blend-weight tests.
+
+Success signal:
+
+- A controlled variant improves over **0.890** without increasing timeout risk.
+
+Deliverables:
+
+- A short result note comparing blend weights and mapping counts.
+
+### 2.6 Add Perch Soundscape Priors
 
 Status: implemented in `03_perch_v2_train.ipynb`; needs a fresh Kaggle train run and
 leaderboard validation.
@@ -137,7 +156,7 @@ Deliverables:
 - A small prior summary table saved by the training notebook.
 - A note added to `05_perch_v2_results.md`.
 
-### 2.6 Inspect Weak Labels
+### 2.7 Inspect Weak Labels
 
 Status: implemented in `03_perch_v2_train.ipynb` via
 `weak_label_diagnostics.csv`; needs review after the next training run.
@@ -162,7 +181,7 @@ Deliverables:
 - Add a weak-label section to `05_perch_v2_results.md`.
 - Optional figure under `docs/figures/perch/`.
 
-### 2.7 Test Lightweight Calibration
+### 2.8 Test Lightweight Calibration
 
 Status: implemented in `03_perch_v2_train.ipynb` via `temperature_grid.csv` and
 `calibration.json`; needs a controlled submission test through
@@ -188,7 +207,7 @@ Deliverables:
   `04_perch_v2_submit.ipynb`.
 - Updated result table in `05_perch_v2_results.md`.
 
-### 2.8 Compare Perch And EfficientNet Errors
+### 2.9 Compare Perch And EfficientNet Errors
 
 Goal: decide whether an ensemble is worth the CPU cost.
 
@@ -209,7 +228,7 @@ Deliverables:
   `05_perch_v2_results.md`.
 - If useful, a simple weighted-average submission path.
 
-### 2.9 Distill Perch Into A Faster Student
+### 2.10 Distill Perch Into A Faster Student
 
 Goal: reduce dependency on TensorFlow Perch inference if scoring runtime becomes
 fragile.
@@ -233,12 +252,13 @@ Deliverables:
 
 ## 3. Recommended Order
 
-1. Freeze the three successful baselines.
-2. Preserve the ONNX Perch speed-test result.
-3. Run `07_onnx_perch_sed_blend.ipynb`.
-4. Move to our own Perch-distilled PyTorch/ONNX student only after the public
-   ONNX SED path finishes under the runtime limit.
-5. Use priors, calibration, and weak-label work only after runtime is stable.
+1. Preserve the **0.890** ONNX Perch + SED champion.
+2. Select the **0.890** blend and **0.822** ONNX SED submissions for final-score
+   tracking unless a stronger variant appears.
+3. Run only small blend-weight variants next.
+4. Try genus proxy mapping only as a separate variant after weight tuning.
+5. Avoid full ProtoSSM-style sequence modeling until simple variants stop
+   improving.
 
 ## 4. Guardrails
 
