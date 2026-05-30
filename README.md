@@ -80,7 +80,8 @@ Project overview and approach: [docs/01_project_overview.md](docs/01_project_ove
 | [05_onnx_sed_submit.ipynb](notebooks/05_onnx_sed_submit.ipynb) | Protected distilled SED ONNX champion submission |
 | [06_onnx_perch_speed_test.ipynb](notebooks/06_onnx_perch_speed_test.ipynb) | ONNX Perch runtime experiment |
 | [07_onnx_perch_sed_blend.ipynb](notebooks/07_onnx_perch_sed_blend.ipynb) | Protected ONNX Perch + SED champion submission |
-| [08_onnx_perch_sed_blend_w025.ipynb](notebooks/08_onnx_perch_sed_blend_w025.ipynb) | Active blend-weight variant with Perch weight 0.25 |
+| [08_onnx_perch_sed_blend_w025.ipynb](notebooks/08_onnx_perch_sed_blend_w025.ipynb) | Blend-weight variant with Perch weight 0.25 |
+| [09_onnx_perch_sed_blend_proxy6.ipynb](notebooks/09_onnx_perch_sed_blend_proxy6.ipynb) | Active narrow proxy-mapping variant for named unmapped taxa |
 
 ONNX Perch + SED is now the protected champion. ONNX distilled SED remains the
 strongest simpler baseline, Perch v2 version 14 remains a useful reference, and
@@ -142,6 +143,7 @@ notebooks/
   06_onnx_perch_speed_test.ipynb
   07_onnx_perch_sed_blend.ipynb
   08_onnx_perch_sed_blend_w025.ipynb
+  09_onnx_perch_sed_blend_proxy6.ipynb
 
 docs/
   01_project_overview.md

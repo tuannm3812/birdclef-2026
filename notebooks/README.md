@@ -14,7 +14,8 @@ project-owned, reproducible, and tied to a documented experiment.
 | `05_onnx_sed_submit.ipynb` | Protected distilled SED ONNX champion submission |
 | `06_onnx_perch_speed_test.ipynb` | ONNX Perch runtime experiment |
 | `07_onnx_perch_sed_blend.ipynb` | Protected ONNX Perch + SED champion submission |
-| `08_onnx_perch_sed_blend_w025.ipynb` | Active blend-weight variant with Perch weight 0.25 |
+| `08_onnx_perch_sed_blend_w025.ipynb` | Blend-weight variant with Perch weight 0.25 |
+| `09_onnx_perch_sed_blend_proxy6.ipynb` | Active narrow proxy-mapping variant for named unmapped taxa |
 
 ## Active Notebook Lane
 
@@ -22,7 +23,7 @@ Use **one** active notebook slot at a time. The current lane is:
 
 | Notebook | Purpose |
 |---|---|
-| `08_onnx_perch_sed_blend_w025.ipynb` | Test whether a stronger exact-mapped Perch contribution improves over the 0.890 champion |
+| `09_onnx_perch_sed_blend_proxy6.ipynb` | Test same-genus Perch proxies for named unmapped taxa while leaving insect sonotypes unchanged |
 
 Do not add separate notebooks for every public reference. Review external
 notebooks in `docs/`, then promote only the cleaned project-owned version.

@@ -132,7 +132,7 @@ Deliverables:
 
 ### 2.6 Test Unmapped-Class Proxy Mapping
 
-Status: mapping diagnostics reviewed.
+Status: active in `09_onnx_perch_sed_blend_proxy6.ipynb`.
 
 Goal: improve target columns that exact scientific-name mapping leaves without
 direct Perch logits.
@@ -140,11 +140,12 @@ direct Perch logits.
 Work items:
 
 1. Use `docs/12_perch_mapping_diagnostics.md` as the mapping review.
-2. Do not proxy the 25 anonymous insect sonotype columns.
-3. If testing proxy mapping, restrict it to the 6 named unmapped taxa only.
-4. Use conservative genus-level Perch proxies rather than changing mapped
+2. Run `09_onnx_perch_sed_blend_proxy6.ipynb`.
+3. Do not proxy the 25 anonymous insect sonotype columns.
+4. Restrict proxy mapping to named unmapped taxa only.
+5. Use conservative genus-level Perch proxies rather than changing mapped
    classes.
-5. Keep the base blend weight unchanged unless the proxy variant needs a
+6. Keep the base blend weight unchanged unless the proxy variant needs a
    separate tuning pass.
 
 Success signal:
@@ -153,8 +154,8 @@ Success signal:
 
 Deliverables:
 
-- A new notebook only if we decide the 6 named taxa justify one more controlled
-  submission.
+- `09_onnx_perch_sed_blend_proxy6.ipynb`.
+- A result note if the proxy variant submits successfully.
 
 ### 2.7 Add Perch Soundscape Priors
 
@@ -282,8 +283,7 @@ Deliverables:
 2. Select the **0.890** blend and **0.822** ONNX SED submissions for final-score
    tracking unless a stronger variant appears.
 3. Use the W0.25 tie as evidence that higher Perch weight alone is not enough.
-4. Inspect mapping diagnostics, then try genus proxy mapping only as a separate
-   variant if enough target columns are unmapped.
+4. Run the narrow proxy variant for named unmapped taxa.
 5. Avoid full ProtoSSM-style sequence modeling until simple variants stop
    improving.
 

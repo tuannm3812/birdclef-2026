@@ -24,6 +24,7 @@ Use numbered, stable notebook names:
 6. `06_onnx_perch_speed_test.ipynb`
 7. `07_onnx_perch_sed_blend.ipynb`
 8. `08_onnx_perch_sed_blend_w025.ipynb`
+9. `09_onnx_perch_sed_blend_proxy6.ipynb`
 
 Notebook names should describe the actual Kaggle workflow. Keep training and submission together for simple baselines, but split them when artifact management, runtime constraints, or Kaggle scoring safety make the responsibilities meaningfully different.
 
