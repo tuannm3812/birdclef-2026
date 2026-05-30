@@ -17,11 +17,11 @@ The Perch workflow is now split into two notebooks. The training notebook uses c
 | Probe | LayerNorm, Linear, ReLU, Dropout, Linear |
 | Classes | 206 |
 | Epochs | 20 max with early stopping |
-| Latest observed run | Early stopped after 7 epochs |
+| Latest observed run | Version 4 artifact, early stopped after 7 epochs |
 | Diagnostic outputs | Validation predictions, per-class recall, weak-label diagnostics, calibration JSON, soundscape priors |
 | Training runtime requirement | Cached `train_embeddings.npz` |
 | Submission runtime requirement | TensorFlow 2.20+ and CPU Perch export |
-| Uploaded artifact path | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/3/perch_v2` for latest probe/calibration artifacts |
+| Uploaded artifact path | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/4/perch_v2` for latest probe/calibration artifacts |
 | Submission mode | Loads `best_perch_probe.pt` and `labels.json`; skips train embeddings, probe training, diagnostics, and artifact zip |
 | Submission speedup | Prefers the CPU Perch export and batches full 60-second soundscape files into 12 windows per file |
 | CPU public score | **0.770** |
@@ -40,14 +40,15 @@ The Perch workflow is now split into two notebooks. The training notebook uses c
 | 6 | 0.1105 | 0.8332 |
 | 7 | 0.0913 | 0.8367 |
 
-Best validation accuracy from the latest Kaggle run: **0.8392**.
+Best validation accuracy from the latest Kaggle run: **0.8391**.
 
 ## 4. Kaggle Runtime Notes
 
 An earlier submission failure came from using the CUDA-only Perch export on CPU. The submission notebook must use the CPU Perch export, while the training notebook avoids this issue by training from cached embeddings only.
 
-The Kaggle model has two useful versions attached. Version **3** contains the
-latest probe, calibration, and diagnostics. Version **1** still contains
+The Kaggle model has multiple useful versions attached. Version **4** contains
+the latest probe, calibration, diagnostics, and project-owned aligned embedding
+cache. Version **1** still contains
 `train_embeddings.npz`. The training notebook now writes our own aligned
 `train_embeddings_aligned.npz` into each new artifact package, so future runs can
 use a project-owned cache before falling back to older or external caches.
@@ -58,7 +59,7 @@ The current Perch submission stack uses:
 |---|---|
 | Competition data | `/kaggle/input/competitions/birdclef-2026` |
 | TensorFlow 2.20 wheels | `/kaggle/input/notebooks/kdmitrie/bc26-tensorflow-2-20-0` |
-| Perch artifact | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/3/perch_v2` |
+| Perch artifact | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/4/perch_v2` |
 | Preferred cached train embeddings | Latest uploaded artifact containing `train_embeddings_aligned.npz` |
 | Legacy cached train embeddings | `/kaggle/input/models/tuannm3812/birdclef-perch-v2-artifacts/pytorch/default/1/perch_v2/train_embeddings.npz` |
 | External fallback cache | `/kaggle/input/datasets/jaejohn/perch-meta/full_perch_arrays.npz` with `/kaggle/input/datasets/jaejohn/perch-meta/full_perch_meta.parquet` |
@@ -67,7 +68,7 @@ The current Perch submission stack uses:
 
 ## 5. Interpretation
 
-The probe reaches strong validation accuracy almost immediately, which indicates that Perch embeddings already encode most of the useful acoustic structure. The best epoch in the latest run is epoch 3; early stopping ends the run at epoch 7 after validation stops improving while train loss continues to fall.
+The probe reaches strong validation accuracy almost immediately, which indicates that Perch embeddings already encode most of the useful acoustic structure. The best epoch in the latest run is epoch 3; early stopping ends the run at epoch 7 after validation stops improving while train loss continues to fall. The latest run selected a global calibration temperature of **1.20**, improving validation log loss from **0.7524** to **0.7264**.
 
 Compared with the offline-safe EfficientNet-B0 run, Perch v2 improves validation accuracy by about **31.2 percentage points**. The CPU submission also improves the public score from **0.646** to **0.770**, a **+0.124** gain over EffNet-B0. The result is important because it shows foundation-model representations are highly valuable for this competition, provided the CPU inference path stays optimized.
 
