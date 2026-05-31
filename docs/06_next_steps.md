@@ -160,7 +160,7 @@ Deliverables:
 
 ### 2.7 Tune Proxy Weight
 
-Status: next.
+Status: deferred.
 
 Goal: check whether the proxy contribution can improve slightly beyond
 **0.892** without changing the full exact-mapped blend.
@@ -181,7 +181,32 @@ Deliverables:
 - A clearly named notebook variant only if we decide to spend another
   submission on proxy tuning.
 
-### 2.8 Add Perch Soundscape Priors
+### 2.8 Soundscape-Calibrated Blend
+
+Status: active in `10_onnx_perch_sed_soundscape_calibrated.ipynb`.
+
+Goal: move toward the higher-scoring sequence-model direction by using labeled
+train-soundscape windows to learn per-class blend weights.
+
+Work items:
+
+1. Preserve `09_onnx_perch_sed_blend_proxy6.ipynb` as the **0.892** champion.
+2. Run `10_onnx_perch_sed_soundscape_calibrated.ipynb`.
+3. Score labeled train-soundscape windows with the same SED and Perch
+   components used for hidden test.
+4. Learn lightweight per-class blend weights from a small grid.
+5. Save `soundscape_blend_calibration.csv` for inspection.
+
+Success signal:
+
+- The calibrated blend improves over **0.892** without timing out.
+
+Deliverables:
+
+- `10_onnx_perch_sed_soundscape_calibrated.ipynb`.
+- Calibration diagnostics if the run completes.
+
+### 2.9 Add Perch Soundscape Priors
 
 Status: implemented in `03_perch_v2_train.ipynb`; needs a fresh Kaggle train run and
 leaderboard validation.
@@ -207,7 +232,7 @@ Deliverables:
 - A small prior summary table saved by the training notebook.
 - A note added to `05_perch_v2_results.md`.
 
-### 2.9 Inspect Weak Labels
+### 2.10 Inspect Weak Labels
 
 Status: implemented in `03_perch_v2_train.ipynb` via
 `weak_label_diagnostics.csv`; needs review after the next training run.
@@ -232,7 +257,7 @@ Deliverables:
 - Add a weak-label section to `05_perch_v2_results.md`.
 - Optional figure under `docs/figures/perch/`.
 
-### 2.10 Test Lightweight Calibration
+### 2.11 Test Lightweight Calibration
 
 Status: implemented in `03_perch_v2_train.ipynb` via `temperature_grid.csv` and
 `calibration.json`; needs a controlled submission test through
@@ -258,7 +283,7 @@ Deliverables:
   `04_perch_v2_submit.ipynb`.
 - Updated result table in `05_perch_v2_results.md`.
 
-### 2.11 Compare Perch And EfficientNet Errors
+### 2.12 Compare Perch And EfficientNet Errors
 
 Goal: decide whether an ensemble is worth the CPU cost.
 
@@ -279,7 +304,7 @@ Deliverables:
   `05_perch_v2_results.md`.
 - If useful, a simple weighted-average submission path.
 
-### 2.12 Distill Perch Into A Faster Student
+### 2.13 Distill Perch Into A Faster Student
 
 Goal: reduce dependency on TensorFlow Perch inference if scoring runtime becomes
 fragile.
@@ -307,9 +332,9 @@ Deliverables:
 2. Select the **0.892** proxy6 blend and **0.822** ONNX SED submissions for final-score
    tracking unless a stronger variant appears.
 3. Use the W0.25 tie as evidence that higher Perch weight alone is not enough.
-4. Run the narrow proxy variant for named unmapped taxa.
-5. Avoid full ProtoSSM-style sequence modeling until simple variants stop
-   improving.
+4. Use the proxy6 improvement as evidence that targeted mapping changes help.
+5. Run the soundscape-calibrated blend before full ProtoSSM-style sequence
+   modeling.
 
 ## 4. Guardrails
 

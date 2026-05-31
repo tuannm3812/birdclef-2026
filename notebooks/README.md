@@ -15,7 +15,8 @@ project-owned, reproducible, and tied to a documented experiment.
 | `06_onnx_perch_speed_test.ipynb` | ONNX Perch runtime experiment |
 | `07_onnx_perch_sed_blend.ipynb` | Protected ONNX Perch + SED champion submission |
 | `08_onnx_perch_sed_blend_w025.ipynb` | Blend-weight variant with Perch weight 0.25 |
-| `09_onnx_perch_sed_blend_proxy6.ipynb` | Active narrow proxy-mapping variant for named unmapped taxa |
+| `09_onnx_perch_sed_blend_proxy6.ipynb` | Protected narrow proxy-mapping champion submission |
+| `10_onnx_perch_sed_soundscape_calibrated.ipynb` | Active soundscape-calibrated blend experiment |
 
 ## Active Notebook Lane
 
@@ -23,7 +24,7 @@ Use **one** active notebook slot at a time. The current lane is:
 
 | Notebook | Purpose |
 |---|---|
-| `09_onnx_perch_sed_blend_proxy6.ipynb` | Test same-genus Perch proxies for named unmapped taxa while leaving insect sonotypes unchanged |
+| `10_onnx_perch_sed_soundscape_calibrated.ipynb` | Learn per-class blend weights from labeled train-soundscape windows |
 
 Do not add separate notebooks for every public reference. Review external
 notebooks in `docs/`, then promote only the cleaned project-owned version.

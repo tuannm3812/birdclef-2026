@@ -82,6 +82,7 @@ Project overview and approach: [docs/01_project_overview.md](docs/01_project_ove
 | [07_onnx_perch_sed_blend.ipynb](notebooks/07_onnx_perch_sed_blend.ipynb) | Protected ONNX Perch + SED champion submission |
 | [08_onnx_perch_sed_blend_w025.ipynb](notebooks/08_onnx_perch_sed_blend_w025.ipynb) | Blend-weight variant with Perch weight 0.25 |
 | [09_onnx_perch_sed_blend_proxy6.ipynb](notebooks/09_onnx_perch_sed_blend_proxy6.ipynb) | Protected narrow proxy-mapping champion submission |
+| [10_onnx_perch_sed_soundscape_calibrated.ipynb](notebooks/10_onnx_perch_sed_soundscape_calibrated.ipynb) | Active soundscape-calibrated blend experiment |
 
 ONNX Perch + SED proxy6 is now the protected champion. ONNX distilled SED remains the
 strongest simpler baseline, Perch v2 version 14 remains a useful reference, and
@@ -117,7 +118,7 @@ Successful Kaggle submissions to preserve:
 | Perch v2 version 14 | **0.770** | Protected baseline | Keep as reference while moving new work to ONNX |
 | ONNX distilled SED version 2 | **0.822** | Protected baseline | Keep as strong non-blended comparison |
 | ONNX Perch + SED blend version 2 | **0.890** | Protected baseline | Preserve exact-mapped blend |
-| ONNX Perch + SED proxy6 version 1 | **0.892** | Current champion | Preserve; test only proxy-weight variants |
+| ONNX Perch + SED proxy6 version 1 | **0.892** | Current champion | Preserve; test soundscape-calibrated blend next |
 
 Result notes:
 
@@ -145,6 +146,7 @@ notebooks/
   07_onnx_perch_sed_blend.ipynb
   08_onnx_perch_sed_blend_w025.ipynb
   09_onnx_perch_sed_blend_proxy6.ipynb
+  10_onnx_perch_sed_soundscape_calibrated.ipynb
 
 docs/
   01_project_overview.md
