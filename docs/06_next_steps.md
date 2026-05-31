@@ -2,7 +2,7 @@
 
 ## 1. Current Position
 
-ONNX Perch + SED is the protected champion with a **0.890** public score. ONNX
+ONNX Perch + SED proxy6 is the protected champion with a **0.892** public score. ONNX
 distilled SED remains the strongest simpler baseline at **0.822**, Perch v2 is
 the strongest older baseline at **0.770**, and EfficientNet-B0 remains the
 reliable PyTorch fallback at **0.646**.
@@ -86,7 +86,8 @@ Deliverables:
 
 ### 2.4 Preserve ONNX Perch + SED Champion
 
-Status: succeeded with **0.890** public score.
+Status: succeeded with **0.890** public score; superseded by proxy6 at
+**0.892**.
 
 Goal: keep the new best submission reproducible before testing variants.
 
@@ -132,7 +133,7 @@ Deliverables:
 
 ### 2.6 Test Unmapped-Class Proxy Mapping
 
-Status: active in `09_onnx_perch_sed_blend_proxy6.ipynb`.
+Status: succeeded with **0.892** public score.
 
 Goal: improve target columns that exact scientific-name mapping leaves without
 direct Perch logits.
@@ -155,9 +156,32 @@ Success signal:
 Deliverables:
 
 - `09_onnx_perch_sed_blend_proxy6.ipynb`.
-- A result note if the proxy variant submits successfully.
+- `docs/11_onnx_perch_sed_blend_results.md` updated with proxy6 result.
 
-### 2.7 Add Perch Soundscape Priors
+### 2.7 Tune Proxy Weight
+
+Status: next.
+
+Goal: check whether the proxy contribution can improve slightly beyond
+**0.892** without changing the full exact-mapped blend.
+
+Work items:
+
+1. Preserve `09_onnx_perch_sed_blend_proxy6.ipynb` as the new champion.
+2. Create only one proxy-weight variant at a time.
+3. Keep exact-mapped `perch_weight = 0.15`.
+4. Try `proxy_weight = 0.08` or `0.10` before adding any new post-processing.
+
+Success signal:
+
+- A proxy-weight variant improves over **0.892** without harming runtime.
+
+Deliverables:
+
+- A clearly named notebook variant only if we decide to spend another
+  submission on proxy tuning.
+
+### 2.8 Add Perch Soundscape Priors
 
 Status: implemented in `03_perch_v2_train.ipynb`; needs a fresh Kaggle train run and
 leaderboard validation.
@@ -183,7 +207,7 @@ Deliverables:
 - A small prior summary table saved by the training notebook.
 - A note added to `05_perch_v2_results.md`.
 
-### 2.8 Inspect Weak Labels
+### 2.9 Inspect Weak Labels
 
 Status: implemented in `03_perch_v2_train.ipynb` via
 `weak_label_diagnostics.csv`; needs review after the next training run.
@@ -208,7 +232,7 @@ Deliverables:
 - Add a weak-label section to `05_perch_v2_results.md`.
 - Optional figure under `docs/figures/perch/`.
 
-### 2.9 Test Lightweight Calibration
+### 2.10 Test Lightweight Calibration
 
 Status: implemented in `03_perch_v2_train.ipynb` via `temperature_grid.csv` and
 `calibration.json`; needs a controlled submission test through
@@ -234,7 +258,7 @@ Deliverables:
   `04_perch_v2_submit.ipynb`.
 - Updated result table in `05_perch_v2_results.md`.
 
-### 2.10 Compare Perch And EfficientNet Errors
+### 2.11 Compare Perch And EfficientNet Errors
 
 Goal: decide whether an ensemble is worth the CPU cost.
 
@@ -255,7 +279,7 @@ Deliverables:
   `05_perch_v2_results.md`.
 - If useful, a simple weighted-average submission path.
 
-### 2.11 Distill Perch Into A Faster Student
+### 2.12 Distill Perch Into A Faster Student
 
 Goal: reduce dependency on TensorFlow Perch inference if scoring runtime becomes
 fragile.
@@ -279,8 +303,8 @@ Deliverables:
 
 ## 3. Recommended Order
 
-1. Preserve the **0.890** ONNX Perch + SED champion.
-2. Select the **0.890** blend and **0.822** ONNX SED submissions for final-score
+1. Preserve the **0.892** ONNX Perch + SED proxy6 champion.
+2. Select the **0.892** proxy6 blend and **0.822** ONNX SED submissions for final-score
    tracking unless a stronger variant appears.
 3. Use the W0.25 tie as evidence that higher Perch weight alone is not enough.
 4. Run the narrow proxy variant for named unmapped taxa.
