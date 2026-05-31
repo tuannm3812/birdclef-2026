@@ -8,6 +8,7 @@ submission in this workspace.
 | Submission | Notebook | Public score | Status |
 |---|---|---:|---|
 | ONNX Perch + SED soundscape-calibrated version 2 | `10_onnx_perch_sed_soundscape_calibrated.ipynb` | **0.893** | New champion |
+| ONNX Perch + SED min10/AP0.01 version 1 | `11_onnx_perch_sed_calibrated_min10_ap001.ipynb` | **0.892** | Did not improve |
 | ONNX Perch + SED proxy6 version 1 | `09_onnx_perch_sed_blend_proxy6.ipynb` | **0.892** | Protected baseline |
 | ONNX Perch + SED blend version 2 | `07_onnx_perch_sed_blend.ipynb` | **0.890** | Protected baseline |
 | ONNX Perch + SED W0.25 version 2 | `08_onnx_perch_sed_blend_w025.ipynb` | **0.890** | Tied champion |
@@ -30,6 +31,11 @@ only for named unmapped taxa.
 The soundscape-calibrated variant improved public score from **0.892** to
 **0.893** by learning lightweight per-class blend weights from labeled
 train-soundscape windows.
+
+The support-thresholded calibration variant dropped back to **0.892**. This
+suggests the low-support calibration changes in notebook `10` may contribute
+useful public-leaderboard signal, or at minimum should not be removed by a
+simple positives/AP threshold.
 
 ## 2. What Worked
 
@@ -60,11 +66,11 @@ Use the remaining submissions carefully. The next work should stay small and
 controlled:
 
 1. Preserve the **0.893** soundscape-calibrated submission.
-2. Inspect `soundscape_blend_calibration.csv` before adding another notebook.
-3. If many classes move to extreme weights, consider a smoothed calibration
-   variant.
-4. Try light temporal smoothing or rank blending only after calibration
-   diagnostics are understood.
+2. Do not continue pruning calibration weights with hard support thresholds.
+3. If testing another calibration variant, prefer a smoother/shrunk version
+   rather than dropping low-support changes entirely.
+4. Try light temporal smoothing or rank blending only after calibration variants
+   stop improving.
 
 Avoid jumping directly to the full ProtoSSM-style stack until simple blend
 variants stop improving.

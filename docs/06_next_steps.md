@@ -232,7 +232,7 @@ Deliverables:
 
 ### 2.10 Test Support-Thresholded Calibration
 
-Status: active in `11_onnx_perch_sed_calibrated_min10_ap001.ipynb`.
+Status: did not improve; public score was **0.892**.
 
 Goal: keep the useful soundscape calibration signal while reducing sparse-label
 overfit risk.
@@ -249,14 +249,39 @@ Work items:
 
 Success signal:
 
-- The thresholded calibration improves over **0.893** or confirms that the
-  current calibration is already best.
+- The result confirmed that hard support/AP thresholds are not better than the
+  current **0.893** calibration.
 
 Deliverables:
 
 - `11_onnx_perch_sed_calibrated_min10_ap001.ipynb`.
 
-### 2.11 Add Perch Soundscape Priors
+### 2.11 Test Shrunk Calibration
+
+Status: next.
+
+Goal: keep the useful low-support calibration signal while reducing overfit more
+gently than the hard min10/AP0.01 threshold.
+
+Work items:
+
+1. Preserve `10_onnx_perch_sed_soundscape_calibrated.ipynb` as the **0.893**
+   champion.
+2. Start from the calibrated weights in notebook `10`.
+3. Shrink learned weights partway back toward their default weights, rather than
+   dropping changes completely.
+4. Keep proxy handling unchanged.
+
+Success signal:
+
+- A shrunk-calibration variant improves over **0.893** or ties without losing
+  the useful calibration signal.
+
+Deliverables:
+
+- A new notebook only if we decide to spend another submission on calibration.
+
+### 2.12 Add Perch Soundscape Priors
 
 Status: implemented in `03_perch_v2_train.ipynb`; needs a fresh Kaggle train run and
 leaderboard validation.
@@ -282,7 +307,7 @@ Deliverables:
 - A small prior summary table saved by the training notebook.
 - A note added to `05_perch_v2_results.md`.
 
-### 2.12 Inspect Weak Labels
+### 2.13 Inspect Weak Labels
 
 Status: implemented in `03_perch_v2_train.ipynb` via
 `weak_label_diagnostics.csv`; needs review after the next training run.
@@ -307,7 +332,7 @@ Deliverables:
 - Add a weak-label section to `05_perch_v2_results.md`.
 - Optional figure under `docs/figures/perch/`.
 
-### 2.13 Test Lightweight Calibration
+### 2.14 Test Lightweight Calibration
 
 Status: implemented in `03_perch_v2_train.ipynb` via `temperature_grid.csv` and
 `calibration.json`; needs a controlled submission test through
@@ -333,7 +358,7 @@ Deliverables:
   `04_perch_v2_submit.ipynb`.
 - Updated result table in `05_perch_v2_results.md`.
 
-### 2.14 Compare Perch And EfficientNet Errors
+### 2.15 Compare Perch And EfficientNet Errors
 
 Goal: decide whether an ensemble is worth the CPU cost.
 
@@ -354,7 +379,7 @@ Deliverables:
   `05_perch_v2_results.md`.
 - If useful, a simple weighted-average submission path.
 
-### 2.15 Distill Perch Into A Faster Student
+### 2.16 Distill Perch Into A Faster Student
 
 Goal: reduce dependency on TensorFlow Perch inference if scoring runtime becomes
 fragile.
@@ -378,8 +403,8 @@ Deliverables:
 
 ## 3. Recommended Order
 
-1. Preserve the **0.892** ONNX Perch + SED proxy6 champion.
-2. Select the **0.892** proxy6 blend and **0.822** ONNX SED submissions for final-score
+1. Preserve the **0.893** soundscape-calibrated champion.
+2. Select the **0.893** calibrated blend and **0.822** ONNX SED submissions for final-score
    tracking unless a stronger variant appears.
 3. Use the W0.25 tie as evidence that higher Perch weight alone is not enough.
 4. Use the proxy6 improvement as evidence that targeted mapping changes help.
