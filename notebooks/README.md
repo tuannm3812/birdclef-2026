@@ -16,7 +16,8 @@ project-owned, reproducible, and tied to a documented experiment.
 | `07_onnx_perch_sed_blend.ipynb` | Protected ONNX Perch + SED champion submission |
 | `08_onnx_perch_sed_blend_w025.ipynb` | Blend-weight variant with Perch weight 0.25 |
 | `09_onnx_perch_sed_blend_proxy6.ipynb` | Protected narrow proxy-mapping champion submission |
-| `10_onnx_perch_sed_soundscape_calibrated.ipynb` | Active soundscape-calibrated blend experiment |
+| `10_onnx_perch_sed_soundscape_calibrated.ipynb` | Protected soundscape-calibrated champion submission |
+| `11_onnx_perch_sed_calibrated_min10_ap001.ipynb` | Active support-thresholded calibration variant |
 
 ## Active Notebook Lane
 
@@ -24,7 +25,7 @@ Use **one** active notebook slot at a time. The current lane is:
 
 | Notebook | Purpose |
 |---|---|
-| `10_onnx_perch_sed_soundscape_calibrated.ipynb` | Learn per-class blend weights from labeled train-soundscape windows |
+| `11_onnx_perch_sed_calibrated_min10_ap001.ipynb` | Apply learned class weights only with at least 10 positives and AP gain of at least 0.01 |
 
 Do not add separate notebooks for every public reference. Review external
 notebooks in `docs/`, then promote only the cleaned project-owned version.

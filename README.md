@@ -83,6 +83,7 @@ Project overview and approach: [docs/01_project_overview.md](docs/01_project_ove
 | [08_onnx_perch_sed_blend_w025.ipynb](notebooks/08_onnx_perch_sed_blend_w025.ipynb) | Blend-weight variant with Perch weight 0.25 |
 | [09_onnx_perch_sed_blend_proxy6.ipynb](notebooks/09_onnx_perch_sed_blend_proxy6.ipynb) | Protected narrow proxy-mapping champion submission |
 | [10_onnx_perch_sed_soundscape_calibrated.ipynb](notebooks/10_onnx_perch_sed_soundscape_calibrated.ipynb) | Protected soundscape-calibrated champion submission |
+| [11_onnx_perch_sed_calibrated_min10_ap001.ipynb](notebooks/11_onnx_perch_sed_calibrated_min10_ap001.ipynb) | Active support-thresholded calibration variant |
 
 ONNX Perch + SED soundscape-calibrated blend is now the protected champion. ONNX distilled SED remains the
 strongest simpler baseline, Perch v2 version 14 remains a useful reference, and
@@ -150,6 +151,7 @@ notebooks/
   08_onnx_perch_sed_blend_w025.ipynb
   09_onnx_perch_sed_blend_proxy6.ipynb
   10_onnx_perch_sed_soundscape_calibrated.ipynb
+  11_onnx_perch_sed_calibrated_min10_ap001.ipynb
 
 docs/
   01_project_overview.md

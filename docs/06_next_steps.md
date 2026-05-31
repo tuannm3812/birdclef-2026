@@ -232,7 +232,7 @@ Deliverables:
 
 ### 2.10 Test Support-Thresholded Calibration
 
-Status: next.
+Status: active in `11_onnx_perch_sed_calibrated_min10_ap001.ipynb`.
 
 Goal: keep the useful soundscape calibration signal while reducing sparse-label
 overfit risk.
@@ -241,7 +241,7 @@ Work items:
 
 1. Preserve `10_onnx_perch_sed_soundscape_calibrated.ipynb` as the **0.893**
    champion.
-2. Create a controlled support-thresholded variant.
+2. Run `11_onnx_perch_sed_calibrated_min10_ap001.ipynb`.
 3. Apply learned weights only when a class has at least **10** positives.
 4. Optionally require AP gain of at least **0.01** before changing the default
    weight.
@@ -254,7 +254,7 @@ Success signal:
 
 Deliverables:
 
-- A clearly named notebook variant if we choose to spend another submission.
+- `11_onnx_perch_sed_calibrated_min10_ap001.ipynb`.
 
 ### 2.11 Add Perch Soundscape Priors
 
