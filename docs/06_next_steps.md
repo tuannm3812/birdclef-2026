@@ -208,7 +208,7 @@ Deliverables:
 
 ### 2.9 Inspect Soundscape Calibration Diagnostics
 
-Status: next.
+Status: completed in `docs/13_soundscape_calibration_diagnostics.md`.
 
 Goal: decide whether the calibration gain can be improved safely.
 
@@ -228,9 +228,35 @@ Success signal:
 
 Deliverables:
 
-- A short calibration diagnostics note.
+- `docs/13_soundscape_calibration_diagnostics.md`.
 
-### 2.10 Add Perch Soundscape Priors
+### 2.10 Test Support-Thresholded Calibration
+
+Status: next.
+
+Goal: keep the useful soundscape calibration signal while reducing sparse-label
+overfit risk.
+
+Work items:
+
+1. Preserve `10_onnx_perch_sed_soundscape_calibrated.ipynb` as the **0.893**
+   champion.
+2. Create a controlled support-thresholded variant.
+3. Apply learned weights only when a class has at least **10** positives.
+4. Optionally require AP gain of at least **0.01** before changing the default
+   weight.
+5. Keep proxy handling unchanged.
+
+Success signal:
+
+- The thresholded calibration improves over **0.893** or confirms that the
+  current calibration is already best.
+
+Deliverables:
+
+- A clearly named notebook variant if we choose to spend another submission.
+
+### 2.11 Add Perch Soundscape Priors
 
 Status: implemented in `03_perch_v2_train.ipynb`; needs a fresh Kaggle train run and
 leaderboard validation.
@@ -256,7 +282,7 @@ Deliverables:
 - A small prior summary table saved by the training notebook.
 - A note added to `05_perch_v2_results.md`.
 
-### 2.11 Inspect Weak Labels
+### 2.12 Inspect Weak Labels
 
 Status: implemented in `03_perch_v2_train.ipynb` via
 `weak_label_diagnostics.csv`; needs review after the next training run.
@@ -281,7 +307,7 @@ Deliverables:
 - Add a weak-label section to `05_perch_v2_results.md`.
 - Optional figure under `docs/figures/perch/`.
 
-### 2.12 Test Lightweight Calibration
+### 2.13 Test Lightweight Calibration
 
 Status: implemented in `03_perch_v2_train.ipynb` via `temperature_grid.csv` and
 `calibration.json`; needs a controlled submission test through
@@ -307,7 +333,7 @@ Deliverables:
   `04_perch_v2_submit.ipynb`.
 - Updated result table in `05_perch_v2_results.md`.
 
-### 2.13 Compare Perch And EfficientNet Errors
+### 2.14 Compare Perch And EfficientNet Errors
 
 Goal: decide whether an ensemble is worth the CPU cost.
 
@@ -328,7 +354,7 @@ Deliverables:
   `05_perch_v2_results.md`.
 - If useful, a simple weighted-average submission path.
 
-### 2.14 Distill Perch Into A Faster Student
+### 2.15 Distill Perch Into A Faster Student
 
 Goal: reduce dependency on TensorFlow Perch inference if scoring runtime becomes
 fragile.
