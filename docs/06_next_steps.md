@@ -2,10 +2,10 @@
 
 ## 1. Current Position
 
-ONNX Perch + SED proxy6 is the protected champion with a **0.892** public score. ONNX
-distilled SED remains the strongest simpler baseline at **0.822**, Perch v2 is
-the strongest older baseline at **0.770**, and EfficientNet-B0 remains the
-reliable PyTorch fallback at **0.646**.
+ONNX Perch + SED soundscape-calibrated blend is the protected champion with a
+**0.893** public score. ONNX distilled SED remains the strongest simpler
+baseline at **0.822**, Perch v2 is the strongest older baseline at **0.770**,
+and EfficientNet-B0 remains the reliable PyTorch fallback at **0.646**.
 
 The main risk is hidden-test runtime. Public notebook runs can pass with only
 three sample rows and no test audio, while real submissions must score hidden
@@ -183,7 +183,7 @@ Deliverables:
 
 ### 2.8 Soundscape-Calibrated Blend
 
-Status: active in `10_onnx_perch_sed_soundscape_calibrated.ipynb`.
+Status: succeeded with **0.893** public score.
 
 Goal: move toward the higher-scoring sequence-model direction by using labeled
 train-soundscape windows to learn per-class blend weights.
@@ -204,9 +204,33 @@ Success signal:
 Deliverables:
 
 - `10_onnx_perch_sed_soundscape_calibrated.ipynb`.
-- Calibration diagnostics if the run completes.
+- `soundscape_blend_calibration.csv` from the run.
 
-### 2.9 Add Perch Soundscape Priors
+### 2.9 Inspect Soundscape Calibration Diagnostics
+
+Status: next.
+
+Goal: decide whether the calibration gain can be improved safely.
+
+Work items:
+
+1. Review `soundscape_blend_calibration.csv`.
+2. Count classes that moved away from default blend weights.
+3. Identify classes with enough positives and clear AP improvement.
+4. Check whether many classes moved to extreme weights because of sparse labels.
+5. Decide whether a smoothed or support-thresholded calibration variant is worth
+   one more submission.
+
+Success signal:
+
+- We can explain why the calibrated notebook improved to **0.893** and identify
+  a low-risk next variant.
+
+Deliverables:
+
+- A short calibration diagnostics note.
+
+### 2.10 Add Perch Soundscape Priors
 
 Status: implemented in `03_perch_v2_train.ipynb`; needs a fresh Kaggle train run and
 leaderboard validation.
@@ -232,7 +256,7 @@ Deliverables:
 - A small prior summary table saved by the training notebook.
 - A note added to `05_perch_v2_results.md`.
 
-### 2.10 Inspect Weak Labels
+### 2.11 Inspect Weak Labels
 
 Status: implemented in `03_perch_v2_train.ipynb` via
 `weak_label_diagnostics.csv`; needs review after the next training run.
@@ -257,7 +281,7 @@ Deliverables:
 - Add a weak-label section to `05_perch_v2_results.md`.
 - Optional figure under `docs/figures/perch/`.
 
-### 2.11 Test Lightweight Calibration
+### 2.12 Test Lightweight Calibration
 
 Status: implemented in `03_perch_v2_train.ipynb` via `temperature_grid.csv` and
 `calibration.json`; needs a controlled submission test through
@@ -283,7 +307,7 @@ Deliverables:
   `04_perch_v2_submit.ipynb`.
 - Updated result table in `05_perch_v2_results.md`.
 
-### 2.12 Compare Perch And EfficientNet Errors
+### 2.13 Compare Perch And EfficientNet Errors
 
 Goal: decide whether an ensemble is worth the CPU cost.
 
@@ -304,7 +328,7 @@ Deliverables:
   `05_perch_v2_results.md`.
 - If useful, a simple weighted-average submission path.
 
-### 2.13 Distill Perch Into A Faster Student
+### 2.14 Distill Perch Into A Faster Student
 
 Goal: reduce dependency on TensorFlow Perch inference if scoring runtime becomes
 fragile.

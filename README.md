@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/badge/Kaggle-BirdCLEF%2B%202026-20BEFF?logo=kaggle&logoColor=white" alt="Kaggle competition">
   </a>
   <img src="https://img.shields.io/badge/Notebook-EDA%20%7C%20EffNet%20%7C%20Perch%20%7C%20ONNX%20SED-F37626?logo=jupyter" alt="Notebook workflow">
-  <img src="https://img.shields.io/badge/Public-EffNet%200.646%20%7C%20SED%200.822%20%7C%20Blend%200.892-2EA44F" alt="Public scores">
+  <img src="https://img.shields.io/badge/Public-EffNet%200.646%20%7C%20SED%200.822%20%7C%20Blend%200.893-2EA44F" alt="Public scores">
 </p>
 
 BirdCLEF+ 2026 bioacoustic classification workspace for identifying wildlife
@@ -36,8 +36,8 @@ classification.
 | EfficientNet-B0 | **0.5464** best validation accuracy, **0.646** public score |
 | Perch v2 probe | **0.8392** best validation accuracy, **0.770** public score |
 | ONNX distilled SED | **0.822** public score |
-| ONNX Perch + SED proxy blend | **0.892** public score |
-| Best gain | ONNX Perch + SED improved public score by **+0.246** over EfficientNet-B0 |
+| ONNX Perch + SED calibrated blend | **0.893** public score |
+| Best gain | ONNX Perch + SED improved public score by **+0.247** over EfficientNet-B0 |
 
 Project overview and approach: [docs/01_project_overview.md](docs/01_project_overview.md).
 
@@ -82,9 +82,9 @@ Project overview and approach: [docs/01_project_overview.md](docs/01_project_ove
 | [07_onnx_perch_sed_blend.ipynb](notebooks/07_onnx_perch_sed_blend.ipynb) | Protected ONNX Perch + SED champion submission |
 | [08_onnx_perch_sed_blend_w025.ipynb](notebooks/08_onnx_perch_sed_blend_w025.ipynb) | Blend-weight variant with Perch weight 0.25 |
 | [09_onnx_perch_sed_blend_proxy6.ipynb](notebooks/09_onnx_perch_sed_blend_proxy6.ipynb) | Protected narrow proxy-mapping champion submission |
-| [10_onnx_perch_sed_soundscape_calibrated.ipynb](notebooks/10_onnx_perch_sed_soundscape_calibrated.ipynb) | Active soundscape-calibrated blend experiment |
+| [10_onnx_perch_sed_soundscape_calibrated.ipynb](notebooks/10_onnx_perch_sed_soundscape_calibrated.ipynb) | Protected soundscape-calibrated champion submission |
 
-ONNX Perch + SED proxy6 is now the protected champion. ONNX distilled SED remains the
+ONNX Perch + SED soundscape-calibrated blend is now the protected champion. ONNX distilled SED remains the
 strongest simpler baseline, Perch v2 version 14 remains a useful reference, and
 EfficientNet-B0 remains the simplest fallback.
 
@@ -108,7 +108,8 @@ Full analysis: [docs/03_eda_insights.md](docs/03_eda_insights.md).
 | EfficientNet-B0 | 5-second mel-spectrogram | **0.5464** | **0.646** | Reliable fallback |
 | Perch v2 probe | Frozen 1,536-d embeddings | **0.8392** | **0.770** | Protected baseline |
 | ONNX distilled SED | 5-fold SED ONNX student | N/A | **0.822** | Protected baseline |
-| ONNX Perch + SED proxy6 | Exact/proxy-mapped Perch logits + SED | N/A | **0.892** | Current champion |
+| ONNX Perch + SED proxy6 | Exact/proxy-mapped Perch logits + SED | N/A | **0.892** | Protected baseline |
+| ONNX Perch + SED calibrated | Soundscape-calibrated blend | N/A | **0.893** | Current champion |
 
 Successful Kaggle submissions to preserve:
 
@@ -118,7 +119,8 @@ Successful Kaggle submissions to preserve:
 | Perch v2 version 14 | **0.770** | Protected baseline | Keep as reference while moving new work to ONNX |
 | ONNX distilled SED version 2 | **0.822** | Protected baseline | Keep as strong non-blended comparison |
 | ONNX Perch + SED blend version 2 | **0.890** | Protected baseline | Preserve exact-mapped blend |
-| ONNX Perch + SED proxy6 version 1 | **0.892** | Current champion | Preserve; test soundscape-calibrated blend next |
+| ONNX Perch + SED proxy6 version 1 | **0.892** | Protected baseline | Preserve proxy-mapped blend |
+| ONNX Perch + SED calibrated version 2 | **0.893** | Current champion | Preserve; inspect calibration diagnostics next |
 
 Result notes:
 
