@@ -18,6 +18,7 @@ project-owned, reproducible, and tied to a documented experiment.
 | `09_onnx_perch_sed_blend_proxy6.ipynb` | Protected narrow proxy-mapping champion submission |
 | `10_onnx_perch_sed_soundscape_calibrated.ipynb` | Protected soundscape-calibrated champion submission |
 | `11_onnx_perch_sed_calibrated_min10_ap001.ipynb` | Active support-thresholded calibration variant |
+| `12_onnx_perch_sed_calibrated_shrink050.ipynb` | Active shrunk-calibration variant |
 
 ## Active Notebook Lane
 
@@ -25,7 +26,7 @@ Use **one** active notebook slot at a time. The current lane is:
 
 | Notebook | Purpose |
 |---|---|
-| `11_onnx_perch_sed_calibrated_min10_ap001.ipynb` | Apply learned class weights only with at least 10 positives and AP gain of at least 0.01 |
+| `12_onnx_perch_sed_calibrated_shrink050.ipynb` | Apply half of each learned class-weight shift away from the default weight |
 
 Do not add separate notebooks for every public reference. Review external
 notebooks in `docs/`, then promote only the cleaned project-owned version.

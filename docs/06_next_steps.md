@@ -258,7 +258,7 @@ Deliverables:
 
 ### 2.11 Test Shrunk Calibration
 
-Status: next.
+Status: active in `12_onnx_perch_sed_calibrated_shrink050.ipynb`.
 
 Goal: keep the useful low-support calibration signal while reducing overfit more
 gently than the hard min10/AP0.01 threshold.
@@ -267,10 +267,11 @@ Work items:
 
 1. Preserve `10_onnx_perch_sed_soundscape_calibrated.ipynb` as the **0.893**
    champion.
-2. Start from the calibrated weights in notebook `10`.
-3. Shrink learned weights partway back toward their default weights, rather than
+2. Run `12_onnx_perch_sed_calibrated_shrink050.ipynb`.
+3. Start from the calibrated weights in notebook `10`.
+4. Shrink learned weights partway back toward their default weights, rather than
    dropping changes completely.
-4. Keep proxy handling unchanged.
+5. Keep proxy handling unchanged.
 
 Success signal:
 
@@ -279,7 +280,7 @@ Success signal:
 
 Deliverables:
 
-- A new notebook only if we decide to spend another submission on calibration.
+- `12_onnx_perch_sed_calibrated_shrink050.ipynb`.
 
 ### 2.12 Add Perch Soundscape Priors
 
