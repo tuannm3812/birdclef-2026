@@ -49,6 +49,5 @@ The next notebook should:
 3. Report seconds per soundscape and projected hidden-test runtime.
 4. Avoid blending, priors, sequence models, and post-processing.
 
-Only if ONNX Perch is comfortably inside the CPU limit should we create
-`07_onnx_perch_sed_blend.ipynb`.
-
+ONNX Perch later passed the CPU speed check, and the historical blend notebook
+is preserved at `archive/07_onnx_perch_sed_blend.ipynb`.

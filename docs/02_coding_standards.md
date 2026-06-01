@@ -14,7 +14,9 @@ Avoid adding local-only folders such as `data/`, `models/`, `outputs/`, `configs
 
 ## 2. Notebook Naming
 
-Use numbered, stable notebook names:
+Use numbered, stable notebook names. Keep active notebooks at the top level and
+move older config-only variants to `notebooks/archive/` once they are no longer
+the active lane.
 
 1. `01_eda.ipynb`
 2. `02_effnet_b0.ipynb`
@@ -22,12 +24,12 @@ Use numbered, stable notebook names:
 4. `04_perch_v2_submit.ipynb`
 5. `05_onnx_sed_submit.ipynb`
 6. `06_onnx_perch_speed_test.ipynb`
-7. `07_onnx_perch_sed_blend.ipynb`
-8. `08_onnx_perch_sed_blend_w025.ipynb`
-9. `09_onnx_perch_sed_blend_proxy6.ipynb`
+7. `archive/07_onnx_perch_sed_blend.ipynb`
+8. `archive/08_onnx_perch_sed_blend_w025.ipynb`
+9. `archive/09_onnx_perch_sed_blend_proxy6.ipynb`
 10. `10_onnx_perch_sed_soundscape_calibrated.ipynb`
-11. `11_onnx_perch_sed_calibrated_min10_ap001.ipynb`
-12. `12_onnx_perch_sed_calibrated_shrink050.ipynb`
+11. `archive/11_onnx_perch_sed_calibrated_min10_ap001.ipynb`
+12. `archive/12_onnx_perch_sed_calibrated_shrink050.ipynb`
 13. `13_onnx_perch_sed_temporal_residual.ipynb`
 
 Notebook names should describe the actual Kaggle workflow. Keep training and submission together for simple baselines, but split them when artifact management, runtime constraints, or Kaggle scoring safety make the responsibilities meaningfully different.

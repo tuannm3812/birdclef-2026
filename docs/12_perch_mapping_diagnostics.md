@@ -55,5 +55,5 @@ The only reasonable proxy experiment is narrow:
 4. Keep the existing exact-mapped blend behavior unchanged.
 
 If a narrow proxy variant is tested, keep it separate from the protected
-`07_onnx_perch_sed_blend.ipynb` champion.
+`archive/07_onnx_perch_sed_blend.ipynb` champion.
 

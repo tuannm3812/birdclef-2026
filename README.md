@@ -71,6 +71,8 @@ Project overview and approach: [docs/01_project_overview.md](docs/01_project_ove
 
 ## 5. Notebooks
 
+Active notebooks:
+
 | Notebook | Purpose |
 |---|---|
 | [01_eda.ipynb](notebooks/01_eda.ipynb) | Dataset audit, class imbalance, secondary labels, metadata bias, soundscape domain analysis, and spectrogram inspection |
@@ -79,13 +81,18 @@ Project overview and approach: [docs/01_project_overview.md](docs/01_project_ove
 | [04_perch_v2_submit.ipynb](notebooks/04_perch_v2_submit.ipynb) | Lean Perch v2 scoring notebook for CPU Kaggle submission |
 | [05_onnx_sed_submit.ipynb](notebooks/05_onnx_sed_submit.ipynb) | Protected distilled SED ONNX champion submission |
 | [06_onnx_perch_speed_test.ipynb](notebooks/06_onnx_perch_speed_test.ipynb) | ONNX Perch runtime experiment |
-| [07_onnx_perch_sed_blend.ipynb](notebooks/07_onnx_perch_sed_blend.ipynb) | Protected ONNX Perch + SED champion submission |
-| [08_onnx_perch_sed_blend_w025.ipynb](notebooks/08_onnx_perch_sed_blend_w025.ipynb) | Blend-weight variant with Perch weight 0.25 |
-| [09_onnx_perch_sed_blend_proxy6.ipynb](notebooks/09_onnx_perch_sed_blend_proxy6.ipynb) | Protected narrow proxy-mapping champion submission |
 | [10_onnx_perch_sed_soundscape_calibrated.ipynb](notebooks/10_onnx_perch_sed_soundscape_calibrated.ipynb) | Protected soundscape-calibrated champion submission |
-| [11_onnx_perch_sed_calibrated_min10_ap001.ipynb](notebooks/11_onnx_perch_sed_calibrated_min10_ap001.ipynb) | Support-thresholded calibration variant |
-| [12_onnx_perch_sed_calibrated_shrink050.ipynb](notebooks/12_onnx_perch_sed_calibrated_shrink050.ipynb) | Shrunk-calibration variant |
 | [13_onnx_perch_sed_temporal_residual.ipynb](notebooks/13_onnx_perch_sed_temporal_residual.ipynb) | Active temporal residual blend experiment |
+
+Archived experiment notebooks:
+
+| Notebook | Purpose |
+|---|---|
+| [07_onnx_perch_sed_blend.ipynb](notebooks/archive/07_onnx_perch_sed_blend.ipynb) | Historical 0.890 exact ONNX Perch + SED blend |
+| [08_onnx_perch_sed_blend_w025.ipynb](notebooks/archive/08_onnx_perch_sed_blend_w025.ipynb) | Historical Perch weight 0.25 variant |
+| [09_onnx_perch_sed_blend_proxy6.ipynb](notebooks/archive/09_onnx_perch_sed_blend_proxy6.ipynb) | Historical 0.892 narrow proxy-mapping milestone |
+| [11_onnx_perch_sed_calibrated_min10_ap001.ipynb](notebooks/archive/11_onnx_perch_sed_calibrated_min10_ap001.ipynb) | Historical support-thresholded calibration variant |
+| [12_onnx_perch_sed_calibrated_shrink050.ipynb](notebooks/archive/12_onnx_perch_sed_calibrated_shrink050.ipynb) | Historical shrunk-calibration variant |
 
 ONNX Perch + SED soundscape-calibrated blend is now the protected champion. ONNX distilled SED remains the
 strongest simpler baseline, Perch v2 version 14 remains a useful reference, and
@@ -149,13 +156,14 @@ notebooks/
   04_perch_v2_submit.ipynb
   05_onnx_sed_submit.ipynb
   06_onnx_perch_speed_test.ipynb
-  07_onnx_perch_sed_blend.ipynb
-  08_onnx_perch_sed_blend_w025.ipynb
-  09_onnx_perch_sed_blend_proxy6.ipynb
   10_onnx_perch_sed_soundscape_calibrated.ipynb
-  11_onnx_perch_sed_calibrated_min10_ap001.ipynb
-  12_onnx_perch_sed_calibrated_shrink050.ipynb
   13_onnx_perch_sed_temporal_residual.ipynb
+  archive/
+    07_onnx_perch_sed_blend.ipynb
+    08_onnx_perch_sed_blend_w025.ipynb
+    09_onnx_perch_sed_blend_proxy6.ipynb
+    11_onnx_perch_sed_calibrated_min10_ap001.ipynb
+    12_onnx_perch_sed_calibrated_shrink050.ipynb
 
 docs/
   01_project_overview.md

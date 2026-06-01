@@ -8,10 +8,10 @@ submission in this workspace.
 | Submission | Notebook | Public score | Status |
 |---|---|---:|---|
 | ONNX Perch + SED soundscape-calibrated version 2 | `10_onnx_perch_sed_soundscape_calibrated.ipynb` | **0.893** | New champion |
-| ONNX Perch + SED min10/AP0.01 version 1 | `11_onnx_perch_sed_calibrated_min10_ap001.ipynb` | **0.892** | Did not improve |
-| ONNX Perch + SED proxy6 version 1 | `09_onnx_perch_sed_blend_proxy6.ipynb` | **0.892** | Protected baseline |
-| ONNX Perch + SED blend version 2 | `07_onnx_perch_sed_blend.ipynb` | **0.890** | Protected baseline |
-| ONNX Perch + SED W0.25 version 2 | `08_onnx_perch_sed_blend_w025.ipynb` | **0.890** | Tied champion |
+| ONNX Perch + SED min10/AP0.01 version 1 | `archive/11_onnx_perch_sed_calibrated_min10_ap001.ipynb` | **0.892** | Did not improve |
+| ONNX Perch + SED proxy6 version 1 | `archive/09_onnx_perch_sed_blend_proxy6.ipynb` | **0.892** | Protected baseline |
+| ONNX Perch + SED blend version 2 | `archive/07_onnx_perch_sed_blend.ipynb` | **0.890** | Protected baseline |
+| ONNX Perch + SED W0.25 version 2 | `archive/08_onnx_perch_sed_blend_w025.ipynb` | **0.890** | Tied champion |
 | ONNX distilled SED version 2 | `05_onnx_sed_submit.ipynb` | **0.822** | Protected baseline |
 | Perch v2 version 14 | `04_perch_v2_submit.ipynb` | **0.770** | Protected baseline |
 | EfficientNet-B0 version 9 | `02_effnet_b0.ipynb` | **0.646** | CPU-safe fallback |

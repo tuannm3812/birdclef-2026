@@ -3,7 +3,7 @@
 Keep this folder small. Notebooks should be promoted here only when they are
 project-owned, reproducible, and tied to a documented experiment.
 
-## Canonical Notebooks
+## Active Notebooks
 
 | Notebook | Role |
 |---|---|
@@ -13,13 +13,21 @@ project-owned, reproducible, and tied to a documented experiment.
 | `04_perch_v2_submit.ipynb` | Protected Perch v2 submission reference |
 | `05_onnx_sed_submit.ipynb` | Protected distilled SED ONNX champion submission |
 | `06_onnx_perch_speed_test.ipynb` | ONNX Perch runtime experiment |
-| `07_onnx_perch_sed_blend.ipynb` | Protected ONNX Perch + SED champion submission |
-| `08_onnx_perch_sed_blend_w025.ipynb` | Blend-weight variant with Perch weight 0.25 |
-| `09_onnx_perch_sed_blend_proxy6.ipynb` | Protected narrow proxy-mapping champion submission |
 | `10_onnx_perch_sed_soundscape_calibrated.ipynb` | Protected soundscape-calibrated champion submission |
-| `11_onnx_perch_sed_calibrated_min10_ap001.ipynb` | Support-thresholded calibration variant |
-| `12_onnx_perch_sed_calibrated_shrink050.ipynb` | Shrunk-calibration variant |
 | `13_onnx_perch_sed_temporal_residual.ipynb` | Active temporal residual blend experiment |
+
+## Archived Experiments
+
+These are preserved for reproducibility, but should not be edited during the
+final submission push.
+
+| Notebook | Role |
+|---|---|
+| `archive/07_onnx_perch_sed_blend.ipynb` | Historical 0.890 exact ONNX Perch + SED blend |
+| `archive/08_onnx_perch_sed_blend_w025.ipynb` | Historical Perch weight 0.25 variant |
+| `archive/09_onnx_perch_sed_blend_proxy6.ipynb` | Historical 0.892 narrow proxy-mapping milestone |
+| `archive/11_onnx_perch_sed_calibrated_min10_ap001.ipynb` | Historical support-thresholded calibration variant |
+| `archive/12_onnx_perch_sed_calibrated_shrink050.ipynb` | Historical shrunk-calibration variant |
 
 ## Active Notebook Lane
 

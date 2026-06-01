@@ -15,8 +15,8 @@ no-DFT model on Kaggle CPU.
 | Output label shape | `(48, 14795)` |
 | Output embedding shape | `(48, 1536)` |
 
-This is fast enough to justify moving to the next controlled experiment:
-`07_onnx_perch_sed_blend.ipynb`.
+This was fast enough to justify the next controlled experiment, now preserved
+at `archive/07_onnx_perch_sed_blend.ipynb`.
 
 ## 2. Timing Detail
 
@@ -52,7 +52,8 @@ columns using Perch label metadata and the BirdCLEF taxonomy.
 
 ## 5. Recommended Next Step
 
-Create `07_onnx_perch_sed_blend.ipynb`.
+The next step at the time was creating the ONNX Perch + SED blend notebook,
+now archived as `archive/07_onnx_perch_sed_blend.ipynb`.
 
 The blend notebook should:
 
@@ -63,4 +64,3 @@ The blend notebook should:
    Perch contribution.
 5. Avoid sequence modeling, priors, and heavy post-processing until the simple
    blend has a successful submission.
-

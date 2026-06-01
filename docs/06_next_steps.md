@@ -93,7 +93,7 @@ Goal: keep the new best submission reproducible before testing variants.
 
 Work items:
 
-1. Preserve `07_onnx_perch_sed_blend.ipynb`.
+1. Preserve `archive/07_onnx_perch_sed_blend.ipynb`.
 2. Record attached Kaggle inputs and notebook version.
 3. Keep the exact-mapped conservative blend unchanged as the protected
    champion.
@@ -116,7 +116,7 @@ stack.
 
 Work items:
 
-1. Preserve `08_onnx_perch_sed_blend_w025.ipynb` as a tied variant.
+1. Preserve `archive/08_onnx_perch_sed_blend_w025.ipynb` as a tied variant.
 2. Save each variant as a clearly named Kaggle notebook version, not a
    replacement for the champion.
 3. Record exact Perch mapping count and unmapped target classes from the run
@@ -141,7 +141,7 @@ direct Perch logits.
 Work items:
 
 1. Use `docs/12_perch_mapping_diagnostics.md` as the mapping review.
-2. Run `09_onnx_perch_sed_blend_proxy6.ipynb`.
+2. Run `archive/09_onnx_perch_sed_blend_proxy6.ipynb`.
 3. Do not proxy the 25 anonymous insect sonotype columns.
 4. Restrict proxy mapping to named unmapped taxa only.
 5. Use conservative genus-level Perch proxies rather than changing mapped
@@ -155,7 +155,7 @@ Success signal:
 
 Deliverables:
 
-- `09_onnx_perch_sed_blend_proxy6.ipynb`.
+- `archive/09_onnx_perch_sed_blend_proxy6.ipynb`.
 - `docs/11_onnx_perch_sed_blend_results.md` updated with proxy6 result.
 
 ### 2.7 Tune Proxy Weight
@@ -167,7 +167,7 @@ Goal: check whether the proxy contribution can improve slightly beyond
 
 Work items:
 
-1. Preserve `09_onnx_perch_sed_blend_proxy6.ipynb` as the new champion.
+1. Preserve `archive/09_onnx_perch_sed_blend_proxy6.ipynb` as the new champion.
 2. Create only one proxy-weight variant at a time.
 3. Keep exact-mapped `perch_weight = 0.15`.
 4. Try `proxy_weight = 0.08` or `0.10` before adding any new post-processing.
@@ -190,7 +190,7 @@ train-soundscape windows to learn per-class blend weights.
 
 Work items:
 
-1. Preserve `09_onnx_perch_sed_blend_proxy6.ipynb` as the **0.892** champion.
+1. Preserve `archive/09_onnx_perch_sed_blend_proxy6.ipynb` as the **0.892** champion.
 2. Run `10_onnx_perch_sed_soundscape_calibrated.ipynb`.
 3. Score labeled train-soundscape windows with the same SED and Perch
    components used for hidden test.
@@ -241,7 +241,7 @@ Work items:
 
 1. Preserve `10_onnx_perch_sed_soundscape_calibrated.ipynb` as the **0.893**
    champion.
-2. Run `11_onnx_perch_sed_calibrated_min10_ap001.ipynb`.
+2. Run `archive/11_onnx_perch_sed_calibrated_min10_ap001.ipynb`.
 3. Apply learned weights only when a class has at least **10** positives.
 4. Optionally require AP gain of at least **0.01** before changing the default
    weight.
@@ -254,7 +254,7 @@ Success signal:
 
 Deliverables:
 
-- `11_onnx_perch_sed_calibrated_min10_ap001.ipynb`.
+- `archive/11_onnx_perch_sed_calibrated_min10_ap001.ipynb`.
 
 ### 2.11 Test Shrunk Calibration
 
@@ -267,7 +267,7 @@ Work items:
 
 1. Preserve `10_onnx_perch_sed_soundscape_calibrated.ipynb` as the **0.893**
    champion.
-2. Run `12_onnx_perch_sed_calibrated_shrink050.ipynb`.
+2. Run `archive/12_onnx_perch_sed_calibrated_shrink050.ipynb`.
 3. Start from the calibrated weights in notebook `10`.
 4. Shrink learned weights partway back toward their default weights, rather than
    dropping changes completely.
@@ -280,7 +280,7 @@ Success signal:
 
 Deliverables:
 
-- `12_onnx_perch_sed_calibrated_shrink050.ipynb`.
+- `archive/12_onnx_perch_sed_calibrated_shrink050.ipynb`.
 
 ### 2.12 Test Temporal Residual Blend
 
