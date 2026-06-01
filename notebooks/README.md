@@ -17,8 +17,9 @@ project-owned, reproducible, and tied to a documented experiment.
 | `08_onnx_perch_sed_blend_w025.ipynb` | Blend-weight variant with Perch weight 0.25 |
 | `09_onnx_perch_sed_blend_proxy6.ipynb` | Protected narrow proxy-mapping champion submission |
 | `10_onnx_perch_sed_soundscape_calibrated.ipynb` | Protected soundscape-calibrated champion submission |
-| `11_onnx_perch_sed_calibrated_min10_ap001.ipynb` | Active support-thresholded calibration variant |
-| `12_onnx_perch_sed_calibrated_shrink050.ipynb` | Active shrunk-calibration variant |
+| `11_onnx_perch_sed_calibrated_min10_ap001.ipynb` | Support-thresholded calibration variant |
+| `12_onnx_perch_sed_calibrated_shrink050.ipynb` | Shrunk-calibration variant |
+| `13_onnx_perch_sed_temporal_residual.ipynb` | Active temporal residual blend experiment |
 
 ## Active Notebook Lane
 
@@ -26,7 +27,7 @@ Use **one** active notebook slot at a time. The current lane is:
 
 | Notebook | Purpose |
 |---|---|
-| `12_onnx_perch_sed_calibrated_shrink050.ipynb` | Apply half of each learned class-weight shift away from the default weight |
+| `13_onnx_perch_sed_temporal_residual.ipynb` | Train a lightweight temporal residual model on soundscape labels, then blend it with the 0.893 calibrated champion |
 
 Do not add separate notebooks for every public reference. Review external
 notebooks in `docs/`, then promote only the cleaned project-owned version.

@@ -258,7 +258,7 @@ Deliverables:
 
 ### 2.11 Test Shrunk Calibration
 
-Status: active in `12_onnx_perch_sed_calibrated_shrink050.ipynb`.
+Status: deprioritized after the deadline pivot toward larger model changes.
 
 Goal: keep the useful low-support calibration signal while reducing overfit more
 gently than the hard min10/AP0.01 threshold.
@@ -282,7 +282,39 @@ Deliverables:
 
 - `12_onnx_perch_sed_calibrated_shrink050.ipynb`.
 
-### 2.12 Add Perch Soundscape Priors
+### 2.12 Test Temporal Residual Blend
+
+Status: active in `13_onnx_perch_sed_temporal_residual.ipynb`.
+
+Goal: make one larger but still controlled leaderboard attempt before the
+deadline instead of spending submissions on tiny calibration knobs.
+
+Work items:
+
+1. Preserve `10_onnx_perch_sed_soundscape_calibrated.ipynb` as the **0.893**
+   champion.
+2. Reuse the champion's ONNX SED, ONNX Perch mapping, proxy mapping, and
+   soundscape-calibrated class weights.
+3. Score labeled train-soundscape windows and collect Perch embeddings.
+4. Train a compact temporal residual model using current, previous, and next
+   calibrated window probabilities plus Perch embeddings.
+5. Blend the residual model lightly with the calibrated champion prediction.
+6. Save `temporal_residual_history.csv` for run diagnostics.
+
+Success signal:
+
+- Public score improves over **0.893** without adding a hidden-test timeout
+  risk.
+- If it fails, the failure is informative: the next remaining work should move
+  to model diversity or external higher-scoring public notebook ideas, not more
+  calibration shrinkage.
+
+Deliverables:
+
+- `13_onnx_perch_sed_temporal_residual.ipynb`.
+- `temporal_residual_history.csv` from the Kaggle run.
+
+### 2.13 Add Perch Soundscape Priors
 
 Status: implemented in `03_perch_v2_train.ipynb`; needs a fresh Kaggle train run and
 leaderboard validation.
@@ -308,7 +340,7 @@ Deliverables:
 - A small prior summary table saved by the training notebook.
 - A note added to `05_perch_v2_results.md`.
 
-### 2.13 Inspect Weak Labels
+### 2.14 Inspect Weak Labels
 
 Status: implemented in `03_perch_v2_train.ipynb` via
 `weak_label_diagnostics.csv`; needs review after the next training run.
@@ -333,7 +365,7 @@ Deliverables:
 - Add a weak-label section to `05_perch_v2_results.md`.
 - Optional figure under `docs/figures/perch/`.
 
-### 2.14 Test Lightweight Calibration
+### 2.15 Test Lightweight Calibration
 
 Status: implemented in `03_perch_v2_train.ipynb` via `temperature_grid.csv` and
 `calibration.json`; needs a controlled submission test through
@@ -359,7 +391,7 @@ Deliverables:
   `04_perch_v2_submit.ipynb`.
 - Updated result table in `05_perch_v2_results.md`.
 
-### 2.15 Compare Perch And EfficientNet Errors
+### 2.16 Compare Perch And EfficientNet Errors
 
 Goal: decide whether an ensemble is worth the CPU cost.
 
@@ -380,7 +412,7 @@ Deliverables:
   `05_perch_v2_results.md`.
 - If useful, a simple weighted-average submission path.
 
-### 2.16 Distill Perch Into A Faster Student
+### 2.17 Distill Perch Into A Faster Student
 
 Goal: reduce dependency on TensorFlow Perch inference if scoring runtime becomes
 fragile.
@@ -409,8 +441,9 @@ Deliverables:
    tracking unless a stronger variant appears.
 3. Use the W0.25 tie as evidence that higher Perch weight alone is not enough.
 4. Use the proxy6 improvement as evidence that targeted mapping changes help.
-5. Run the soundscape-calibrated blend before full ProtoSSM-style sequence
-   modeling.
+5. Run `13_onnx_perch_sed_temporal_residual.ipynb` as the next larger
+   experiment. It is the best current use of limited daily submissions because
+   it changes the modeling surface instead of tuning another scalar.
 
 ## 4. Guardrails
 
